@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -11,8 +11,8 @@
     <link rel="stylesheet" href="css/style.css" />
     <script src="js/common.js" defer></script>
     <script type="module" src="js/auth.js"></script>
-    <script type="module" src="js/cart.js"></script>
-    <script type="module" src="js/search.js"></script>
+    <script type="module" src="js/client/cart.js"></script>
+    <script type="module" src="js/client/search.js"></script>
 </head>
 <body class="bg-[#f8f9fa] text-slate-900 font-display transition-colors duration-300 antialiased relative flex min-h-screen w-full flex-col">
     <!-- Top Navigation Bar (FoodSaver) -->
@@ -33,16 +33,14 @@
         </button>
         <!-- Auth buttons -->
         <div class="flex gap-3" id="auth-buttons">
-          <a href="Account.html" class="hover:text-primary transition-colors flex items-center justify-center text-slate-700">
+          <a href="login.html" class="hover:text-primary transition-colors flex items-center justify-center text-slate-700 account-link">
             <span class="material-symbols-outlined">person</span>
           </a>
           <a href="Cart.html" class="hover:text-primary transition-colors relative flex items-center justify-center text-slate-700">
             <span class="material-symbols-outlined">shopping_cart</span>
             <span class="absolute -top-2 -right-2 bg-primary text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold text-white border border-white" id="cart-count">0</span>
           </a>
-          <button id="auth-action-btn" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em]" onclick="window.location.href='Login.html'">
-            <span class="truncate">Đăng nhập</span>
-          </button>
+          
         </div>
         <!-- Mobile menu button -->
         <button id="mobile-menu-btn" class="md:hidden text-slate-700">
@@ -283,3 +281,4 @@
     </footer>
 </body>
 </html>
+

@@ -16,13 +16,6 @@ export const firebaseConfig = {
   measurementId: "G-EYKMW9YD14"
 };
 
-// Cloudinary Configuration
-export const cloudinaryConfig = {
-  cloudName: "",
-  uploadPreset: "",
-  folder: ""
-};
-
 // Initialize Firebase App (singleton pattern)
 let app;
 let auth;

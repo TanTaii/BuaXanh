@@ -18,7 +18,6 @@ import {
   doc,
   setDoc,
   getDoc,
-  updateDoc,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
@@ -66,7 +65,6 @@ function setLoading(button, isLoading) {
 async function saveUserToDatabase(user, additionalData = {}) {
   try {
     const userRef = doc(db, 'users', user.uid);
-    const snapshot = await getDoc(userRef);
 
     const isAdmin = user.email === ADMIN_EMAIL;
 
@@ -80,34 +78,15 @@ async function saveUserToDatabase(user, additionalData = {}) {
       ...additionalData,
     };
 
-    if (!snapshot.exists()) {
-      // New user - create full profile
-      await setDoc(userRef, {
-        ...userData,
-        createdAt: serverTimestamp(),
-        role: isAdmin ? 'admin' : 'customer',
-        isAdmin: isAdmin,
-        addresses: [],
-        wishlist: [],
-        loyaltyPoints: 0,
-      });
-    } else {
-      // Existing user - update login time and basic info
-      const updates = {
-        lastLogin: serverTimestamp(),
-        displayName: userData.displayName,
-        photoURL: userData.photoURL,
-        emailVerified: userData.emailVerified,
-      };
-
-      // Force admin role for admin email
-      if (isAdmin) {
-        updates.role = 'admin';
-        updates.isAdmin = true;
-      }
-
-      await updateDoc(userRef, updates);
-    }
+    await setDoc(userRef, {
+      ...userData,
+      createdAt: serverTimestamp(),
+      role: isAdmin ? 'admin' : 'customer',
+      isAdmin,
+      addresses: [],
+      wishlist: [],
+      loyaltyPoints: 0,
+    }, { merge: true });
 
     return userData;
   } catch (error) {
@@ -137,14 +116,15 @@ export async function getUserData(uid) {
 // AUTHENTICATION FUNCTIONS
 // ============================================================================
 
-export async function registerUser(email, password, displayName, gender = '') {
+export async function registerUser(email, password, displayName, gender = 'other') {
   const submitButton = document.querySelector('button[type="submit"]');
   try {
     setLoading(submitButton, true);
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     await updateProfile(user, { displayName });
-    await saveUserToDatabase(user, { displayName, gender });
+    const normalizedGender = ['male', 'female', 'other', 'unisex'].includes(gender) ? gender : 'other';
+    void saveUserToDatabase(user, { displayName, gender: normalizedGender });
     showToast(`Chào mừng ${displayName}! Đăng ký thành công.`);
     window.location.href = 'Account.html';
   } catch (error) {
@@ -168,7 +148,7 @@ export async function loginUser(email, password) {
     setLoading(submitButton, true);
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-    await saveUserToDatabase(user);
+    void saveUserToDatabase(user);
     showToast(`Chào mừng trở lại, ${user.displayName || 'bạn'}!`);
     window.location.href = user.email === ADMIN_EMAIL ? 'admin.html' : 'Account.html';
   } catch (error) {
@@ -190,18 +170,9 @@ export async function loginUser(email, password) {
 
 export async function loginWithGoogle() {
   try {
-    const isHttps = window.location.protocol === 'https:';
-    if (isHttps && typeof google !== 'undefined' && google.accounts) {
-      const hasSession = await tryGoogleSilentSignIn();
-      if (hasSession) return;
-    } else {
-      console.log('Google One Tap not available, using standard popup...');
-    }
-
-    console.log('Google not connected, showing popup...');
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
-    await saveUserToDatabase(user);
+    void saveUserToDatabase(user);
     showToast(`Chào mừng ${user.displayName}!`);
     window.location.href = user.email === ADMIN_EMAIL ? 'admin.html' : 'Account.html';
   } catch (error) {
@@ -253,17 +224,9 @@ async function tryGoogleSilentSignIn() {
 
 export async function loginWithFacebook() {
   try {
-    const isHttps = window.location.protocol === 'https:';
-    if (isHttps) {
-      const loginStatus = await checkFacebookLoginStatus();
-      if (loginStatus.status === 'connected') {
-        await handleFacebookLogin(loginStatus.authResponse.accessToken);
-        return;
-      }
-    }
     const result = await signInWithPopup(auth, facebookProvider);
     const user = result.user;
-    await saveUserToDatabase(user);
+    void saveUserToDatabase(user);
     showToast(`Chào mừng ${user.displayName}!`);
     window.location.href = user.email === ADMIN_EMAIL ? 'admin.html' : 'Account.html';
   } catch (error) {

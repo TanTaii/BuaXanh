@@ -1,10 +1,12 @@
 import { getFirebaseFirestore, getFirebaseAuth } from '../firebase-config.js';
-import { doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { doc, getDoc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+import { uploadAvatarDirect } from '../base64-upload.js';
 
 const db = getFirebaseFirestore();
 const auth = getFirebaseAuth();
 const settingsDocRef = doc(db, 'settings', 'general');
+const brandDocRef = doc(db, 'settings', 'brandCustomization');
 
 // State
 let currentTheme = localStorage.getItem('theme') || 'dark';
@@ -574,6 +576,11 @@ function getCheckbox(id) {
     return el ? el.checked : false;
 }
 
+async function getBrandSettingsData() {
+    const snapshot = await getDoc(brandDocRef);
+    return snapshot.exists() ? snapshot.data() : {};
+}
+
 // ==================== BRAND CUSTOMIZATION ====================
 
 // Load Brand Settings
@@ -731,7 +738,7 @@ function resetColor(type) {
     showToast(`Đã reset về màu mặc định`, 'success');
 }
 
-// Upload Logo via Cloudinary
+// Upload logo as base64 and save directly in Firestore.
 async function uploadLogo(file, type) {
     if (!file) return;
     
@@ -742,29 +749,15 @@ async function uploadLogo(file, type) {
         return;
     }
     
-    showToast('Đang tải lên logo...', 'info');
+    showToast('Đang xử lý logo...', 'info');
     
     try {
-        // Upload to Cloudinary using existing function
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('upload_preset', '');
-        formData.append('folder', '');
-        
-        const response = await fetch(
-            `https://api.cloudinary.com/v1_1//image/upload`,
-            {
-                method: 'POST',
-                body: formData
-            }
+        const imageUrl = await uploadAvatarDirect(
+            file,
+            type === 'favicon' ? 128 : 900,
+            type === 'favicon' ? 128 : 900,
+            type === 'favicon' ? 0.8 : 0.72
         );
-        
-        if (!response.ok) {
-            throw new Error('Upload failed');
-        }
-        
-        const data = await response.json();
-        const imageUrl = data.secure_url;
         
         // Update preview
         const previewImg = document.getElementById(`preview-logo-${type}`);
@@ -772,11 +765,16 @@ async function uploadLogo(file, type) {
             previewImg.src = imageUrl;
         }
         
-        // Save to Firebase
-        await update(ref(db, 'settings/brandCustomization/logos'), {
-            [type]: imageUrl,
+        const brandData = await getBrandSettingsData();
+        const currentLogos = brandData.logos || {};
+
+        await setDoc(brandDocRef, {
+            logos: {
+                ...currentLogos,
+                [type]: imageUrl
+            },
             updatedAt: new Date().toISOString()
-        });
+        }, { merge: true });
         
         showToast('Logo đã được cập nhật!', 'success');
         
@@ -786,7 +784,7 @@ async function uploadLogo(file, type) {
     }
 }
 
-// Upload Hero Slider Image
+// Upload hero slider image as base64 and append to existing slider list.
 async function uploadSliderImage(file) {
     if (!file) return;
     
@@ -796,36 +794,12 @@ async function uploadSliderImage(file) {
         return;
     }
     
-    showToast('Đang tải lên banner...', 'info');
+    showToast('Đang xử lý banner...', 'info');
     
     try {
-        // Upload to Cloudinary
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('upload_preset', 'x-sneaker-upload');
-        formData.append('folder', 'hero-slider');
-        
-        const response = await fetch(
-            `https://api.cloudinary.com/v1_1/dvcebine7/image/upload`,
-            {
-                method: 'POST',
-                body: formData
-            }
-        );
-        
-        if (!response.ok) {
-            throw new Error('Upload failed');
-        }
-        
-        const data = await response.json();
-        const imageUrl = data.secure_url;
-        
-        // Get existing slider data
-        const snapshot = await new Promise((resolve) => {
-            onValue(ref(db, 'settings/brandCustomization/banners/heroSlider'), resolve, { onlyOnce: true });
-        });
-        
-        const sliderImages = snapshot.val() || [];
+        const imageUrl = await uploadAvatarDirect(file, 1280, 720, 0.72);
+        const brandData = await getBrandSettingsData();
+        const sliderImages = brandData?.banners?.heroSlider || [];
         
         // Add new image
         sliderImages.push({
@@ -835,8 +809,13 @@ async function uploadSliderImage(file) {
             subtitle: ''
         });
         
-        // Save to Firebase
-        await set(ref(db, 'settings/brandCustomization/banners/heroSlider'), sliderImages);
+        await setDoc(brandDocRef, {
+            banners: {
+                ...(brandData.banners || {}),
+                heroSlider: sliderImages
+            },
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
         
         showToast('Banner đã được thêm!', 'success');
         renderSliderImagesList(sliderImages);
@@ -885,14 +864,17 @@ function renderSliderImagesList(slides) {
 // Update Slide Text
 async function updateSlideText(index, field, value) {
     try {
-        const snapshot = await new Promise((resolve) => {
-            onValue(ref(db, 'settings/brandCustomization/banners/heroSlider'), resolve, { onlyOnce: true });
-        });
-        
-        const slides = snapshot.val() || [];
+        const brandData = await getBrandSettingsData();
+        const slides = brandData?.banners?.heroSlider || [];
         if (slides[index]) {
             slides[index][field] = value;
-            await set(ref(db, 'settings/brandCustomization/banners/heroSlider'), slides);
+            await setDoc(brandDocRef, {
+                banners: {
+                    ...(brandData.banners || {}),
+                    heroSlider: slides
+                },
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
             showToast('Đã cập nhật!', 'success');
         }
     } catch (error) {
@@ -916,11 +898,8 @@ async function deleteSlide(index) {
     if (!confirmed) return;
     
     try {
-        const snapshot = await new Promise((resolve) => {
-            onValue(ref(db, 'settings/brandCustomization/banners/heroSlider'), resolve, { onlyOnce: true });
-        });
-        
-        const slides = snapshot.val() || [];
+        const brandData = await getBrandSettingsData();
+        const slides = brandData?.banners?.heroSlider || [];
         slides.splice(index, 1);
         
         // Update order
@@ -928,7 +907,13 @@ async function deleteSlide(index) {
             slide.order = i + 1;
         });
         
-        await set(ref(db, 'settings/brandCustomization/banners/heroSlider'), slides);
+        await setDoc(brandDocRef, {
+            banners: {
+                ...(brandData.banners || {}),
+                heroSlider: slides
+            },
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
         showToast('Đã xóa slide!', 'success');
         renderSliderImagesList(slides);
         
@@ -958,7 +943,7 @@ async function saveBrandSettings() {
             updatedAt: new Date().toISOString()
         };
 
-        await update(ref(db, 'settings/brandCustomization'), brandData);
+        await setDoc(brandDocRef, brandData, { merge: true });
         showToast('Brand settings saved successfully!', 'success');
         hasUnsavedChanges = false;
 

@@ -1,6 +1,6 @@
 import { getFirebaseFirestore } from '../firebase-config.js';
 import { doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
-import { uploadAvatarDirect } from '../cloudinary-upload.js';
+import { uploadAvatarDirect } from '../base64-upload.js';
 
 const db = getFirebaseFirestore();
 

@@ -155,7 +155,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (closeMenuBtn) closeMenuBtn.addEventListener('click', toggleMenu);
 
   // Khởi tạo các logic chung
-  window.updateCartCount(); 
+  window.updateCartCount();
+  syncHeaderAuthUI();
 
   // --- 6. Quick Add (Global Event Listener) ---
   // Lắng nghe sự kiện click nút "Thêm Nhanh" trên toàn trang
@@ -187,4 +188,42 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+
+async function syncHeaderAuthUI() {
+  const authButtons = document.getElementById('auth-buttons');
+  if (!authButtons) return;
+
+  // Remove legacy login button in header to keep a consistent compact nav.
+  const legacyLoginButton = authButtons.querySelector('#auth-action-btn');
+  if (legacyLoginButton) {
+    legacyLoginButton.remove();
+  }
+
+  const accountLink = Array.from(authButtons.querySelectorAll('a')).find((anchor) => {
+    const icon = anchor.querySelector('.material-symbols-outlined');
+    if (!icon) return false;
+    const iconText = (icon.textContent || '').trim();
+    return iconText === 'person' || iconText === 'settings';
+  });
+
+  if (!accountLink) return;
+
+  accountLink.classList.add('account-link');
+  accountLink.href = 'login.html';
+
+  try {
+    const [{ getFirebaseAuth }, { onAuthStateChanged }] = await Promise.all([
+      import('./firebase-config.js'),
+      import('https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js')
+    ]);
+
+    const auth = getFirebaseAuth();
+    onAuthStateChanged(auth, (user) => {
+      accountLink.href = user ? 'Account.html' : 'login.html';
+      accountLink.title = user ? 'Tài khoản của tôi' : 'Đăng nhập';
+    });
+  } catch (error) {
+    console.warn('Auth sync skipped:', error?.message || error);
+  }
+}
 

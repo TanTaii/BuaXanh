@@ -45,8 +45,13 @@ async function reload() {
         productsSnapshot.docs.forEach(d => { allProducts[d.id] = { id: d.id, ...d.data() }; });
 
         // 2. Fetch Orders
-        const ordersSnapshot = await getDocs(query(collection(db, 'orders'), orderBy('createdAt')));
-        allOrders = ordersSnapshot.docs.map(d => ({ key: d.id, ...d.data() }));
+        const ordersSnapshot = await getDocs(collection(db, 'orders'));
+        // Sort orders by createdAt client-side since we removed orderBy
+        allOrders = ordersSnapshot.docs.map(d => ({ key: d.id, ...d.data() })).sort((a, b) => {
+            const timeA = a.createdAt || 0;
+            const timeB = b.createdAt || 0;
+            return timeA - timeB; // ascending
+        });
 
         // 3. Process Data
         processData();

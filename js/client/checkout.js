@@ -3,8 +3,8 @@
  * Handles cart summary display and order placement (COD & QR Transfer)
  */
 
-import { initAuthStateObserver, getUserData } from './auth.js';
-import { getFirebaseAuth, getFirebaseFirestore } from './firebase-config.js';
+import { initAuthStateObserver, getUserData } from '../auth.js';
+import { getFirebaseAuth, getFirebaseFirestore } from '../firebase-config.js';
 import { collection, addDoc, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 import { showQRPaymentModal } from './qr-payment.js';
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -11,9 +11,8 @@
     <script src="js/tailwind-config.js"></script>
     <link rel="stylesheet" href="css/style.css" />
     <script src="js/common.js" defer></script>
-    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
-    <script type="module" src="js/search.js"></script>
-    <script type="module" src="js/account.js"></script>
+    <script type="module" src="js/client/search.js"></script>
+    <script type="module" src="js/client/account.js"></script>
   </head>
 <body class="bg-[#f6f8f6] text-slate-900 font-display min-h-screen flex flex-col">
 
@@ -35,8 +34,8 @@
         </button>
         <!-- Auth buttons -->
         <div class="flex gap-4 items-center" id="auth-buttons">
-          <a href="Account.html" class="hover:text-primary transition-colors flex items-center justify-center text-slate-700">
-            <span class="material-symbols-outlined text-xl">settings</span>
+          <a href="login.html" class="hover:text-primary transition-colors flex items-center justify-center text-slate-700 account-link">
+            <span class="material-symbols-outlined text-xl">person</span>
           </a>
           <a href="Cart.html" class="hover:text-primary transition-colors relative flex items-center justify-center text-slate-700">
             <span class="material-symbols-outlined">shopping_cart</span>
@@ -105,130 +104,68 @@
         <section class="flex-1 w-full max-w-[800px] flex flex-col gap-10">
             <!-- Profile Tab (Default) -->
             <div id="tab-profile" class="tab-content block w-full space-y-10">
-                
-                <!-- User Profile Card -->
-                <div class="bg-white rounded-3xl p-8 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-8 border border-slate-100 relative">
-                    <!-- Avatar Area -->
-                    <div class="relative shrink-0 flex items-center justify-center">
-                        <div class="size-32 rounded-full border-[6px] border-green-50 overflow-hidden relative shadow-inner">
-                            <div id="user-avatar" class="w-full h-full bg-cover bg-center" style='background-image: url("image/default-avatar.jpg");'></div>
-                        </div>
-                        <button id="upload-avatar-btn-quick" class="absolute bottom-1 right-1 size-8 bg-primary rounded-full text-white flex items-center justify-center border-2 border-white shadow-sm hover:scale-105 transition-transform" onclick="document.getElementById('edit-profile-btn').click();">
-                            <span class="material-symbols-outlined text-[16px]">photo_camera</span>
-                        </button>
-                    </div>
-
-                    <!-- User Details -->
-                    <div class="flex-1 text-center md:text-left pt-2">
-                        <h1 id="user-name" class="text-2xl font-black text-slate-900 leading-tight">...</h1>
-                        
-                        <div class="flex items-center justify-center md:justify-start gap-1.5 mt-1.5 mb-4 text-slate-500">
-                            <span class="material-symbols-outlined text-[16px] text-primary">verified</span>
-                            <span class="text-sm">Thành viên từ tháng 6, 2023</span>
-                        </div>
-
-                        <!-- Badges -->
-                        <div class="flex items-center justify-center md:justify-start gap-3 mb-6">
-                            <span id="user-tier" class="px-3 py-1 bg-green-50 text-primary text-xs font-bold uppercase tracking-wider rounded-md border border-green-100">...</span>
-                            <span class="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wider rounded-md">250 ĐIỂM TÍCH LŨY</span>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="flex items-center justify-center md:justify-start gap-3">
-                            <button id="edit-profile-btn" class="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-colors shadow-sm text-sm">
-                                Chỉnh sửa hồ sơ
-                            </button>
-                            <button class="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors text-sm">
-                                Chia sẻ
+                <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
+                    <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+                        <div class="relative shrink-0">
+                            <div class="size-28 rounded-full border-[6px] border-green-50 overflow-hidden shadow-inner">
+                                <div id="user-avatar" class="w-full h-full bg-cover bg-center" style='background-image: url("image/default-avatar.jpg");'></div>
+                            </div>
+                            <button id="upload-avatar-btn-quick" class="absolute bottom-0 right-0 size-8 bg-primary rounded-full text-white flex items-center justify-center border-2 border-white shadow-sm hover:scale-105 transition-transform" onclick="document.getElementById('edit-profile-btn').click();">
+                                <span class="material-symbols-outlined text-[16px]">photo_camera</span>
                             </button>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Hidden inputs for fallback compatibility if they exist in standard code -->
-                <div class="hidden">
-                    <p id="info-displayname"></p>
-                    <p id="total-orders"></p>
-                    <p id="wishlist-count"></p>
-                </div>
-
-
-
-                <!-- Bottom Two Columns (Notifications & User Info details) -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    
-                    <!-- Notifications Box -->
-                    <div class="space-y-4">
-                        <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900">
-                            <span class="material-symbols-outlined text-primary">notifications_active</span> Thông báo
-                        </h3>
-                        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 divide-y divide-slate-100">
-                            
-                            <!-- Setting 1 -->
-                            <div class="flex items-center justify-between p-5">
-                                <div>
-                                    <p class="font-bold text-slate-900 text-sm mb-0.5">Flash deals</p>
-                                    <p class="text-xs text-slate-400">Giảm giá chớp nhoáng gần bạn</p>
-                                </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                  <input type="checkbox" value="" class="sr-only peer" checked>
-                                  <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                                </label>
-                            </div>
-                            
-                            <!-- Setting 2 -->
-                            <div class="flex items-center justify-between p-5">
-                                <div>
-                                    <p class="font-bold text-slate-900 text-sm mb-0.5">Tin nhắn từ cửa hàng</p>
-                                    <p class="text-xs text-slate-400">Cập nhật về đơn hàng của bạn</p>
-                                </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                  <input type="checkbox" value="" class="sr-only peer" checked>
-                                  <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                                </label>
-                            </div>
-                            
-                            <!-- Setting 3 -->
-                            <div class="flex items-center justify-between p-5">
-                                <div>
-                                    <p class="font-bold text-slate-900 text-sm mb-0.5">Nhắc nhở hàng ngày</p>
-                                    <p class="text-xs text-slate-400">Đừng quên giải cứu thực phẩm</p>
-                                </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                  <input type="checkbox" value="" class="sr-only peer">
-                                  <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Personal Info Box -->
-                    <div class="space-y-4">
-                        <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900">
-                            <span class="material-symbols-outlined text-primary">info</span> Thông tin cá nhân
-                        </h3>
-                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-5">
+                        <div class="w-full space-y-4 text-center md:text-left">
                             <div>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Email</p>
-                                <p id="info-email" class="font-medium text-slate-900 text-sm">--</p>
+                                <h1 id="user-name" class="text-2xl font-black text-slate-900 leading-tight">...</h1>
+                                <p class="text-sm text-slate-500 mt-1">Thông tin tài khoản của bạn</p>
                             </div>
-                            <div class="w-full h-px bg-slate-100"></div>
-                            <div>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Số điện thoại</p>
-                                <p id="info-phone" class="font-medium text-slate-900 text-sm">--</p>
+
+                            <div class="flex items-center justify-center md:justify-start gap-2">
+                                <span id="user-tier" class="px-3 py-1 bg-green-50 text-primary text-xs font-bold uppercase tracking-wider rounded-md border border-green-100">...</span>
                             </div>
-                            <div class="w-full h-px bg-slate-100"></div>
-                            <div>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Địa chỉ mặc định</p>
-                                <p id="info-address" class="font-medium text-slate-900 text-sm leading-relaxed">--</p>
-                                <p id="info-gender" class="hidden">--</p> <!-- Hidden gender to satisfy JS -->
+
+                            <div class="flex items-center justify-center md:justify-start">
+                                <button id="edit-profile-btn" class="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-colors shadow-sm text-sm">
+                                    Chỉnh sửa hồ sơ
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Danger Zone Delete Account -->
-                <div class="pt-8 flex justify-end">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <h3 class="text-lg font-bold text-slate-900 mb-5">Thông tin cá nhân</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Họ và tên</p>
+                            <p id="info-displayname" class="font-medium text-slate-900">--</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Email</p>
+                            <p id="info-email" class="font-medium text-slate-900">--</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Số điện thoại</p>
+                            <p id="info-phone" class="font-medium text-slate-900">--</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Giới tính</p>
+                            <p id="info-gender" class="font-medium text-slate-900">--</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Địa chỉ mặc định</p>
+                            <p id="info-address" class="font-medium text-slate-900 leading-relaxed">--</p>
+                        </div>
+                    </div>
+
+                    <div class="hidden">
+                        <p id="total-orders"></p>
+                        <p id="wishlist-count"></p>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex justify-end">
                     <button id="btn-request-delete" class="text-sm font-medium text-red-500 hover:text-red-700 hover:underline transition-all">
                         Yêu cầu xóa tài khoản
                     </button>
@@ -382,6 +319,7 @@
                         <span class="material-symbols-outlined text-lg">cloud_upload</span>
                         Thay Đổi Avatar
                     </button>
+                    <input type="file" id="avatar-file-input" accept="image/*" class="hidden">
                     <input type="hidden" id="avatar-url" name="photoURL">
                 </div>
 
@@ -405,11 +343,13 @@
                     </div>
 
                     <!-- Gender -->
-                    <div class="hidden">
-                        <select id="edit-gender" name="gender">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Giới Tính</label>
+                        <select id="edit-gender" name="gender" class="w-full rounded-xl border-slate-200 bg-white p-3.5 font-semibold focus:ring-primary focus:border-primary transition-colors shadow-sm">
                             <option value="">Chọn giới tính</option>
                             <option value="male">Nam</option>
                             <option value="female">Nữ</option>
+                            <option value="other">Khác</option>
                         </select>
                     </div>
                 </div>
@@ -679,3 +619,4 @@
 
 </body>
 </html>
+

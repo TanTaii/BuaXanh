@@ -1,22 +1,24 @@
 // Account Page Logic for X-Sneaker
 // Handles user profile display, editing, and real-time updates
 
-import { getFirebaseAuth, getFirebaseFirestore } from './firebase-config.js';
+import { getFirebaseAuth, getFirebaseFirestore } from '../firebase-config.js';
 import { 
     onAuthStateChanged,
-    updateProfile as updateAuthProfile
+    updateProfile as updateAuthProfile,
+    signOut
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 import { 
     doc,
     onSnapshot,
     updateDoc,
+    setDoc,
     getDoc,
     collection,
     getDocs,
     query,
     where
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
-import { initCloudinaryWidget } from './cloudinary-upload.js';
+import { uploadAvatarDirect } from '../base64-upload.js';
 
 // Get Firebase instances from shared config
 let auth = null;
@@ -24,7 +26,6 @@ let database = null;
 
 // Global State
 let currentUser = null;
-let cloudinaryWidget = null;
 let unsubscribeProfile = null;
 let unsubscribeOrders = null;
 let allUserOrders = []; // Store all orders for quick access
@@ -141,12 +142,12 @@ function checkUrlForTab() {
 
 function loadUserProfile(uid) {
     console.log('📥 Loading user profile for:', uid);
-    const userRef = ref(database, `users/${uid}`);
+    const userRef = doc(database, `users/${uid}`);
     
     // Real-time listener
-    unsubscribeProfile = onValue(userRef, (snapshot) => {
+    unsubscribeProfile = onSnapshot(userRef, (snapshot) => {
         if (snapshot.exists()) {
-            const userData = snapshot.val();
+            const userData = snapshot.data();
             console.log('✅ User data loaded:', userData);
             renderUserProfile(userData);
         } else {
@@ -168,6 +169,7 @@ async function createBasicProfile(uid) {
         uid: uid,
         email: user.email,
         displayName: user.displayName || 'User',
+        gender: 'other',
         photoURL: user.photoURL || '../image/default-avatar.jpg',
         createdAt: Date.now(),
         lastLogin: Date.now(),
@@ -177,7 +179,7 @@ async function createBasicProfile(uid) {
     };
 
     try {
-        await update(ref(database, `users/${uid}`), basicData);
+        await updateDoc(doc(database, `users/${uid}`), basicData);
         console.log('Basic profile created');
     } catch (error) {
         console.error('Error creating profile:', error);
@@ -187,16 +189,15 @@ async function createBasicProfile(uid) {
 async function loadUserOrders(uid) {
     try {
         // Query orders by userId using Firebase query
-        const ordersRef = ref(database, 'orders');
-        const userOrdersQuery = query(ordersRef, orderByChild('userId'), equalTo(uid));
+        const ordersRef = collection(database, 'orders');
+        const userOrdersQuery = query(ordersRef, where('userId', '==', uid));
         
-        const snapshot = await get(userOrdersQuery);
+        const snapshot = await getDocs(userOrdersQuery);
         
-        if (snapshot.exists()) {
-            const ordersData = snapshot.val();
+        if (!snapshot.empty) {
             // Convert to array and sort by createdAt
-            const userOrders = Object.entries(ordersData)
-                .map(([id, order]) => ({ ...order, id }))
+            const userOrders = snapshot.docs
+                .map(doc => ({ ...doc.data(), id: doc.id }))
                 .sort((a, b) => b.createdAt - a.createdAt);
             
             // Store orders globally for modal access
@@ -222,11 +223,11 @@ async function loadUserOrders(uid) {
 
 async function loadUserWishlist(uid) {
     try {
-        const wishlistRef = ref(database, `wishlist/${uid}`);
-        const snapshot = await get(wishlistRef);
+        const wishlistRef = doc(database, `wishlist/${uid}`);
+        const snapshot = await getDoc(wishlistRef);
         
         if (snapshot.exists()) {
-            const wishlistData = snapshot.val();
+            const wishlistData = snapshot.data();
             const productIds = Object.keys(wishlistData); // Assuming wishlist structure is { productId: true/timestamp }
             
             document.getElementById('wishlist-count').textContent = productIds.length;
@@ -234,9 +235,9 @@ async function loadUserWishlist(uid) {
             // Fetch product details for wishlist tab
             if (productIds.length > 0) {
                 const products = await Promise.all(productIds.map(async (pid) => {
-                    const productSnapshot = await get(ref(database, `products/${pid}`));
+                    const productSnapshot = await getDoc(doc(database, `products/${pid}`));
                     if (productSnapshot.exists()) {
-                        return { id: pid, ...productSnapshot.val() };
+                        return { id: pid, ...productSnapshot.data() };
                     }
                     return null;
                 }));
@@ -307,7 +308,7 @@ function renderUserProfile(userData) {
     }
     
     if (infoGender) {
-        const genders = { 'male': 'Nam', 'female': 'Nữ', 'other': 'Khác' };
+        const genders = { 'male': 'Nam', 'female': 'Nữ', 'other': 'Khác', 'unisex': 'Khác' };
         infoGender.textContent = genders[userData.gender] || 'Chưa cập nhật';
         infoGender.className = userData.gender ? 'font-medium text-lg' : 'font-medium text-lg text-gray-400 italic';
     }
@@ -507,6 +508,11 @@ function setupEventListeners() {
         uploadBtn.addEventListener('click', openAvatarUpload);
     }
 
+    const avatarFileInput = document.getElementById('avatar-file-input');
+    if (avatarFileInput) {
+        avatarFileInput.addEventListener('change', handleAvatarFileChange);
+    }
+
     // Form Submit
     const form = document.getElementById('edit-profile-form');
     if (form) {
@@ -585,7 +591,7 @@ async function handleDeleteAccount() {
 
         // 1. Mark account as scheduled for deletion in Database
         // This is a "Soft Delete" - Admin or Cloud Function would clean this up after 7 days
-        await update(ref(database, `users/${currentUser.uid}`), {
+        await updateDoc(doc(database, `users/${currentUser.uid}`), {
             deletionScheduled: true,
             deletionRequestedAt: Date.now(),
             accountStatus: 'pending_deletion'
@@ -612,13 +618,14 @@ async function openEditModal() {
 
     try {
         // Fetch current data
-        const snapshot = await get(ref(database, `users/${currentUser.uid}`));
-        const userData = snapshot.val() || {};
+        const snapshot = await getDoc(doc(database, `users/${currentUser.uid}`));
+        const userData = snapshot.exists() ? snapshot.data() : {};
 
         // Populate form
         document.getElementById('edit-displayName').value = userData.displayName || '';
         document.getElementById('edit-email').value = userData.email || '';
-        document.getElementById('edit-gender').value = userData.gender || '';
+        const normalizedGender = userData.gender === 'unisex' ? 'other' : (userData.gender || '');
+        document.getElementById('edit-gender').value = normalizedGender;
         document.getElementById('edit-phone').value = userData.phone || '';
         document.getElementById('edit-street').value = userData.address?.street || '';
         document.getElementById('edit-ward').value = userData.address?.ward || '';
@@ -651,19 +658,66 @@ function closeEditModal() {
 }
 
 function openAvatarUpload() {
-    if (!cloudinaryWidget) {
-        cloudinaryWidget = initCloudinaryWidget((url) => {
-            console.log('Avatar uploaded:', url);
-            document.getElementById('avatar-url').value = url;
-            document.getElementById('preview-avatar').style.backgroundImage = `url('${url}')`;
-            showToast('Avatar đã được upload thành công!');
-        });
+    const avatarFileInput = document.getElementById('avatar-file-input');
+    if (!avatarFileInput) {
+        showToast('Không tìm thấy input upload ảnh.', 'error');
+        return;
     }
 
-    if (cloudinaryWidget) {
-        cloudinaryWidget.open();
-    } else {
-        showToast('Không thể mở upload widget. Vui lòng thử lại!', 'error');
+    avatarFileInput.click();
+}
+
+async function handleAvatarFileChange(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const uploadBtn = document.getElementById('upload-avatar-btn');
+    const originalText = uploadBtn ? uploadBtn.innerHTML : '';
+
+    try {
+        if (uploadBtn) {
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<span class="material-symbols-outlined animate-spin text-lg">progress_activity</span> Đang xử lý...';
+        }
+
+        const base64Avatar = await uploadAvatarDirect(file, 600, 600, 0.7);
+
+        const avatarUrlInput = document.getElementById('avatar-url');
+        if (avatarUrlInput) {
+            avatarUrlInput.value = base64Avatar;
+        }
+
+        const previewAvatar = document.getElementById('preview-avatar');
+        if (previewAvatar) {
+            previewAvatar.style.backgroundImage = `url('${base64Avatar}')`;
+        }
+
+        const profileAvatar = document.getElementById('user-avatar');
+        if (profileAvatar) {
+            profileAvatar.style.backgroundImage = `url('${base64Avatar}')`;
+        }
+
+        if (currentUser?.uid && database) {
+            await setDoc(doc(database, `users/${currentUser.uid}`), {
+                photoURL: base64Avatar,
+                updatedAt: Date.now()
+            }, { merge: true });
+
+            await updateAuthProfile(currentUser, {
+                photoURL: base64Avatar
+            });
+        }
+
+        showToast('Avatar đã được cập nhật thành công!');
+    } catch (error) {
+        console.error('Avatar upload error:', error);
+        showToast('Không thể cập nhật avatar: ' + error.message, 'error');
+    } finally {
+        if (uploadBtn) {
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = originalText;
+        }
+        event.target.value = '';
     }
 }
 
@@ -683,7 +737,7 @@ async function handleProfileUpdate(e) {
             displayName: formData.get('displayName'),
             gender: formData.get('gender'),
             phone: formData.get('phone'),
-            photoURL: formData.get('photoURL'),
+            photoURL: formData.get('photoURL') || currentUser?.photoURL || '',
             address: {
                 street: formData.get('address.street'),
                 ward: formData.get('address.ward'),
@@ -692,8 +746,11 @@ async function handleProfileUpdate(e) {
             }
         };
 
-        // Update Realtime Database
-        await update(ref(database, `users/${currentUser.uid}`), updates);
+        // Update Firestore Database (merge mode prevents failure when user doc is missing)
+        await setDoc(doc(database, `users/${currentUser.uid}`), {
+            ...updates,
+            updatedAt: Date.now()
+        }, { merge: true });
 
         // Update Auth Profile (displayName & photoURL)
         await updateAuthProfile(currentUser, {
@@ -706,7 +763,8 @@ async function handleProfileUpdate(e) {
 
     } catch (error) {
         console.error('Update error:', error);
-        showToast('Cập nhật thất bại! Vui lòng thử lại.', 'error');
+        const message = error?.message ? `Cập nhật thất bại: ${error.message}` : 'Cập nhật thất bại! Vui lòng thử lại.';
+        showToast(message, 'error');
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
@@ -715,13 +773,11 @@ async function handleProfileUpdate(e) {
 
 async function handleLogout() {
     try {
-        const { logoutUser } = await import('./auth.js');
-        await logoutUser();
+        await signOut(auth);
+        window.location.href = 'index.html';
     } catch (error) {
         console.error('Logout error:', error);
-        // Fallback logout
-        await auth.signOut();
-        window.location.href = 'index.html';
+        showToast('Đăng xuất thất bại!', 'error');
     }
 }
 
@@ -731,11 +787,11 @@ async function handleLogout() {
 
 async function checkPendingDeletion(uid) {
     try {
-        const userRef = ref(database, `users/${uid}`);
-        const snapshot = await get(userRef);
+        const userRef = doc(database, `users/${uid}`);
+        const snapshot = await getDoc(userRef);
         
         if (snapshot.exists()) {
-            const userData = snapshot.val();
+            const userData = snapshot.data();
             
             // Check if account is scheduled for deletion
             if (userData.deletionScheduled === true && userData.deletionRequestedAt) {
@@ -829,7 +885,7 @@ async function handleCancelDeletion() {
         cancelBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Đang xử lý...';
         
         // Remove deletion flags from user account
-        await update(ref(database, `users/${currentUser.uid}`), {
+        await updateDoc(doc(database, `users/${currentUser.uid}`), {
             deletionScheduled: false,
             deletionRequestedAt: null,
             accountStatus: 'active'
@@ -1055,8 +1111,8 @@ function showConfirmReceivedModal(orderId) {
             submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Đang xử lý...';
 
             // Update order status to delivered
-            const orderRef = ref(database, `orders/${orderId}`);
-            await update(orderRef, {
+            const orderRef = doc(database, `orders/${orderId}`);
+            await updateDoc(orderRef, {
                 status: 'delivered',
                 deliveredAt: Date.now(),
                 updatedAt: Date.now()
@@ -1147,8 +1203,8 @@ function showCancelReasonModal(orderId) {
             submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Đang hủy...';
 
             // Update order status to cancelled
-            const orderRef = ref(database, `orders/${orderId}`);
-            await update(orderRef, {
+            const orderRef = doc(database, `orders/${orderId}`);
+            await updateDoc(orderRef, {
                 status: 'cancelled',
                 cancelledAt: Date.now(),
                 cancelReason: reason,

@@ -36,23 +36,25 @@ function init() {
 /**
  * Reload Orders Data
  */
-function reload() {
+async function reload() {
     const tableBody = document.getElementById('orders-table-body');
     const loadingState = document.getElementById('orders-loading');
 
     if (loadingState) loadingState.style.display = 'flex';
     if (tableBody) tableBody.innerHTML = '';
 
-    onSnapshot(collection(db, 'orders'), (snapshot) => {
+    try {
+        const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js");
+        const snapshot = await getDocs(collection(db, 'orders'));
         allOrders = snapshot.docs.map(d => ({ key: d.id, ...d.data() }));
         applyFilterAndSort();
         renderStats();
-        if (loadingState) loadingState.style.display = 'none';
-    }, (error) => {
+    } catch (error) {
         console.error("Error loading orders:", error);
         if (tableBody) tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-red-500">Lỗi tải dữ liệu</td></tr>';
+    } finally {
         if (loadingState) loadingState.style.display = 'none';
-    });
+    }
 }
 
 /**
@@ -384,20 +386,31 @@ async function updateStatus(orderId, newStatus) {
     
     if (!confirmed) return;
 
-    const orderRef = ref(db, `orders/${orderId}`);
-    update(orderRef, {
-        status: newStatus,
-        updatedAt: Date.now()
-    }).then(() => {
+    try {
+        const orderRef = doc(db, `orders/${orderId}`);
+        await updateDoc(orderRef, {
+            status: newStatus,
+            updatedAt: Date.now()
+        });
+        
+        // Cập nhật state local ngay để giao diện thấy phản hồi nhanh
+        const orderIndex = allOrders.findIndex(o => o.key === orderId);
+        if (orderIndex !== -1) {
+            allOrders[orderIndex].status = newStatus;
+            allOrders[orderIndex].updatedAt = Date.now();
+        }
+        applyFilterAndSort();
+        renderStats();
+        
         if (window.showToast) {
             window.showToast('Cập nhật trạng thái thành công!', 'success');
         }
-    }).catch((error) => {
+    } catch (error) {
         console.error('Lỗi cập nhật:', error);
         if (window.showToast) {
             window.showToast('Không thể cập nhật trạng thái', 'error');
         }
-    });
+    }
 }
 
 /**

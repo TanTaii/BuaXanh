@@ -2,7 +2,7 @@ import { getFirebaseFirestore } from '../firebase-config.js';
 import { 
     collection, doc, addDoc, setDoc, deleteDoc, onSnapshot, getDocs
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
-import { uploadAvatarDirect, getOptimizedImageUrl } from '../cloudinary-upload.js';
+import { uploadAvatarDirect, getOptimizedImageUrl } from '../base64-upload.js';
 import { getFirebaseAuth } from '../firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 

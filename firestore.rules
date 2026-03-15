@@ -3,78 +3,65 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 1. Cấu hình cho bộ sưu tập 'users'
+    // === Helper Functions ===
+    // Check if the current user is an Admin
+    function isAdmin() {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
+    // Check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // === Users Collection ===
     match /users/{userId} {
-      // Cho phép người dùng đọc và ghi vào chính Profile của họ
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      
-      // Cho phép Admin có quyền xem danh sách user (để quản lý trong Admin Dashboard)
-      allow read: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      // Users can read/write their own profile; Admins can read/write all users
+      allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      // Anyone can create a new user document during registration
+      allow create: if isAuthenticated();
     }
 
-    // 2. Cấu hình cho 'products' và 'promotions'
+    // === Products Collection ===
     match /products/{productId} {
-      // Ai cũng có thể xem sản phẩm (để mua hàng)
+      // Anyone (even guests) can view products
       allow read: if true;
-      // Chỉ Admin mới được thêm/sửa/xóa sản phẩm
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      // Only Admins can create, update, or delete products
+      allow write: if isAdmin();
     }
-    
+
+    // === Promotions Collection ===
     match /promotions/{promoId} {
+      // Anyone can validate/read promotions
       allow read: if true;
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      // Only Admins can manage promotions
+      allow write: if isAdmin();
     }
 
-    // 3. Cấu hình cho 'orders'
+    // === Orders Collection ===
     match /orders/{orderId} {
-      // Người dùng chỉ thấy đơn hàng của chính mình (sửa request.resource.data -> resource.data for read)
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      // Cho phép tạo đơn hàng nếu đã đăng nhập
-      allow create: if request.auth != null;
-      // Chỉ Admin mới được cập nhật trạng thái đơn hàng (shipment status)
-      allow update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-      
-      // Cho phép admin đọc tất cả đơn hàng
-      allow read: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      // Users can only read their own orders; Admins can read all orders
+      // Note: Make sure queries match these constraints, e.g. querying where("userId", "==", auth.uid)
+      allow read: if isAuthenticated() && (isAdmin() || request.auth.uid == resource.data.userId);
+      // Any authenticated user can create an order
+      allow create: if isAuthenticated();
+      // Only Admins can update order status or delete orders
+      allow update, delete: if isAdmin();
+    }
+
+    // === Settings Collection ===
+    // Stores global app settings (about us, general, contact info)
+    match /settings/{document=**} {
+      // Anyone can read store settings/info
+      allow read: if true;
+      // Only Admins can modify store settings
+      allow write: if isAdmin();
     }
     
-    // 4. Cart - Owner only
-    match /cart/{uid}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
-    }
-
-    // 5. Blogs - Public read, Admin write
-    match /blogs/{blogId} {
+    // === Posts/Blogs Collection ===
+    match /posts/{postId} {
       allow read: if true;
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-
-    // 6. Blog Comments
-    match /blogComments/{blogId}/{commentId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null &&
-        (resource.data.userId == request.auth.uid || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true);
-    }
-
-    // 7. Contact Submissions
-    match /contactSubmissions/{submissionId} {
-      allow create: if true; // Anyone can submit
-      allow read, update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-
-    // 8. Settings - Public read, Admin write
-    match /settings/{settingId} {
-      allow read: if true;
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-    
-    // 9. Reviews
-    match /reviews/{productId}/{reviewId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null && (resource.data.userId == request.auth.uid || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['helpful']));
-      allow delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      allow write: if isAdmin();
     }
   }
 }
