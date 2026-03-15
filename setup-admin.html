@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>FoodSaver - Admin Setup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center font-sans">
+<div class="max-w-lg w-full bg-gray-800 rounded-2xl p-8 shadow-2xl">
+    <div class="text-center mb-8">
+        <span class="text-5xl">🔥</span>
+        <h1 class="text-2xl font-bold mt-3 text-green-400">FoodSaver Admin Setup</h1>
+        <p class="text-gray-400 text-sm mt-2">Trang này chỉ dùng 1 lần để cấp quyền Admin</p>
+    </div>
+
+    <div id="status-box" class="bg-gray-700 rounded-xl p-4 mb-6 text-sm text-gray-300 space-y-1">
+        <p>⏳ Đang chờ...</p>
+    </div>
+
+    <button id="btn-login" onclick="loginAndSetAdmin()"
+        class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl transition-all text-lg">
+        🔐 Đăng nhập bằng Google & Set Admin
+    </button>
+
+    <div id="result" class="mt-6 hidden">
+        <div class="bg-green-900/50 border border-green-500 rounded-xl p-4 text-center">
+            <p class="text-green-400 font-bold text-lg">✅ Đã set Admin thành công!</p>
+            <p id="uid-display" class="text-gray-400 text-xs mt-2 break-all"></p>
+            <p class="text-gray-400 text-sm mt-3">Bạn có thể xóa file <code class="bg-gray-800 px-2 py-0.5 rounded text-orange-300">setup-admin.html</code> sau khi hoàn tất.</p>
+        </div>
+    </div>
+
+    <div id="error-box" class="mt-6 hidden">
+        <div class="bg-red-900/50 border border-red-500 rounded-xl p-4">
+            <p class="text-red-400 font-bold">❌ Lỗi:</p>
+            <p id="error-msg" class="text-gray-400 text-sm mt-1 break-all"></p>
+        </div>
+    </div>
+
+    <div class="mt-6 bg-gray-700/50 rounded-xl p-4 text-xs text-gray-500">
+        <p class="font-semibold text-gray-400 mb-2">📋 Hướng dẫn thủ công (nếu cần):</p>
+        <ol class="list-decimal list-inside space-y-1">
+            <li>Vào <a href="https://console.firebase.google.com/project/foodsaver-de38b/authentication/users" target="_blank" class="text-blue-400 hover:underline">Firebase Console → Authentication</a></li>
+            <li>Tìm email <span class="text-orange-300">quantrifs@gmail.com</span> → Copy UID</li>
+            <li>Vào <a href="https://console.firebase.google.com/project/foodsaver-de38b/database" target="_blank" class="text-blue-400 hover:underline">Realtime Database</a></li>
+            <li>Thêm: <code class="bg-gray-800 px-1 rounded text-green-300">users/&lt;UID&gt;/isAdmin = true</code></li>
+            <li>Thêm: <code class="bg-gray-800 px-1 rounded text-green-300">users/&lt;UID&gt;/role = "admin"</code></li>
+        </ol>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+import { getDatabase, ref, set, update, get } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDAmkXauyjvhmFl3TCsVuj83M5vEeLiG94",
+    authDomain: "foodsaver-de38b.firebaseapp.com",
+    databaseURL: "https://foodsaver-de38b-default-rtdb.firebaseio.com",
+    projectId: "foodsaver-de38b",
+    storageBucket: "foodsaver-de38b.firebasestorage.app",
+    messagingSenderId: "367236262821",
+    appId: "1:367236262821:web:7fff2c67cfdd650f0e164c"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+const ADMIN_EMAIL = "quantrifs@gmail.com";
+
+function log(msg, color = 'text-gray-300') {
+    const box = document.getElementById('status-box');
+    box.innerHTML += `<p class="${color}">${msg}</p>`;
+}
+
+window.loginAndSetAdmin = async function() {
+    document.getElementById('status-box').innerHTML = '';
+    document.getElementById('result').classList.add('hidden');
+    document.getElementById('error-box').classList.add('hidden');
+    document.getElementById('btn-login').disabled = true;
+    document.getElementById('btn-login').textContent = '⏳ Đang xử lý...';
+
+    try {
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ login_hint: ADMIN_EMAIL });
+
+        log('🔐 Đang mở cửa sổ đăng nhập Google...');
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+
+        log(`✅ Đăng nhập thành công: <span class="text-green-400">${user.email}</span>`);
+
+        if (user.email !== ADMIN_EMAIL) {
+            throw new Error(`Email không đúng! Cần đăng nhập bằng: ${ADMIN_EMAIL}. Bạn đã dùng: ${user.email}`);
+        }
+
+        log(`👤 UID: <span class="text-yellow-300 text-xs">${user.uid}</span>`);
+        log('⚡ Đang cập nhật quyền Admin trong Database...');
+
+        // Get existing user data if any
+        const userRef = ref(db, `users/${user.uid}`);
+        const snapshot = await get(userRef);
+        const existingData = snapshot.exists() ? snapshot.val() : {};
+
+        // Merge with admin fields
+        await update(userRef, {
+            ...existingData,
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || 'Admin',
+            photoURL: user.photoURL || '',
+            isAdmin: true,
+            role: 'admin',
+            updatedAt: Date.now()
+        });
+
+        log('🎉 Admin đã được set thành công!', 'text-green-400 font-bold');
+
+        document.getElementById('result').classList.remove('hidden');
+        document.getElementById('uid-display').textContent = `UID: ${user.uid}`;
+
+    } catch (err) {
+        console.error(err);
+        document.getElementById('error-box').classList.remove('hidden');
+        document.getElementById('error-msg').textContent = err.message;
+        log('❌ Lỗi: ' + err.message, 'text-red-400');
+    } finally {
+        document.getElementById('btn-login').disabled = false;
+        document.getElementById('btn-login').textContent = '🔐 Đăng nhập bằng Google & Set Admin';
+    }
+};
+</script>
+</body>
+</html>

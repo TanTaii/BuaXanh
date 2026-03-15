@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>FoodSaver | Chi Tiết Sản Phẩm</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <script src="js/tailwind-config.js"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="js/common.js" defer></script>
+    <script type="module" src="js/product-detail.js"></script>
+    <script type="module" src="js/search.js"></script>
+</head>
+<body class="bg-[#f8f9fa] text-slate-900 font-display">
+    <!-- Top Navigation Bar (FoodSaver) -->
+    <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 px-6 md:px-20 py-4 bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+      <div class="flex items-center gap-2 text-primary">
+        <span class="material-symbols-outlined text-3xl font-bold">eco</span>
+        <h2 class="text-slate-900 text-xl font-extrabold leading-tight tracking-tight">FoodSaver</h2>
+      </div>
+      <div class="flex flex-1 justify-end gap-4 md:gap-10 items-center">
+        <nav class="hidden md:flex items-center gap-8">
+          <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="Product.html">Sản Phẩm</a>
+          <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="Contact-Us.html">Liên hệ</a>
+          <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="About-us.html">Giới thiệu</a>
+        </nav>
+        <!-- Search Button -->
+        <button id="search-btn" class="hover:text-primary transition-colors flex items-center justify-center text-slate-700">
+          <span class="material-symbols-outlined">search</span>
+        </button>
+        <!-- Auth buttons -->
+        <div class="flex gap-3" id="auth-buttons">
+          <a href="Account.html" class="hover:text-primary transition-colors flex items-center justify-center text-slate-700">
+            <span class="material-symbols-outlined">person</span>
+          </a>
+          <a href="Cart.html" class="hover:text-primary transition-colors relative flex items-center justify-center text-slate-700">
+            <span class="material-symbols-outlined">shopping_cart</span>
+            <span class="absolute -top-2 -right-2 bg-primary text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold text-white border border-white" id="cart-count">0</span>
+          </a>
+          <button id="auth-action-btn" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em]" onclick="window.location.href='Login.html'">
+            <span class="truncate">Đăng nhập</span>
+          </button>
+        </div>
+        <!-- Mobile menu button -->
+        <button id="mobile-menu-btn" class="md:hidden text-slate-700">
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+      </div>
+
+      <!-- Mobile Menu Overlay -->
+      <div id="mobile-menu" class="fixed inset-0 bg-white z-[60] hidden flex-col items-center justify-center text-slate-900 transition-opacity duration-300">
+          <button id="close-menu-btn" class="absolute top-6 right-6 text-slate-900 p-2">
+              <span class="material-symbols-outlined text-4xl">close</span>
+          </button>
+          <nav class="flex flex-col items-center gap-8 text-xl font-bold uppercase tracking-widest">
+              <a href="Product.html" class="hover:text-primary transition-colors">Sản Phẩm</a>
+              <a href="Contact-Us.html" class="hover:text-primary transition-colors">Liên hệ</a>
+              <a href="About-us.html" class="hover:text-primary transition-colors">Giới thiệu</a>
+          </nav>
+      </div>
+
+      <!-- Search Modal / Fullscreen Overlay (kept logic) -->
+      <div id="search-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[70] hidden opacity-0 transition-opacity duration-300">
+        <div class="relative w-full max-w-4xl mx-auto mt-20 p-6 flex flex-col h-[calc(100vh-100px)]">
+          <!-- Đóng tìm kiếm -->
+          <button id="close-search-btn" class="absolute -top-12 right-6 md:-right-12 text-white/50 hover:text-white transition-colors">
+            <span class="material-symbols-outlined text-4xl">close</span>
+          </button>
+          
+          <div class="bg-slate-900 rounded-3xl overflow-hidden shadow-2xl flex flex-col flex-1">
+            <!-- Ô nhập liệu -->
+            <div class="relative flex items-center p-4 border-b border-white/10 shrink-0">
+              <span class="material-symbols-outlined absolute left-8 text-white/50 text-2xl">search</span>
+              <input id="search-input" type="text" placeholder="Tìm cửa hàng, món ăn, thực phẩm..." 
+                class="w-full bg-transparent border-none text-white text-xl md:text-2xl placeholder:text-white/30 pl-14 pr-4 py-4 focus:ring-0 outline-none" autocomplete="off" />
+              <button id="clear-input-btn" class="hidden absolute right-6 text-white/50 hover:text-white transition-colors p-2">
+                <span class="material-symbols-outlined">cancel</span>
+              </button>
+            </div>
+            
+            <div class="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar">
+              <div id="search-results" class="hidden">
+                <div class="flex items-center justify-between mb-6">
+                  <h3 class="text-white text-sm font-bold uppercase tracking-widest" id="search-title">Kết quả tìm kiếm</h3>
+                  <a href="Product.html" class="text-primary text-sm font-bold hover:underline" id="view-all-results">Xem tất cả</a>
+                </div>
+                <div id="results-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- JS append results here -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-[1280px] mx-auto w-full px-6 py-8">
+        <!-- Breadcrumbs -->
+        <div id="breadcrumbs" class="flex flex-wrap gap-2 py-4 items-center text-sm mb-6">
+            <!-- Breadcrumbs will be loaded dynamically -->
+        </div>
+        <div class="flex flex-col lg:flex-row gap-12">
+            <!-- Left: Product Gallery -->
+            <div class="w-full lg:w-3/5 flex flex-col gap-4">
+                <div id="main-image-container" class="w-full bg-primary/5 rounded-xl overflow-hidden aspect-[4/5] md:aspect-square flex items-center justify-center">
+                    <!-- Main image will be loaded dynamically -->
+                </div>
+                <!-- Color Thumbnails - Hiển thị ảnh đại diện của từng màu -->
+                <div id="color-thumbnails-container" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                    <!-- Color thumbnails will be loaded dynamically -->
+                </div>
+            </div>
+            <!-- Right: Product Info -->
+            <div class="w-full lg:w-2/5 flex flex-col">
+                <div id="product-badges" class="mb-2 flex items-center gap-2">
+                    <!-- Badges and rating will be loaded dynamically -->
+                </div>
+                <h1 id="product-name" class="text-slate-900 text-3xl font-bold leading-tight mb-2">
+                    <!-- Product name will be loaded dynamically -->
+                </h1>
+                <p id="product-description" class="text-gray-500 text-base mb-6">
+                    <!-- Product description will be loaded dynamically -->
+                </p>
+                <div id="product-price" class="flex items-baseline gap-4 mb-6">
+                    <!-- Price will be loaded dynamically -->
+                </div>
+                <!-- Gender Info -->
+                <!-- Product Details List -->
+                <div id="product-details-list" class="space-y-4 rounded-xl bg-primary/5 p-6 mb-8 border border-primary/10">
+                    <!-- Dynamic details like weight/location will be injected here if applicable, or fallback to simple fields or we can keep it empty and adapt in JS -->
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button id="add-to-cart-btn" class="flex-1 bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined">shopping_cart</span>
+                        Thêm Vào Giỏ
+                    </button>
+                    <button id="add-to-wishlist-btn" class="sm:flex-none p-4 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold transition-all flex items-center justify-center">
+                        <span class="material-symbols-outlined">favorite</span>
+                    </button>
+                </div>
+                <!-- Delivery Info -->
+                <!-- Delivery Info / Values -->
+                <div class="mt-8 pt-6 border-t border-gray-200 flex flex-col gap-4">
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-outlined text-primary">eco</span>
+                        <div>
+                            <p class="text-sm font-bold text-slate-900">Bảo Quản Tươi Ngon</p>
+                            <p class="text-xs text-gray-500">Thực phẩm được đảm bảo quy trình bảo quản nghiêm ngặt cho đến khi giao.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-outlined text-primary">volunteer_activism</span>
+                        <div>
+                            <p class="text-sm font-bold text-slate-900">Tiết Kiệm & Chống Lãng Phí</p>
+                            <p class="text-xs text-gray-500">Góp phần bảo vệ môi trường bằng cách giải cứu thực phẩm chất lượng.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Product Reviews Section -->
+        <div class="mt-20 mb-12">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left: Rating Summary -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm sticky top-24">
+                        <h3 class="text-2xl font-bold text-slate-900 mb-6">Đánh Giá Sản Phẩm</h3>
+                        
+                        <!-- Overall Rating -->
+                        <div class="text-center mb-6 pb-6 border-b border-gray-100">
+                            <div id="average-rating" class="text-6xl font-black text-primary mb-2">0.0</div>
+                            <div class="flex justify-center items-center gap-1 mb-2" id="average-stars">
+                                <!-- Stars will be rendered dynamically -->
+                            </div>
+                            <p id="total-reviews" class="text-sm text-gray-500">0 đánh giá</p>
+                        </div>
+                        
+                        <!-- Rating Breakdown -->
+                        <div id="rating-breakdown" class="space-y-3">
+                            <!-- Rating bars will be rendered dynamically -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right: Reviews List & Form -->
+                <div class="lg:col-span-2">
+                    <!-- Sort & Filter -->
+                    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                        <h3 class="text-xl font-bold text-slate-900">Tất Cả Đánh Giá</h3>
+                        <select id="review-sort" class="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium bg-white focus:ring-primary focus:border-primary">
+                            <option value="recent">Mới nhất</option>
+                            <option value="helpful">Hữu ích nhất</option>
+                            <option value="rating-high">Đánh giá cao nhất</option>
+                            <option value="rating-low">Đánh giá thấp nhất</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Write Review Button -->
+                    <button id="write-review-btn" class="w-full mb-6 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors">
+                        <span class="material-symbols-outlined">edit</span>
+                        Viết Đánh Giá
+                    </button>
+                    
+                    <!-- Review Form (Hidden by default) -->
+                    <div id="review-form-container" class="hidden mb-8 bg-gray-50 rounded-xl p-6 border border-gray-100">
+                        <!-- Form will be rendered dynamically -->
+                    </div>
+                    
+                    <!-- Reviews List -->
+                    <div id="reviews-list" class="space-y-6">
+                        <!-- Reviews will be loaded dynamically -->
+                        <div class="text-center py-12 text-gray-400">
+                            <span class="material-symbols-outlined text-5xl mb-2">rate_review</span>
+                            <p>Đang tải đánh giá...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Related Products -->
+        <div class="mt-24 mb-12">
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Sản Phẩm Tương Tự</h2>
+                </div>
+                <div class="flex gap-2">
+                    <a class="text-primary font-semibold flex items-center gap-1 hover:underline" href="Product.html">
+                        Xem tất cả
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                    </a>
+                </div>
+            </div>
+            <div id="related-products-container" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Related products will be loaded dynamically from Firebase -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer (FoodSaver) -->
+    <footer class="bg-slate-900 text-slate-400 py-12 mt-20 border-t border-slate-800">
+      <div class="max-w-[1240px] mx-auto px-6 md:px-20 grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="col-span-1 md:col-span-1">
+          <div class="flex items-center gap-2 text-white mb-6">
+            <span class="material-symbols-outlined text-3xl font-bold text-primary">eco</span>
+            <h2 class="text-xl font-extrabold leading-tight tracking-tight">FoodSaver</h2>
+          </div>
+          <p class="text-sm leading-relaxed mb-6">
+            Cùng chung tay giảm thiểu rác thải thực phẩm. Giải cứu những phần ăn chất lượng với giá ưu đãi.
+          </p>
+          <div class="flex gap-4">
+            <a class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-primary transition-colors text-white" href="https://facebook.com" target="_blank">
+              <span class="material-symbols-outlined text-sm">public</span>
+            </a>
+            <a class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-primary transition-colors text-white" href="Contact-Us.html">
+              <span class="material-symbols-outlined text-sm">alternate_email</span>
+            </a>
+          </div>
+        </div>
+        <div>
+          <h4 class="text-white font-bold mb-6 uppercase text-xs tracking-widest">Khám phá</h4>
+          <ul class="flex flex-col gap-3 text-sm">
+            <li><a class="hover:text-primary transition-colors" href="Product.html">Tìm thực phẩm</a></li>
+            <li><a class="hover:text-primary transition-colors" href="Product.html">Cửa hàng quanh tôi</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#">Cách hoạt động</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white font-bold mb-6 uppercase text-xs tracking-widest">Dành cho đối tác</h4>
+          <ul class="flex flex-col gap-3 text-sm">
+            <li><a class="hover:text-primary transition-colors" href="#">Đăng ký cửa hàng</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#">Kênh đối tác</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#">Câu chuyện thành công</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white font-bold mb-6 uppercase text-xs tracking-widest">Đăng ký nhận tin</h4>
+          <p class="text-sm mb-4">Nhận thông báo về những deal thực phẩm hot nhất gần bạn.</p>
+          <div class="flex gap-2">
+            <input class="bg-slate-800 border-none rounded-lg text-sm w-full focus:ring-1 focus:ring-primary text-white placeholder-slate-500 px-4 py-2" placeholder="Email của bạn..." type="email"/>
+            <button class="bg-primary text-white px-4 rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center">
+              <span class="material-symbols-outlined text-xl">send</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="max-w-[1240px] border-t border-slate-800 mx-auto px-6 md:px-20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
+        <p>© 2024 FoodSaver. All rights reserved.</p>
+        <div class="flex gap-6">
+          <a class="hover:text-white transition-colors" href="#">Chính sách bảo mật</a>
+          <a class="hover:text-white transition-colors" href="#">Điều khoản sử dụng</a>
+        </div>
+      </div>
+    </footer>
+</body>
+</html>
+

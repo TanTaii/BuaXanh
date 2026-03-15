@@ -1,0 +1,146 @@
+{
+  "rules": {
+    "users": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+      "$uid": {
+        ".read": "auth != null && ($uid === auth.uid || root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && ($uid === auth.uid || root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        "role": {
+          ".write": "root.child('users').child(auth.uid).child('isAdmin').val() === true"
+        },
+        "isAdmin": {
+          ".write": "root.child('users').child(auth.uid).child('isAdmin').val() === true"
+        },
+        "deletionScheduled": {
+          ".write": "$uid === auth.uid"
+        },
+        "deletionRequestedAt": {
+          ".write": "$uid === auth.uid"
+        },
+        "accountStatus": {
+          ".write": "$uid === auth.uid || root.child('users').child(auth.uid).child('isAdmin').val() === true"
+        }
+      }
+    },
+    "products": {
+      ".read": true,
+      ".indexOn": ["category", "brand", "price", "createdAt", "isActive"],
+      "$productId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
+    },
+    "orders": {
+      ".indexOn": ["userId", "userEmail", "status", "createdAt", "orderId"],
+      ".read": "auth != null",
+      "$orderId": {
+        ".read": "auth != null",
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('isAdmin').val() === true || !data.exists() || data.child('userId').val() === auth.uid)",
+        "status": {
+          ".write": "auth != null && data.parent().child('userId').val() === auth.uid"
+        },
+        "cancelledAt": {
+          ".write": "auth != null && data.parent().child('userId').val() === auth.uid"
+        },
+        "cancelReason": {
+          ".write": "auth != null && data.parent().child('userId').val() === auth.uid"
+        },
+        "updatedAt": {
+          ".write": "auth != null && data.parent().child('userId').val() === auth.uid"
+        }
+      }
+    },
+    "cart": {
+      "$uid": {
+        ".read": "auth != null && $uid === auth.uid",
+        ".write": "auth != null && $uid === auth.uid"
+      }
+    },
+    "wishlist": {
+      "$uid": {
+        ".read": "auth != null && $uid === auth.uid",
+        ".write": "auth != null && $uid === auth.uid",
+        "$productId": {
+          ".validate": "newData.hasChildren(['id', 'name', 'price', 'image', 'addedAt'])"
+        }
+      }
+    },
+    "categories": {
+      ".read": true,
+      ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+    },
+    "brands": {
+      ".read": true,
+      ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+    },
+    "blogs": {
+      ".read": true,
+      ".indexOn": ["category", "createdAt", "isPublished"],
+      "$blogId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        "views": {
+          ".write": true
+        }
+      }
+    },
+    "blogComments": {
+      ".read": true,
+      "$blogId": {
+        ".indexOn": ["timestamp", "parentId"],
+        "$commentId": {
+          ".write": "auth != null && (!data.exists() || data.child('userId').val() === auth.uid)",
+          ".validate": "newData.hasChildren(['content', 'userId', 'userEmail', 'userName', 'timestamp'])"
+        }
+      }
+    },
+    "reviews": {
+      ".read": true,
+      "$productId": {
+        ".indexOn": ["userId", "createdAt", "rating"],
+        "$reviewId": {
+          ".write": "auth != null && (!data.exists() || data.child('userId').val() === auth.uid || root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+          ".validate": "newData.hasChildren(['productId', 'userId', 'rating', 'comment', 'createdAt'])"
+        }
+      }
+    },
+    "promotions": {
+      ".read": true,
+      ".indexOn": ["isActive", "startDate", "endDate"],
+      "$promoId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
+    },
+    "banners": {
+      ".read": true,
+      ".indexOn": ["isActive", "position"],
+      "$bannerId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
+    },
+    "settings": {
+      ".read": true,
+      "$settingKey": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
+    },
+    "contact-submissions": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+      ".indexOn": ["createdAt", "status"],
+      "$submissionId": {
+        ".write": "!data.exists()",
+        ".validate": "newData.hasChildren(['name', 'email', 'message', 'createdAt'])"
+      }
+    },
+    "newsletters": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+      ".indexOn": ["subscribedAt"],
+      "$subscriberId": {
+        ".write": "!data.exists()",
+        ".validate": "newData.hasChildren(['email', 'subscribedAt'])"
+      }
+    },
+    "analytics": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+      ".write": "auth != null && (root.child('users').child(auth.uid).child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+    }
+  }
+}

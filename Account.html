@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>FoodSaver | Tài Khoản Của Tôi</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <script src="js/tailwind-config.js"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="js/common.js" defer></script>
+    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
+    <script type="module" src="js/search.js"></script>
+    <script type="module" src="js/account.js"></script>
+  </head>
+<body class="bg-[#f6f8f6] text-slate-900 font-display min-h-screen flex flex-col">
+
+    <!-- Header (FoodSaver) -->
+    <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 px-6 md:px-20 py-4 bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+      <div class="flex items-center gap-2 text-primary">
+        <span class="material-symbols-outlined text-3xl font-bold">eco</span>
+        <h2 class="text-slate-900 text-xl font-extrabold leading-tight tracking-tight">FoodSaver</h2>
+      </div>
+      <div class="flex flex-1 justify-end gap-4 md:gap-10 items-center">
+        <nav class="hidden md:flex items-center gap-8">
+          <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="Product.html">Sản Phẩm</a>
+          <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="Contact-Us.html">Liên hệ</a>
+          <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="About-us.html">Giới thiệu</a>
+        </nav>
+        <!-- Search Button -->
+        <button id="search-btn" class="hover:text-primary transition-colors flex items-center justify-center text-slate-700">
+          <span class="material-symbols-outlined">search</span>
+        </button>
+        <!-- Auth buttons -->
+        <div class="flex gap-4 items-center" id="auth-buttons">
+          <a href="Account.html" class="hover:text-primary transition-colors flex items-center justify-center text-slate-700">
+            <span class="material-symbols-outlined text-xl">settings</span>
+          </a>
+          <a href="Cart.html" class="hover:text-primary transition-colors relative flex items-center justify-center text-slate-700">
+            <span class="material-symbols-outlined">shopping_cart</span>
+            <span class="absolute -top-2 -right-2 bg-primary text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold text-white border border-white" id="cart-count">0</span>
+          </a>
+        </div>
+        <!-- Mobile menu button -->
+        <button id="mobile-menu-btn" class="md:hidden text-slate-700">
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+      </div>
+
+      <!-- Mobile Menu Overlay -->
+      <div id="mobile-menu" class="fixed inset-0 bg-white z-[60] hidden flex-col items-center justify-center text-slate-900 transition-opacity duration-300">
+          <button id="close-menu-btn" class="absolute top-6 right-6 text-slate-900 p-2">
+              <span class="material-symbols-outlined text-4xl">close</span>
+          </button>
+          <nav class="flex flex-col items-center gap-8 text-xl font-bold uppercase tracking-widest">
+              <a href="Product.html" class="hover:text-primary transition-colors">Sản Phẩm</a>
+              <a href="Contact-Us.html" class="hover:text-primary transition-colors">Liên hệ</a>
+              <a href="About-us.html" class="hover:text-primary transition-colors">Giới thiệu</a>
+          </nav>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-[1240px] mx-auto px-6 lg:px-12 py-10 flex flex-col md:flex-row gap-8 w-full flex-1">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-64 flex-shrink-0">
+            <nav class="flex flex-col gap-2">
+                <button class="nav-tab active flex items-center gap-4 px-6 py-4 rounded-full bg-primary text-white font-bold transition-all text-left w-full shadow-md shadow-primary/20" data-tab="profile">
+                    <span class="material-symbols-outlined text-[20px]">person</span>
+                    <span class="text-[15px]">Hồ sơ cá nhân</span>
+                </button>
+                <button class="nav-tab flex items-center gap-4 px-6 py-4 rounded-full hover:bg-white text-slate-600 hover:text-slate-900 font-medium transition-all text-left w-full" data-tab="orders">
+                    <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                    <span class="text-[15px]">Lịch sử đặt hàng</span>
+                </button>
+                <button class="nav-tab flex items-center gap-4 px-6 py-4 rounded-full hover:bg-white text-slate-600 hover:text-slate-900 font-medium transition-all text-left w-full" data-tab="wishlist">
+                    <span class="material-symbols-outlined text-[20px]">favorite</span>
+                    <span class="text-[15px]">Cửa hàng yêu thích</span>
+                </button>
+                <!-- Notifications Tab (UI only for now) -->
+                <button class="flex items-center gap-4 px-6 py-4 rounded-full hover:bg-white text-slate-600 hover:text-slate-900 font-medium transition-all text-left w-full">
+                    <span class="material-symbols-outlined text-[20px]">notifications</span>
+                    <span class="text-[15px]">Thông báo</span>
+                </button>
+
+                <!-- Admin Link (Hidden by default) -->
+                <a id="admin-panel-btn" href="admin.html" class="hidden flex items-center gap-4 px-6 py-4 mt-2 rounded-full border border-purple-200 text-purple-600 font-bold hover:bg-purple-50 transition-all">
+                    <span class="material-symbols-outlined">admin_panel_settings</span>
+                    <span class="text-[15px]">Trang quản trị</span>
+                </a>
+
+                <div class="mt-4 pt-4 border-t border-slate-200">
+                    <a id="logout-link" class="flex items-center gap-4 px-6 py-4 rounded-full text-red-500 hover:bg-red-50 transition-all font-medium" href="#">
+                        <span class="material-symbols-outlined text-[20px]">logout</span>
+                        <span class="text-[15px]">Đăng xuất</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Dashboard Area -->
+        <section class="flex-1 w-full max-w-[800px] flex flex-col gap-10">
+            <!-- Profile Tab (Default) -->
+            <div id="tab-profile" class="tab-content block w-full space-y-10">
+                
+                <!-- User Profile Card -->
+                <div class="bg-white rounded-3xl p-8 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-8 border border-slate-100 relative">
+                    <!-- Avatar Area -->
+                    <div class="relative shrink-0 flex items-center justify-center">
+                        <div class="size-32 rounded-full border-[6px] border-green-50 overflow-hidden relative shadow-inner">
+                            <div id="user-avatar" class="w-full h-full bg-cover bg-center" style='background-image: url("image/default-avatar.jpg");'></div>
+                        </div>
+                        <button id="upload-avatar-btn-quick" class="absolute bottom-1 right-1 size-8 bg-primary rounded-full text-white flex items-center justify-center border-2 border-white shadow-sm hover:scale-105 transition-transform" onclick="document.getElementById('edit-profile-btn').click();">
+                            <span class="material-symbols-outlined text-[16px]">photo_camera</span>
+                        </button>
+                    </div>
+
+                    <!-- User Details -->
+                    <div class="flex-1 text-center md:text-left pt-2">
+                        <h1 id="user-name" class="text-2xl font-black text-slate-900 leading-tight">...</h1>
+                        
+                        <div class="flex items-center justify-center md:justify-start gap-1.5 mt-1.5 mb-4 text-slate-500">
+                            <span class="material-symbols-outlined text-[16px] text-primary">verified</span>
+                            <span class="text-sm">Thành viên từ tháng 6, 2023</span>
+                        </div>
+
+                        <!-- Badges -->
+                        <div class="flex items-center justify-center md:justify-start gap-3 mb-6">
+                            <span id="user-tier" class="px-3 py-1 bg-green-50 text-primary text-xs font-bold uppercase tracking-wider rounded-md border border-green-100">...</span>
+                            <span class="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wider rounded-md">250 ĐIỂM TÍCH LŨY</span>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-center justify-center md:justify-start gap-3">
+                            <button id="edit-profile-btn" class="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-colors shadow-sm text-sm">
+                                Chỉnh sửa hồ sơ
+                            </button>
+                            <button class="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors text-sm">
+                                Chia sẻ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden inputs for fallback compatibility if they exist in standard code -->
+                <div class="hidden">
+                    <p id="info-displayname"></p>
+                    <p id="total-orders"></p>
+                    <p id="wishlist-count"></p>
+                </div>
+
+
+
+                <!-- Bottom Two Columns (Notifications & User Info details) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    
+                    <!-- Notifications Box -->
+                    <div class="space-y-4">
+                        <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+                            <span class="material-symbols-outlined text-primary">notifications_active</span> Thông báo
+                        </h3>
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 divide-y divide-slate-100">
+                            
+                            <!-- Setting 1 -->
+                            <div class="flex items-center justify-between p-5">
+                                <div>
+                                    <p class="font-bold text-slate-900 text-sm mb-0.5">Flash deals</p>
+                                    <p class="text-xs text-slate-400">Giảm giá chớp nhoáng gần bạn</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                  <input type="checkbox" value="" class="sr-only peer" checked>
+                                  <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            
+                            <!-- Setting 2 -->
+                            <div class="flex items-center justify-between p-5">
+                                <div>
+                                    <p class="font-bold text-slate-900 text-sm mb-0.5">Tin nhắn từ cửa hàng</p>
+                                    <p class="text-xs text-slate-400">Cập nhật về đơn hàng của bạn</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                  <input type="checkbox" value="" class="sr-only peer" checked>
+                                  <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            
+                            <!-- Setting 3 -->
+                            <div class="flex items-center justify-between p-5">
+                                <div>
+                                    <p class="font-bold text-slate-900 text-sm mb-0.5">Nhắc nhở hàng ngày</p>
+                                    <p class="text-xs text-slate-400">Đừng quên giải cứu thực phẩm</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                  <input type="checkbox" value="" class="sr-only peer">
+                                  <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Personal Info Box -->
+                    <div class="space-y-4">
+                        <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+                            <span class="material-symbols-outlined text-primary">info</span> Thông tin cá nhân
+                        </h3>
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-5">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Email</p>
+                                <p id="info-email" class="font-medium text-slate-900 text-sm">--</p>
+                            </div>
+                            <div class="w-full h-px bg-slate-100"></div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Số điện thoại</p>
+                                <p id="info-phone" class="font-medium text-slate-900 text-sm">--</p>
+                            </div>
+                            <div class="w-full h-px bg-slate-100"></div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Địa chỉ mặc định</p>
+                                <p id="info-address" class="font-medium text-slate-900 text-sm leading-relaxed">--</p>
+                                <p id="info-gender" class="hidden">--</p> <!-- Hidden gender to satisfy JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger Zone Delete Account -->
+                <div class="pt-8 flex justify-end">
+                    <button id="btn-request-delete" class="text-sm font-medium text-red-500 hover:text-red-700 hover:underline transition-all">
+                        Yêu cầu xóa tài khoản
+                    </button>
+                </div>
+            </div> <!-- End tab-profile -->
+
+            <!-- Orders Tab -->
+            <div id="tab-orders" class="tab-content hidden space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <h2 class="text-2xl font-bold">Lịch Sử Đơn Hàng</h2>
+                    
+                    <!-- Filter Buttons for Orders Tab -->
+                    <div class="flex items-center gap-2 p-1.5 bg-white rounded-xl shadow-sm border border-slate-100 overflow-x-auto">
+                        <button id="order-filter-all-tab" onclick="window.filterOrders('all')" class="px-4 py-2 bg-slate-100 text-slate-900 text-xs font-bold rounded-lg transition-all whitespace-nowrap">
+                            Tất cả
+                        </button>
+                        <button id="order-filter-pending-tab" onclick="window.filterOrders('pending')" class="px-4 py-2 text-slate-600 hover:text-slate-900 text-xs font-medium rounded-lg transition-all whitespace-nowrap">
+                            Chờ xử lý
+                        </button>
+                        <button id="order-filter-shipped-tab" onclick="window.filterOrders('shipped')" class="px-4 py-2 text-slate-600 hover:text-slate-900 text-xs font-medium rounded-lg transition-all whitespace-nowrap">
+                            Đang giao
+                        </button>
+                        <button id="order-filter-delivered-tab" onclick="window.filterOrders('delivered')" class="px-4 py-2 text-slate-600 hover:text-slate-900 text-xs font-medium rounded-lg transition-all whitespace-nowrap">
+                            Đã giao
+                        </button>
+                        <button id="order-filter-cancelled-tab" onclick="window.filterOrders('cancelled')" class="px-4 py-2 text-slate-600 hover:text-slate-900 text-xs font-medium rounded-lg transition-all whitespace-nowrap">
+                            Đã hủy
+                        </button>
+                    </div>
+                    <!-- Hidden Duplicate Order Filter for compatibility if code looks for it -->
+                    <div class="hidden">
+                        <button id="order-filter-all"></button>
+                        <button id="order-filter-pending"></button>
+                        <button id="order-filter-shipped"></button>
+                        <button id="order-filter-delivered"></button>
+                        <button id="order-filter-cancelled"></button>
+                        <tbody id="orders-table-body"></tbody>
+                    </div>
+                </div>
+                
+                <div class="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="bg-slate-50 text-[10px] uppercase tracking-widest text-slate-400 font-bold border-b border-slate-100">
+                                    <th class="px-6 py-4">Mã Đơn</th>
+                                    <th class="px-6 py-4">Ngày</th>
+                                    <th class="px-6 py-4">Sản Phẩm</th>
+                                    <th class="px-6 py-4">Trạng Thái</th>
+                                    <th class="px-6 py-4">Tổng Tiền</th>
+                                    <th class="px-6 py-4 text-right">Hành Động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="full-orders-table-body" class="divide-y divide-slate-100">
+                                <!-- Dynamic orders content will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wishlist Tab -->
+            <div id="tab-wishlist" class="tab-content hidden space-y-6">
+                <h2 class="text-2xl font-bold">Cửa Hàng Yêu Thích</h2>
+                <div id="wishlist-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Wishlist items will be loaded here -->
+                    <div class="col-span-full text-center py-12">
+                        <span class="material-symbols-outlined animate-spin text-4xl text-slate-300">progress_activity</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer (FoodSaver) -->
+    <footer class="bg-slate-900 text-slate-400 py-12 mt-20 border-t border-slate-800">
+      <div class="max-w-[1240px] mx-auto px-6 md:px-20 grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="col-span-1 md:col-span-1">
+          <div class="flex items-center gap-2 text-white mb-6">
+            <span class="material-symbols-outlined text-3xl font-bold text-primary">eco</span>
+            <h2 class="text-xl font-extrabold leading-tight tracking-tight">FoodSaver</h2>
+          </div>
+          <p class="text-sm leading-relaxed mb-6">
+            Cùng chung tay giảm thiểu rác thải thực phẩm. Giải cứu những phần ăn chất lượng với giá ưu đãi.
+          </p>
+          <div class="flex gap-4">
+            <a class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-primary transition-colors text-white" href="https://facebook.com" target="_blank">
+              <span class="material-symbols-outlined text-sm">public</span>
+            </a>
+            <a class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-primary transition-colors text-white" href="Contact-Us.html">
+              <span class="material-symbols-outlined text-sm">alternate_email</span>
+            </a>
+          </div>
+        </div>
+        <div>
+          <h4 class="text-white font-bold mb-6 uppercase text-xs tracking-widest">Khám phá</h4>
+          <ul class="flex flex-col gap-3 text-sm">
+            <li><a class="hover:text-primary transition-colors" href="Product.html">Tìm thực phẩm</a></li>
+            <li><a class="hover:text-primary transition-colors" href="Product.html">Cửa hàng quanh tôi</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#">Cách hoạt động</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white font-bold mb-6 uppercase text-xs tracking-widest">Dành cho đối tác</h4>
+          <ul class="flex flex-col gap-3 text-sm">
+            <li><a class="hover:text-primary transition-colors" href="#">Đăng ký cửa hàng</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#">Kênh đối tác</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#">Câu chuyện thành công</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white font-bold mb-6 uppercase text-xs tracking-widest">Đăng ký nhận tin</h4>
+          <p class="text-sm mb-4">Nhận thông báo về những deal thực phẩm hot nhất gần bạn.</p>
+          <div class="flex gap-2">
+            <input class="bg-slate-800 border-none rounded-lg text-sm w-full focus:ring-1 focus:ring-primary text-white placeholder-slate-500 px-4 py-2" placeholder="Email của bạn..." type="email"/>
+            <button class="bg-primary text-white px-4 rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center">
+              <span class="material-symbols-outlined text-xl">send</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="max-w-[1240px] border-t border-slate-800 mx-auto px-6 md:px-20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
+        <p>© 2024 FoodSaver. All rights reserved.</p>
+        <div class="flex gap-6">
+          <a class="hover:text-white transition-colors" href="#">Chính sách bảo mật</a>
+          <a class="hover:text-white transition-colors" href="#">Điều khoản sử dụng</a>
+        </div>
+      </div>
+    </footer>
+
+
+    <!-- MODALS (Restyled and preserving JS functionality bindings) -->
+    
+    <!-- Edit Profile Modal -->
+    <div id="edit-profile-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <!-- Modal Header -->
+            <div class="sticky top-0 bg-white border-b border-slate-100 p-6 flex items-center justify-between z-10 rounded-t-3xl">
+                <h2 class="text-2xl font-bold text-slate-900">Chỉnh Sửa Thông Tin</h2>
+                <button id="close-modal-btn" class="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full p-2 transition-colors">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <form id="edit-profile-form" class="p-8 space-y-6">
+                <!-- Avatar Upload -->
+                <div class="flex flex-col items-center gap-4">
+                    <div id="preview-avatar" class="size-24 rounded-full bg-cover bg-center shadow-inner" style="background-image: url('image/default-avatar.jpg');"></div>
+                    <button type="button" id="upload-avatar-btn" class="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 text-sm font-bold rounded-lg hover:bg-slate-200 transition-colors">
+                        <span class="material-symbols-outlined text-lg">cloud_upload</span>
+                        Thay Đổi Avatar
+                    </button>
+                    <input type="hidden" id="avatar-url" name="photoURL">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Full Name -->
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Họ và Tên</label>
+                        <input type="text" id="edit-displayName" name="displayName" class="w-full rounded-xl border-slate-200 bg-white p-3.5 font-semibold focus:ring-primary focus:border-primary transition-colors shadow-sm" required>
+                    </div>
+
+                    <!-- Email (Read-only) -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Email</label>
+                        <input type="email" id="edit-email" name="email" class="w-full rounded-xl border-transparent bg-slate-50 p-3.5 text-slate-500 cursor-not-allowed font-medium" readonly>
+                    </div>
+
+                    <!-- Phone -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Số Điện Thoại</label>
+                        <input type="tel" id="edit-phone" name="phone" pattern="[0-9]{10}" class="w-full rounded-xl border-slate-200 bg-white p-3.5 font-semibold focus:ring-primary focus:border-primary transition-colors shadow-sm" placeholder="09xxxxxxxx">
+                    </div>
+
+                    <!-- Gender -->
+                    <div class="hidden">
+                        <select id="edit-gender" name="gender">
+                            <option value="">Chọn giới tính</option>
+                            <option value="male">Nam</option>
+                            <option value="female">Nữ</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="w-full h-px bg-slate-100"></div>
+
+                <!-- Address Section -->
+                <div>
+                    <h3 class="font-bold text-lg mb-4 text-slate-900">Địa Chỉ Mặc Định</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Địa chỉ cụ thể</label>
+                            <input type="text" id="edit-street" name="address.street" class="w-full rounded-xl border-slate-200 bg-white p-3.5 font-semibold focus:ring-primary focus:border-primary shadow-sm" placeholder="Số nhà, tên đường">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Phường/Xã</label>
+                            <input type="text" id="edit-ward" name="address.ward" class="w-full rounded-xl border-slate-200 bg-white p-3.5 font-semibold focus:ring-primary focus:border-primary shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Quận/Huyện</label>
+                            <input type="text" id="edit-district" name="address.district" class="w-full rounded-xl border-slate-200 bg-white p-3.5 font-semibold focus:ring-primary focus:border-primary shadow-sm">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Tỉnh/Thành Phố</label>
+                            <input type="text" id="edit-city" name="address.city" class="w-full rounded-xl border-slate-200 bg-white p-3.5 font-semibold focus:ring-primary focus:border-primary shadow-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-4 pt-4 border-t border-slate-100 mt-4">
+                    <button type="button" id="cancel-edit-btn" class="flex-1 px-6 py-3 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors">
+                        Hủy Bỏ
+                    </button>
+                    <button type="submit" class="flex-1 px-6 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/30">
+                        Lưu Thay Đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logout-modal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl transform scale-95 transition-transform duration-300">
+            <div class="text-center">
+                <div class="size-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
+                    <span class="material-symbols-outlined text-3xl">logout</span>
+                </div>
+                <h3 class="text-xl font-bold mb-2 text-slate-900">Đăng Xuất?</h3>
+                <p class="text-slate-500 mb-8 text-sm">Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?</p>
+                <div class="flex gap-3">
+                    <button id="btn-cancel-logout" class="flex-1 px-4 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors">
+                        Hủy
+                    </button>
+                    <button id="btn-confirm-logout" class="flex-1 px-4 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors">
+                        Đăng Xuất
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Account Confirmation Modal -->
+    <div id="delete-account-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl transform scale-95 transition-transform duration-300">
+            <div class="text-center">
+                <div class="size-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
+                    <span class="material-symbols-outlined text-3xl">warning</span>
+                </div>
+                <h3 class="text-xl font-bold mb-2 text-slate-900">Xác Nhận Xóa Tài Khoản</h3>
+                <p class="text-slate-500 mb-6 text-sm">
+                    Tài khoản của bạn sẽ bị vô hiệu hóa trong 7 ngày, sau đó dữ liệu sẽ bị xóa hoàn toàn.
+                </p>
+                <div class="flex flex-col gap-3">
+                    <button id="btn-confirm-delete" class="w-full px-4 py-3 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-colors">
+                        Tôi Chắc Chắn Xóa
+                    </button>
+                    <button id="btn-cancel-delete" class="w-full px-4 py-3 bg-primary text-white font-bold rounded-xl shadow-lg transition-colors">
+                        Giữ Lại Tài Khoản
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Deletion Notification Modal -->
+    <div id="pending-deletion-modal" class="fixed inset-0 z-[80] hidden flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl transform scale-95 transition-transform duration-300 border border-slate-200 relative">
+            <button id="close-pending-deletion-btn" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors rounded-full p-2 bg-slate-100 hover:bg-slate-200">
+                <span class="material-symbols-outlined text-xl">close</span>
+            </button>
+            <div class="text-center mt-2">
+                <div class="size-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-6 text-orange-500 animate-pulse">
+                    <span class="material-symbols-outlined text-4xl">schedule_send</span>
+                </div>
+                <h3 class="text-2xl font-bold mb-3 text-red-600">Tài Khoản Đang Chờ Xóa</h3>
+                <div class="bg-red-50 rounded-xl p-4 mb-6">
+                    <p class="text-slate-700 text-sm leading-relaxed mb-2">
+                        Bạn đã yêu cầu xóa tài khoản vào ngày <strong id="deletion-request-date"></strong>.
+                    </p>
+                    <p class="text-slate-700 text-sm leading-relaxed">
+                        Tài khoản sẽ bị xóa vĩnh viễn sau <strong class="text-red-600 text-lg" id="days-remaining"></strong> ngày nữa.
+                    </p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button id="btn-cancel-pending-deletion" class="flex-1 px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all shadow-lg text-sm">
+                        Hủy Yêu Cầu Xóa
+                    </button>
+                    <button id="btn-proceed-deletion" class="flex-1 px-6 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-all text-sm">
+                        Để Sau
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Received Modal -->
+    <div id="confirm-received-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl transform scale-95 transition-transform duration-300">
+            <div class="text-center">
+                <div class="size-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600">
+                    <span class="material-symbols-outlined text-3xl">task_alt</span>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Xác Nhận Đã Nhận Hàng</h3>
+                <p class="text-slate-500 text-sm mb-6">
+                    Bạn đã nhận được hàng và xác nhận đơn hàng hoàn thành?
+                </p>
+                <div class="flex gap-3">
+                    <button id="btn-confirm-received-close" class="flex-1 px-4 py-3 bg-slate-100 font-bold rounded-xl hover:bg-slate-200 transition-colors">
+                        Hủy
+                    </button>
+                    <button id="btn-confirm-received-submit" class="flex-1 px-4 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+                        Xác Nhận
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Order Reason Modal -->
+    <div id="cancel-reason-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl transform scale-95 transition-transform duration-300">
+            <div class="text-center mb-6">
+                <div class="size-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-600">
+                    <span class="material-symbols-outlined text-3xl">report</span>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Hủy Đơn Hàng</h3>
+                <p class="text-slate-500 text-sm">Vui lòng cho biết lý do hủy đơn hàng của bạn</p>
+            </div>
+            
+            <textarea id="cancel-reason-input" class="w-full rounded-xl border border-slate-200 bg-white p-3 font-medium focus:ring-primary focus:border-primary min-h-[120px] resize-none outline-none shadow-sm" placeholder="Nhập lý do hủy đơn..."></textarea>
+            
+            <div class="flex gap-3 mt-6">
+                <button id="btn-cancel-reason-close" class="flex-1 px-4 py-3 bg-slate-100 font-bold rounded-xl hover:bg-slate-200 transition-colors">
+                    Đóng
+                </button>
+                <button id="btn-cancel-reason-submit" class="flex-1 px-4 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors">
+                    Xác Nhận Hủy
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="order-details-modal" class="fixed inset-0 z-[90] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+        <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl transform scale-95 transition-all duration-300 max-h-[90vh] overflow-y-auto">
+            <!-- Modal Header -->
+            <div class="sticky top-0 bg-primary text-white p-6 rounded-t-3xl flex items-center justify-between z-10 shadow-sm">
+                <div>
+                    <h3 class="text-2xl font-bold" id="modal-order-id">Chi Tiết Đơn Hàng</h3>
+                    <p class="text-sm opacity-90 mt-1" id="modal-order-date">Ngày đặt: --</p>
+                </div>
+                <button id="close-order-modal" class="hover:bg-white/20 p-2 text-white rounded-full transition-colors flex items-center justify-center">
+                    <span class="material-symbols-outlined text-3xl">close</span>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-6">
+                <!-- Status Badge -->
+                <div class="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <span class="text-sm font-semibold text-slate-600">Trạng thái đơn hàng:</span>
+                    <span id="modal-order-status" class="font-bold uppercase tracking-wider"></span>
+                </div>
+
+                <!-- Customer Info -->
+                <div class="bg-white border border-slate-100 rounded-xl p-5 space-y-3 shadow-sm">
+                    <h4 class="font-bold text-lg mb-3 flex items-center gap-2 text-slate-900">
+                        <span class="material-symbols-outlined text-primary text-[20px]">person</span>
+                        Thông Tin Người Nhận
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mt-4">
+                        <div>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Họ tên:</p>
+                            <p class="font-semibold text-slate-900 text-[15px]" id="modal-customer-name">--</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Số điện thoại:</p>
+                            <p class="font-semibold text-slate-900 text-[15px]" id="modal-customer-phone">--</p>
+                        </div>
+                        <div class="md:col-span-2 w-full h-px bg-slate-100 my-1"></div>
+                        <div class="md:col-span-2">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Email:</p>
+                            <p class="font-semibold text-slate-900 text-[15px]" id="modal-customer-email">--</p>
+                        </div>
+                        <div class="md:col-span-2 w-full h-px bg-slate-100 my-1"></div>
+                        <div class="md:col-span-2">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Địa chỉ giao hàng:</p>
+                            <p class="font-semibold text-slate-900 text-[15px]" id="modal-customer-address">--</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <div>
+                    <h4 class="font-bold text-lg mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-[20px]">shopping_bag</span>
+                        Sản Phẩm Đã Đặt
+                    </h4>
+                    <div class="space-y-3" id="modal-order-items">
+                        <!-- Items will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Order Summary -->
+                <div class="border-t border-slate-100 pt-6">
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between items-center text-slate-600">
+                            <span>Tạm tính:</span>
+                            <span class="font-semibold text-slate-900" id="modal-subtotal">--</span>
+                        </div>
+                        <div class="flex justify-between items-center text-slate-600">
+                            <span>Thuế (8%):</span>
+                            <span class="font-semibold text-slate-900" id="modal-tax">--</span>
+                        </div>
+                        <div class="flex justify-between items-center text-slate-600">
+                            <span>Phí vận chuyển:</span>
+                            <span class="font-bold text-primary">Miễn phí</span>
+                        </div>
+                        <div class="flex justify-between items-center text-slate-600">
+                            <span>Phương thức thanh toán:</span>
+                            <span class="font-semibold text-slate-900" id="modal-payment-method">--</span>
+                        </div>
+                        <div class="flex justify-between items-center text-lg font-bold border-t border-slate-100 pt-4 mt-2">
+                            <span class="text-slate-900">Tổng cộng:</span>
+                            <span class="text-primary text-xl" id="modal-total">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-4 pt-4 border-t border-slate-100 mt-4">
+                    <button id="btn-confirm-received" class="flex-1 px-6 py-3.5 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-colors font-bold flex items-center justify-center gap-2 shadow-sm">
+                        <span class="material-symbols-outlined text-[20px]">task_alt</span>
+                        <span>Đã Nhận Hàng</span>
+                    </button>
+                    
+                    <button id="btn-cancel-order" class="flex-1 px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors font-bold flex items-center justify-center gap-2 shadow-sm">
+                        <span class="material-symbols-outlined text-[20px]">cancel</span>
+                        <span>Hủy Đơn Hàng</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

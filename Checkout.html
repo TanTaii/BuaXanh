@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html class="light" lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>X-Sneaker | Thanh Toán</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <script src="js/tailwind-config.js"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="js/common.js" defer></script>
+
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/checkout.js"></script>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-[#1b0e0f] dark:text-white transition-colors duration-300">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-[#000000] border-b border-white/10">
+        <div class="max-w-[1440px] mx-auto px-4 md:px-10 lg:px-20 py-4 flex items-center justify-between">
+            <a class="flex items-center gap-2 text-white shrink-0" href="index.html">
+                    <img src="image/Logo_X_Sneaker.png" alt="X-Sneaker Logo" class="h-12">
+                <h2 class="text-xl font-extrabold tracking-tighter uppercase italic">X-Sneaker</h2>
+            </a>
+            <nav class="hidden lg:flex items-center gap-10 text-white ml-10">
+                <div class="shop-nav-item relative py-2">
+                    <a class="text-sm font-semibold hover:text-primary transition-colors flex items-center gap-1" href="Product.html">
+                        Cửa hàng <span class="material-symbols-outlined text-[16px]">expand_more</span>
+                    </a>
+                    <div class="mega-menu absolute top-full left-1/2 -translate-x-1/2 pt-4 w-[600px]">
+                        <div class="bg-white text-black shadow-2xl rounded-xl p-8 grid grid-cols-3 gap-8 border border-gray-100">
+                            <div>
+                                <h4 class="font-black text-xs uppercase tracking-widest text-primary mb-4">Nam</h4>
+                                <ul class="space-y-3 text-sm font-medium">
+                                    <li><a class="hover:text-primary transition-colors" href="Product.html">Thời trang</a></li>
+                                    <li><a class="hover:text-primary transition-colors" href="Product.html">Chạy bộ</a></li>
+                                    <li><a class="hover:text-primary transition-colors" href="Product.html">Bóng rổ</a></li>
+                                    <li><a class="hover:text-primary transition-colors" href="Product.html">Tập luyện</a></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-black text-xs uppercase tracking-widest text-primary mb-4">Nữ</h4>
+                                <ul class="space-y-3 text-sm font-medium">
+                                    <li><a class="hover:text-primary transition-colors" href="Product.html">Thời trang</a></li>
+                                    <li><a class="hover:text-primary transition-colors" href="Product.html">Chạy bộ</a></li>
+                                    <li><a class="hover:text-primary transition-colors" href="Product.html">Gym &amp; Training</a></li>
+                                    <li><a class="hover:text-primary transition-colors" href="Product.html">Yoga</a></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-black text-xs uppercase tracking-widest text-primary mb-4">Phụ kiện</h4>
+                                <ul class="space-y-3 text-sm font-medium">
+                                    <li><a class="hover:text-primary transition-colors" href="Product.html">Tất / Vớ</a></li>
+                                    <li><a class="hover:text-primary transition-colors" href="Product.html">Chăm sóc giày</a></li>
+                                    <li><a class="hover:text-primary transition-colors" href="Product.html">Túi &amp; Balo</a></li>
+                                    <li><a class="hover:text-primary transition-colors" href="Product.html">Dây giày</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <a class="text-sm font-semibold hover:text-primary transition-colors" href="Contact-Us.html">Liên hệ</a>
+                <a class="text-sm font-semibold hover:text-primary transition-colors" href="About-us.html">Giới thiệu</a>
+            </nav>
+            <div class="flex items-center gap-6 text-white">
+                <button class="hover:text-primary transition-colors flex items-center justify-center">
+                    <span class="material-symbols-outlined">search</span>
+                </button>
+                <a href="Account.html" class="hover:text-primary transition-colors flex items-center justify-center">
+                    <span class="material-symbols-outlined">person</span>
+                </a>
+                <a href="Account.html?tab=wishlist" class="hover:text-primary transition-colors flex items-center justify-center">
+                    <span class="material-symbols-outlined">favorite</span>
+                </a>
+                <a href="Cart.html" class="hover:text-primary transition-colors relative flex items-center justify-center">
+                    <span class="material-symbols-outlined">shopping_cart</span>
+                    <span class="absolute -top-2 -right-2 bg-primary text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold text-white border border-black hidden shopping_cart_badge">0</span>
+                </a>
+                <button id="mobile-menu-btn" class="lg:hidden text-white"><span class="material-symbols-outlined">menu</span></button>
+            </div>
+        </div>
+        <!-- Mobile Menu Overlay -->
+        <div id="mobile-menu" class="fixed inset-0 bg-black/95 z-[60] hidden flex-col items-center justify-center text-white transition-opacity duration-300">
+            <button id="close-menu-btn" class="absolute top-6 right-6 text-white p-2">
+                <span class="material-symbols-outlined text-4xl">close</span>
+            </button>
+            <nav class="flex flex-col items-center gap-8 text-xl font-bold uppercase tracking-widest">
+                <a href="Product.html" class="hover:text-primary transition-colors">Cửa hàng</a>
+                <a href="Contact-Us.html" class="hover:text-primary transition-colors">Liên hệ</a>
+                <a href="About-us.html" class="hover:text-primary transition-colors">Giới thiệu</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-[1200px] mx-auto w-full px-4 md:px-10 py-8">
+        <!-- Breadcrumbs -->
+        <div class="flex flex-wrap gap-2 pb-6">
+            <a class="text-[#974e52] dark:text-[#c48e91] text-sm font-medium leading-normal hover:text-primary transition-colors" href="Cart.html">Giỏ hàng</a>
+            <span class="text-[#974e52] dark:text-[#c48e91] text-sm font-medium leading-normal">/</span>
+            <span class="text-[#1b0e0f] dark:text-white text-sm font-bold leading-normal">Thanh toán</span>
+        </div>
+        
+        <form id="checkout-form" class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <!-- Left Column: Shipping Form -->
+            <div class="lg:col-span-2 space-y-8">
+                <div>
+                    <h1 class="text-[#1b0e0f] dark:text-white tracking-tight text-3xl font-extrabold pb-6">Thanh Toán</h1>
+                    
+                    <!-- Shipping Info -->
+                    <div class="bg-white dark:bg-[#2d1a1b] p-8 rounded-xl border border-[#f3e7e8] dark:border-[#3a2526]">
+                        <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">local_shipping</span>
+                            Thông Tin Vận Chuyển
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex flex-col gap-1 md:col-span-2">
+                                <label class="text-xs font-bold uppercase tracking-wider text-[#974e52]">Họ Tên <span class="text-red-500">*</span></label>
+                                <input id="fullname" required class="form-input rounded-lg border-[#f3e7e8] dark:border-[#3a2526] bg-background-light dark:bg-background-dark focus:ring-primary focus:border-primary w-full" placeholder="Nguyễn Văn A" type="text"/>
+                            </div>
+                            <div class="flex flex-col gap-1 md:col-span-1">
+                                <label class="text-xs font-bold uppercase tracking-wider text-[#974e52]">Email <span class="text-red-500">*</span></label>
+                                <input id="email" required class="form-input rounded-lg border-[#f3e7e8] dark:border-[#3a2526] bg-background-light dark:bg-background-dark focus:ring-primary focus:border-primary w-full" placeholder="email@example.com" type="email"/>
+                            </div>
+                            <div class="flex flex-col gap-1 md:col-span-1">
+                                <label class="text-xs font-bold uppercase tracking-wider text-[#974e52]">Số Điện Thoại <span class="text-red-500">*</span></label>
+                                <input id="phone" required class="form-input rounded-lg border-[#f3e7e8] dark:border-[#3a2526] bg-background-light dark:bg-background-dark focus:ring-primary focus:border-primary w-full" placeholder="0901234567" type="tel"/>
+                            </div>
+                            <div class="flex flex-col gap-1 md:col-span-2">
+                                <label class="text-xs font-bold uppercase tracking-wider text-[#974e52]">Địa Chỉ <span class="text-red-500">*</span></label>
+                                <input id="address" required class="form-input rounded-lg border-[#f3e7e8] dark:border-[#3a2526] bg-background-light dark:bg-background-dark focus:ring-primary focus:border-primary w-full" placeholder="123 Đường Hype, Phường X, Quận Y" type="text"/>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-xs font-bold uppercase tracking-wider text-[#974e52]">Thành Phố <span class="text-red-500">*</span></label>
+                                <input id="city" required class="form-input rounded-lg border-[#f3e7e8] dark:border-[#3a2526] bg-background-light dark:bg-background-dark focus:ring-primary focus:border-primary w-full" placeholder="TP.HCM" type="text"/>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-xs font-bold uppercase tracking-wider text-[#974e52]">Ghi chú</label>
+                                <input id="note" class="form-input rounded-lg border-[#f3e7e8] dark:border-[#3a2526] bg-background-light dark:bg-background-dark focus:ring-primary focus:border-primary w-full" placeholder="Ghi chú thêm về đơn hàng" type="text"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="bg-white dark:bg-[#2d1a1b] p-8 rounded-xl border border-[#f3e7e8] dark:border-[#3a2526] mt-8">
+                        <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">payments</span>
+                            Phương Thức Thanh Toán
+                        </h3>
+                        <div class="space-y-4">
+                            <label class="flex items-center gap-4 p-4 border border-[#f3e7e8] dark:border-[#3a2526] rounded-xl cursor-pointer hover:border-primary transition-colors">
+                                <input type="radio" name="payment-method" value="cod" class="text-primary focus:ring-primary w-5 h-5" checked>
+                                <div class="flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-3xl text-gray-500">local_shipping</span>
+                                    <div>
+                                        <p class="font-bold">Thanh toán khi nhận hàng (COD)</p>
+                                        <p class="text-xs text-gray-500">Thanh toán tiền mặt khi giao hàng</p>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="flex items-center gap-4 p-4 border border-[#f3e7e8] dark:border-[#3a2526] rounded-xl cursor-pointer hover:border-primary transition-colors">
+                                <input type="radio" name="payment-method" value="qr-transfer" class="text-primary focus:ring-primary w-5 h-5">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-3xl text-blue-500">qr_code_2</span>
+                                    <div>
+                                        <p class="font-bold">Chuyển khoản QR Code</p>
+                                        <p class="text-xs text-gray-500">Quét mã QR để thanh toán qua ngân hàng</p>
+                                    </div>
+                                </div>
+                            </label>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column: Summary & Payment -->
+            <div class="lg:col-span-1">
+                <div class="bg-[#f5f5f5] dark:bg-[#2d1a1b] p-6 rounded-xl border border-[#f3e7e8] dark:border-[#3a2526] sticky top-24">
+                    <h3 class="text-xl font-bold mb-6">Đơn Hàng Của Bạn</h3>
+                    
+                    <!-- Mini Cart List -->
+                    <div id="checkout-items" class="space-y-3 mb-6 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                        <!-- Items rendered by JS -->
+                    </div>
+
+                    <div class="space-y-4 border-t border-b border-dashed border-[#d1c2c3] py-6 mb-6">
+                        <div class="flex justify-between text-base font-medium">
+                            <span class="text-[#974e52] dark:text-[#c48e91]">Tạm tính</span>
+                            <span id="checkout-subtotal">0₫</span>
+                        </div>
+                        <div id="checkout-discount-row" class="flex justify-between text-base font-medium hidden">
+                            <span class="text-[#974e52] dark:text-[#c48e91]">Giảm giá</span>
+                            <span id="checkout-discount" class="text-green-600 dark:text-green-400 font-bold">0₫</span>
+                        </div>
+                        <div class="flex justify-between text-base font-medium">
+                            <span class="text-[#974e52] dark:text-[#c48e91]">Phí vận chuyển</span>
+                            <span class="text-green-600 dark:text-green-400 font-bold">MIỄN PHÍ</span>
+                        </div>
+                        <div class="flex justify-between text-base font-medium">
+                            <span class="text-[#974e52] dark:text-[#c48e91]">Thuế (8%)</span>
+                            <span id="checkout-tax">0₫</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-xl font-extrabold mb-8">
+                        <span>Tổng Cộng</span>
+                        <span class="text-primary" id="checkout-total">0₫</span>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-primary hover:bg-[#c1141d] text-white font-extrabold py-4 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 mb-4">
+                        <span>ĐẶT HÀNG</span>
+                        <span class="material-symbols-outlined">check_circle</span>
+                    </button>
+                    
+                    <div class="space-y-4 text-center">
+                        <p class="text-xs text-[#974e52] flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-sm">lock</span>
+                            Thanh toán bảo mật mã hóa SSL
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-black text-white pt-20 pb-10 px-4 md:px-20 border-t border-white/10">
+        <div class="max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-20">
+            <div class="flex flex-col gap-6">
+                <a class="flex items-center gap-2" href="index.html">
+                     <img src="image/Logo_X_Sneaker.png" alt="X-Sneaker Logo" class="h-8">
+                    <h2 class="text-xl font-extrabold tracking-tighter uppercase italic">X-Sneaker</h2>
+                </a>
+                <p class="text-gray-400 text-sm leading-relaxed">
+                    Nâng tầm văn hóa đường phố từ năm 2018. Chúng tôi cung cấp những mẫu giày độc quyền và phụ kiện cao cấp cho các tín đồ trên toàn thế giới.
+                </p>
+                <div class="flex gap-4">
+                    <a class="hover:text-primary transition-colors" href="https://facebook.com" target="_blank"><span class="material-symbols-outlined">public</span></a>
+                    <a class="hover:text-primary transition-colors" href="Contact-Us.html"><span class="material-symbols-outlined">alternate_email</span></a>
+                    <a class="hover:text-primary transition-colors" href="Blog-list.html"><span class="material-symbols-outlined">podcasts</span></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 uppercase tracking-tighter italic">Chăm Sóc Khách Hàng</h4>
+                <ul class="flex flex-col gap-3 text-gray-400 text-sm font-medium">
+                    <li><a class="hover:text-white transition-colors" href="Contact-Us.html">Trung Tâm Trợ Giúp</a></li>
+                    <li><a class="hover:text-white transition-colors" href="Account.html?tab=orders">Tra Cứu Đơn Hàng</a></li>
+                    <li><a class="hover:text-white transition-colors" href="Contact-Us.html">Đổi Trả &amp; Hoàn Tiền</a></li>
+                    <li><a class="hover:text-white transition-colors" href="About-us.html">Hướng Dẫn Chọn Size</a></li>
+                    <li><a class="hover:text-white transition-colors" href="About-us.html">Thông Tin Vận Chuyển</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-6 uppercase tracking-tighter italic">Về X-Sneaker</h4>
+                <ul class="flex flex-col gap-3 text-gray-400 text-sm font-medium">
+                    <li><a class="hover:text-white transition-colors" href="About-us.html">Câu Chuyện Thương Hiệu</a></li>
+                    <li><a class="hover:text-white transition-colors" href="About-us.html">Tuyển Dụng</a></li>
+                    <li><a class="hover:text-white transition-colors" href="About-us.html">Phát Triển Bền Vững</a></li>
+                    <li><a class="hover:text-white transition-colors" href="About-us.html">Cam Kết Chính Hãng</a></li>
+                    <li><a class="hover:text-white transition-colors" href="About-us.html">Chính Sách Bảo Mật</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-[1280px] mx-auto pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-bold text-gray-500 uppercase tracking-widest">
+            <p>© 2024 X-Sneaker E-Commerce. All Rights Reserved.</p>
+            <div class="flex gap-8">
+                <span>Điều Khoản Sử Dụng</span>
+                <span>Cài Đặt Cookie</span>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+
+

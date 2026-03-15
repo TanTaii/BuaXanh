@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>FoodSaver | Cửa hàng</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <script src="js/tailwind-config.js"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="js/common.js" defer></script>
+    <script type="module" src="js/product.js"></script>
+    <script type="module" src="js/search.js"></script>
+</head>
+<body class="bg-[#f8f9fa] text-slate-900 font-display">
+    <!-- Top Navigation Bar (FoodSaver) -->
+    <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 px-6 md:px-20 py-4 bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+      <div class="flex items-center gap-2 text-primary">
+        <span class="material-symbols-outlined text-3xl font-bold">eco</span>
+        <h2 class="text-slate-900 text-xl font-extrabold leading-tight tracking-tight">FoodSaver</h2>
+      </div>
+      <div class="flex flex-1 justify-end gap-4 md:gap-10 items-center">
+        <nav class="hidden md:flex items-center gap-8">
+          <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="Product.html">Sản Phẩm</a>
+          <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="Contact-Us.html">Liên hệ</a>
+          <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="About-us.html">Giới thiệu</a>
+        </nav>
+        <!-- Search Button -->
+        <button id="search-btn" class="hover:text-primary transition-colors flex items-center justify-center text-slate-700">
+          <span class="material-symbols-outlined">search</span>
+        </button>
+        <!-- Auth buttons -->
+        <div class="flex gap-3" id="auth-buttons">
+          <a href="Account.html" class="hover:text-primary transition-colors flex items-center justify-center text-slate-700">
+            <span class="material-symbols-outlined">person</span>
+          </a>
+          <a href="Cart.html" class="hover:text-primary transition-colors relative flex items-center justify-center text-slate-700">
+            <span class="material-symbols-outlined">shopping_cart</span>
+            <span class="absolute -top-2 -right-2 bg-primary text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold text-white border border-white" id="cart-count">0</span>
+          </a>
+          <button id="auth-action-btn" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em]" onclick="window.location.href='Login.html'">
+            <span class="truncate">Đăng nhập</span>
+          </button>
+        </div>
+        <!-- Mobile menu button -->
+        <button id="mobile-menu-btn" class="md:hidden text-slate-700">
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+      </div>
+
+      <!-- Mobile Menu Overlay -->
+      <div id="mobile-menu" class="fixed inset-0 bg-white z-[60] hidden flex-col items-center justify-center text-slate-900 transition-opacity duration-300">
+          <button id="close-menu-btn" class="absolute top-6 right-6 text-slate-900 p-2">
+              <span class="material-symbols-outlined text-4xl">close</span>
+          </button>
+          <nav class="flex flex-col items-center gap-8 text-xl font-bold uppercase tracking-widest">
+              <a href="Product.html" class="hover:text-primary transition-colors">Sản Phẩm</a>
+              <a href="Contact-Us.html" class="hover:text-primary transition-colors">Liên hệ</a>
+              <a href="About-us.html" class="hover:text-primary transition-colors">Giới thiệu</a>
+          </nav>
+      </div>
+
+      <!-- Search Modal / Fullscreen Overlay (kept logic) -->
+      <div id="search-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[70] hidden opacity-0 transition-opacity duration-300">
+        <div class="relative w-full max-w-4xl mx-auto mt-20 p-6 flex flex-col h-[calc(100vh-100px)]">
+          <!-- Đóng tìm kiếm -->
+          <button id="close-search-btn" class="absolute -top-12 right-6 md:-right-12 text-white/50 hover:text-white transition-colors">
+            <span class="material-symbols-outlined text-4xl">close</span>
+          </button>
+          
+          <div class="bg-slate-900 rounded-3xl overflow-hidden shadow-2xl flex flex-col flex-1">
+            <!-- Ô nhập liệu -->
+            <div class="relative flex items-center p-4 border-b border-white/10 shrink-0">
+              <span class="material-symbols-outlined absolute left-8 text-white/50 text-2xl">search</span>
+              <input id="search-input" type="text" placeholder="Tìm cửa hàng, món ăn, thực phẩm..." 
+                class="w-full bg-transparent border-none text-white text-xl md:text-2xl placeholder:text-white/30 pl-14 pr-4 py-4 focus:ring-0 outline-none" autocomplete="off" />
+              <button id="clear-input-btn" class="hidden absolute right-6 text-white/50 hover:text-white transition-colors p-2">
+                <span class="material-symbols-outlined">cancel</span>
+              </button>
+            </div>
+            
+            <div class="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar">
+              <div id="search-results" class="hidden">
+                <div class="flex items-center justify-between mb-6">
+                  <h3 class="text-white text-sm font-bold uppercase tracking-widest" id="search-title">Kết quả tìm kiếm</h3>
+                  <a href="Product.html" class="text-primary text-sm font-bold hover:underline" id="view-all-results">Xem tất cả</a>
+                </div>
+                <div id="results-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- JS append results here -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-[1440px] mx-auto min-h-screen">
+        <!-- Top Utility Bar (Breadcrumbs & Sort) -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between px-6 lg:px-20 py-6 border-b border-gray-100 bg-white">
+            <div class="flex items-center gap-2 text-sm text-gray-500 mb-4 md:mb-0">
+                <a class="hover:text-primary transition-colors" href="index.html">Trang chủ</a>
+                <span class="material-symbols-outlined text-base">chevron_right</span>
+                <span class="font-medium text-black">Danh mục sản phẩm</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">Sắp xếp theo:</span>
+                <div class="relative inline-block text-left">
+                    <button class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold">
+                        Gần nhất
+                        <span class="material-symbols-outlined text-xl">expand_more</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex flex-col lg:flex-row px-6 lg:px-20 pb-20 gap-10 pt-8">
+            <!-- Sidebar: Search + Filters -->
+            <aside class="w-full lg:w-80 flex-shrink-0 space-y-6">
+                <!-- Search Section -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                    <h3 class="text-sm font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-base">search</span>
+                        Tìm Kiếm
+                    </h3>
+                    
+                    <!-- Search Input -->
+                    <div class="relative mb-4">
+                        <div class="relative group">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary text-lg transition-colors z-10">search</span>
+                            <input
+                                id="product-search-input"
+                                type="text"
+                                placeholder="Tìm món ăn, cửa hàng..."
+                                class="w-full bg-[#f8f9fa] border-2 border-transparent rounded-lg py-2.5 pl-10 pr-10 text-sm font-medium shadow-sm hover:shadow-md focus:shadow-lg focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/10 outline-none transition-all duration-300"
+                                autocomplete="off"
+                            />
+                            <button id="clear-search-btn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-200 rounded-full">
+                                <span class="material-symbols-outlined text-base">close</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Active Search Info -->
+                    <div id="active-search-info" class="hidden mb-4 bg-gradient-to-r from-primary/10 to-transparent border-l-4 border-primary rounded-lg p-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="material-symbols-outlined text-primary text-base flex-shrink-0">search</span>
+                                <div class="min-w-0">
+                                    <p class="text-xs text-gray-600 font-medium">Tìm kiếm:</p>
+                                    <p class="font-bold text-sm text-primary truncate" id="search-term-display"></p>
+                                </div>
+                            </div>
+                            <button id="clear-search-filter-btn" class="flex-shrink-0 p-1.5 bg-white hover:bg-gray-50 rounded-lg transition-all shadow-sm border border-gray-200">
+                                <span class="material-symbols-outlined text-sm text-gray-600">close</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Trending & Recent -->
+                    <div id="search-suggestions" class="space-y-4">
+                        <!-- Recent Searches -->
+                        <div id="recent-searches-section" class="hidden">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-gray-600 flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-xs">history</span>
+                                    Gần đây
+                                </h4>
+                                <button id="clear-recent-btn" class="text-xs font-semibold text-gray-400 hover:text-primary transition-colors">
+                                    Xóa
+                                </button>
+                            </div>
+                            <div id="recent-searches-list" class="flex flex-col gap-1.5"></div>
+                        </div>
+
+                        <!-- Trending -->
+                        <div>
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-600 mb-2 flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-xs">trending_up</span>
+                                Xu hướng
+                            </h4>
+                            <div class="flex flex-wrap gap-1.5">
+                                <button class="trending-tag px-3 py-1.5 rounded-lg bg-[#f8f9fa] text-xs font-semibold hover:bg-primary hover:text-white transition-all shadow-sm border border-gray-200">Cơm tấm</button>
+                                <button class="trending-tag px-3 py-1.5 rounded-lg bg-[#f8f9fa] text-xs font-semibold hover:bg-primary hover:text-white transition-all shadow-sm border border-gray-200">Bánh mì</button>
+                                <button class="trending-tag px-3 py-1.5 rounded-lg bg-[#f8f9fa] text-xs font-semibold hover:bg-primary hover:text-white transition-all shadow-sm border border-gray-200">Sushi</button>
+                                <button class="trending-tag px-3 py-1.5 rounded-lg bg-[#f8f9fa] text-xs font-semibold hover:bg-primary hover:text-white transition-all shadow-sm border border-gray-200">Salad</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                    <h3 class="text-sm font-bold uppercase tracking-widest mb-4 flex items-center justify-between">
+                        Danh Mục
+                        <span class="material-symbols-outlined text-gray-400">expand_less</span>
+                    </h3>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input data-filter="category" value="bakery" class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+                            <span class="text-sm text-gray-700 group-hover:text-black">Tiệm bánh</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input data-filter="category" value="restaurant" class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+                            <span class="text-sm text-gray-700 group-hover:text-black">Nhà hàng</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input data-filter="category" value="grocery" class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+                            <span class="text-sm text-gray-700 group-hover:text-black">Siêu thị Mini</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input data-filter="category" value="drink" class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+                            <span class="text-sm text-gray-700 group-hover:text-black">Đồ uống</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Khoảng Giá -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-bold uppercase tracking-widest">Khoảng Giá</h3>
+                        <span id="price-display" class="text-sm font-bold text-primary">0₫ - 10.000.000₫</span>
+                    </div>
+                    <div class="px-2 relative">
+                        <div class="relative h-2">
+                            <!-- Track background -->
+                            <div class="absolute w-full h-2 bg-gray-200 rounded-lg"></div>
+                            <!-- Active range -->
+                            <div id="price-range-track" class="absolute h-2 bg-primary rounded-lg" style="left: 0%; right: 0%;"></div>
+                            <!-- Min slider -->
+                            <input id="price-min" type="range" min="0" max="10000000" step="100000" value="0" 
+                                   class="absolute w-full h-2 appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-primary [&::-moz-range-thumb]:cursor-pointer" />
+                            <!-- Max slider -->
+                            <input id="price-max" type="range" min="0" max="10000000" step="100000" value="10000000"
+                                   class="absolute w-full h-2 appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-primary [&::-moz-range-thumb]:cursor-pointer" />
+                        </div>
+                    </div>
+                </div>
+                <button data-action="clear-filters" class="w-full py-3 bg-white border-2 border-primary text-primary text-sm font-bold uppercase tracking-wider rounded-lg hover:bg-primary hover:text-white transition-colors">
+                    Xóa Bộ Lọc
+                </button>
+            </aside>
+            
+            <!-- Product Grid -->
+            <section class="flex-1">
+                <div id="products-container" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
+                    <!-- Products will be dynamically rendered here by product.js -->
+                </div>
+                
+                <!-- Pagination -->
+                <div class="mt-16 flex items-center justify-center gap-4">
+                    <button class="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 hover:bg-gray-100 text-slate-500">
+                        <span class="material-symbols-outlined">chevron_left</span>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <button class="w-10 h-10 rounded-lg bg-primary text-white font-bold text-sm">1</button>
+                        <button class="w-10 h-10 rounded-lg border border-transparent hover:border-gray-200 font-bold text-sm text-slate-700">2</button>
+                        <button class="w-10 h-10 rounded-lg border border-transparent hover:border-gray-200 font-bold text-sm text-slate-700">3</button>
+                        <span class="px-2 text-gray-400">...</span>
+                        <button class="w-10 h-10 rounded-lg border border-transparent hover:border-gray-200 font-bold text-sm text-slate-700">12</button>
+                    </div>
+                    <button class="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 hover:bg-gray-100 text-slate-500">
+                        <span class="material-symbols-outlined">chevron_right</span>
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer (FoodSaver) -->
+    <footer class="bg-slate-900 text-slate-400 py-12 mt-20 border-t border-slate-800">
+      <div class="max-w-[1240px] mx-auto px-6 md:px-20 grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="col-span-1 md:col-span-1">
+          <div class="flex items-center gap-2 text-white mb-6">
+            <span class="material-symbols-outlined text-3xl font-bold text-primary">eco</span>
+            <h2 class="text-xl font-extrabold leading-tight tracking-tight">FoodSaver</h2>
+          </div>
+          <p class="text-sm leading-relaxed mb-6">
+            Cùng chung tay giảm thiểu rác thải thực phẩm. Giải cứu những phần ăn chất lượng với giá ưu đãi.
+          </p>
+          <div class="flex gap-4">
+            <a class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-primary transition-colors text-white" href="https://facebook.com" target="_blank">
+              <span class="material-symbols-outlined text-sm">public</span>
+            </a>
+            <a class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-primary transition-colors text-white" href="Contact-Us.html">
+              <span class="material-symbols-outlined text-sm">alternate_email</span>
+            </a>
+          </div>
+        </div>
+        <div>
+          <h4 class="text-white font-bold mb-6 uppercase text-xs tracking-widest">Khám phá</h4>
+          <ul class="flex flex-col gap-3 text-sm">
+            <li><a class="hover:text-primary transition-colors" href="Product.html">Tìm thực phẩm</a></li>
+            <li><a class="hover:text-primary transition-colors" href="Product.html">Cửa hàng quanh tôi</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#">Cách hoạt động</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white font-bold mb-6 uppercase text-xs tracking-widest">Dành cho đối tác</h4>
+          <ul class="flex flex-col gap-3 text-sm">
+            <li><a class="hover:text-primary transition-colors" href="#">Đăng ký cửa hàng</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#">Kênh đối tác</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#">Câu chuyện thành công</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white font-bold mb-6 uppercase text-xs tracking-widest">Đăng ký nhận tin</h4>
+          <p class="text-sm mb-4">Nhận thông báo về những deal thực phẩm hot nhất gần bạn.</p>
+          <div class="flex gap-2">
+            <input class="bg-slate-800 border-none rounded-lg text-sm w-full focus:ring-1 focus:ring-primary text-white placeholder-slate-500 px-4 py-2" placeholder="Email của bạn..." type="email"/>
+            <button class="bg-primary text-white px-4 rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center">
+              <span class="material-symbols-outlined text-xl">send</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="max-w-[1240px] border-t border-slate-800 mx-auto px-6 md:px-20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
+        <p>© 2024 FoodSaver. All rights reserved.</p>
+        <div class="flex gap-6">
+          <a class="hover:text-white transition-colors" href="#">Chính sách bảo mật</a>
+          <a class="hover:text-white transition-colors" href="#">Điều khoản sử dụng</a>
+        </div>
+      </div>
+    </footer>
+</body>
+</html>

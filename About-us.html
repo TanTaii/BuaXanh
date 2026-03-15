@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>FoodSaver | Về Chúng Tôi</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <script src="js/tailwind-config.js"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="js/common.js" defer></script>
+    <script type="module" src="js/search.js"></script>
+</head>
+<body class="bg-[#f6f8f6] text-slate-900 font-display min-h-screen flex flex-col">
+
+    <!-- Header (FoodSaver) -->
+    <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 px-6 md:px-20 py-4 bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+      <div class="flex items-center gap-2 text-primary">
+        <span class="material-symbols-outlined text-3xl font-bold">eco</span>
+        <h2 class="text-slate-900 text-xl font-extrabold leading-tight tracking-tight">FoodSaver</h2>
+      </div>
+      <div class="flex flex-1 justify-end gap-4 md:gap-10 items-center">
+        <nav class="hidden md:flex items-center gap-8">
+          <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="Product.html">Sản Phẩm</a>
+          <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="Contact-Us.html">Liên Hệ</a>
+          <a class="primary text-sm font-bold text-primary transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:rounded-full" href="About-us.html">Giới thiệu</a>
+        </nav>
+        <!-- Search Button -->
+        <button id="search-btn" class="hover:text-primary transition-colors flex items-center justify-center text-slate-700">
+          <span class="material-symbols-outlined">search</span>
+        </button>
+        <!-- Auth buttons -->
+        <div class="flex gap-4 items-center" id="auth-buttons">
+          <a href="Account.html" class="hover:text-primary transition-colors flex items-center justify-center text-slate-700">
+            <span class="material-symbols-outlined text-xl">settings</span>
+          </a>
+          <a href="Cart.html" class="hover:text-primary transition-colors relative flex items-center justify-center text-slate-700">
+            <span class="material-symbols-outlined">shopping_cart</span>
+            <span class="absolute -top-2 -right-2 bg-primary text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold text-white border border-white" id="cart-count">0</span>
+          </a>
+        </div>
+        <!-- Mobile menu button -->
+        <button id="mobile-menu-btn" class="md:hidden text-slate-700">
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+      </div>
+
+      <!-- Mobile Menu Overlay -->
+      <div id="mobile-menu" class="fixed inset-0 bg-white z-[60] hidden flex-col items-center justify-center text-slate-900 transition-opacity duration-300">
+          <button id="close-menu-btn" class="absolute top-6 right-6 text-slate-900 p-2">
+              <span class="material-symbols-outlined text-4xl">close</span>
+          </button>
+          <nav class="flex flex-col items-center gap-8 text-xl font-bold uppercase tracking-widest">
+              <a href="Product.html" class="hover:text-primary transition-colors">Sản Phẩm</a>
+              <a href="Contact-Us.html" class="hover:text-primary transition-colors">Liên hệ</a>
+              <a href="About-us.html" class="text-primary hover:text-primary transition-colors">Giới thiệu</a>
+          </nav>
+      </div>
+    </header>
+
+    <main class="flex-1 w-full bg-white relative z-0">
+        <!-- Hero Section -->
+        <section class="max-w-[1240px] mx-auto px-6 md:px-20 py-16 md:py-28 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div class="space-y-6">
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-primary text-sm font-bold uppercase tracking-widest rounded-full">
+                    <span class="material-symbols-outlined text-[18px]">verified</span>
+                    Về FoodSaver
+                </div>
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 leading-tight">
+                    Chung tay giảm <br>
+                    <span class="text-primary relative inline-block">
+                        lãng phí thực phẩm
+                        <svg class="absolute w-full h-3 -bottom-1 left-0 text-green-200 -z-10" viewBox="0 0 100 10" preserveAspectRatio="none">
+                            <path d="M0 5 Q 50 10 100 5" stroke="currentColor" stroke-width="8" fill="transparent" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                </h1>
+                <div class="text-slate-600 text-lg leading-relaxed space-y-4 max-w-xl">
+                    <p>
+                        Mỗi năm, hàng triệu tấn thực phẩm hoàn toàn ngon miệng bị vứt bỏ, trong khi rất nhiều người vẫn đang thiếu ăn. 
+                        <strong>FoodSaver</strong> ra đời với mục tiêu kết nối các nhà hàng, cửa hàng bánh, 
+                        siêu thị với những người tiêu dùng muốn mua thực phẩm chất lượng với mức giá ưu đãi.
+                    </p>
+                    <p>
+                        Bằng việc tạo ra một nền tảng dễ sử dụng, minh bạch và hiệu quả, chúng tôi hy vọng 
+                        sẽ mang lại lợi ích cho cả ba bên: người bán giảm thiểu lỗ hổng tài chính, 
+                        người mua tiết kiệm chi phí sinh hoạt, và cùng nhau bảo vệ môi trường khỏi tác động của việc phân hủy rác thải thực phẩm.
+                    </p>
+                </div>
+                <div class="pt-4 flex items-center gap-4">
+                    <a href="Product.html" class="px-8 py-4 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/30 flex items-center gap-2">
+                        <span>Khám Phá Ngay</span>
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Overlapping Images Gallery -->
+            <div class="relative h-[400px] md:h-[500px] lg:h-[600px] w-full hidden md:block">
+                <!-- Large Image (Back) -->
+                <div class="absolute top-0 right-0 w-3/4 h-3/4 rounded-3xl overflow-hidden shadow-2xl border-4 border-white z-10">
+                    <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80" alt="Fresh Produce" class="w-full h-full object-cover">
+                </div>
+                <!-- Medium Image (Front Left) -->
+                <div class="absolute bottom-10 left-0 w-1/2 h-1/2 rounded-3xl overflow-hidden shadow-2xl border-4 border-white z-20">
+                    <img src="https://images.unsplash.com/photo-1593504049359-74330189a345?auto=format&fit=crop&q=80" alt="Bakery Items" class="w-full h-full object-cover">
+                </div>
+                <!-- Small Floating Card (Front Right) -->
+                <div class="absolute bottom-20 right-10 bg-white p-6 rounded-2xl shadow-2xl z-30 flex items-center gap-4 border border-slate-100 animate-bounce" style="animation-duration: 3s;">
+                    <div class="size-14 bg-green-50 rounded-full flex items-center justify-center text-primary">
+                        <span class="material-symbols-outlined text-3xl">eco</span>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-black text-slate-900 leading-none">100%</p>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mt-1">An toàn vệ sinh</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sứ Mệnh (Mission) -->
+        <section class="bg-green-50/50 py-20 px-6 md:px-20 border-t border-b border-green-100/50">
+            <div class="max-w-[1240px] mx-auto">
+                <div class="text-center mb-16 max-w-2xl mx-auto">
+                    <h2 class="text-3xl md:text-4xl font-black text-slate-900 mb-4">Sứ Mệnh Của Chúng Tôi</h2>
+                    <p class="text-slate-600">Chúng tôi tin rằng mọi hành động nhỏ đều có thể góp phần tạo nên một tương lai xanh và bền vững hơn.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Mission 1 -->
+                    <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+                        <div class="size-16 bg-green-50 text-primary rounded-2xl flex items-center justify-center mb-6">
+                            <span class="material-symbols-outlined text-3xl">delete_sweep</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">Giảm Lãng Phí Thực Phẩm</h3>
+                        <p class="text-slate-500 leading-relaxed text-sm">
+                            Đưa các phần ăn dư thừa hoặc gần ngày hết hạn từ nhà hàng, siêu thị đến tay người cần, thay vì đổ bỏ lãng phí ra bãi rác.
+                        </p>
+                    </div>
+
+                    <!-- Mission 2 -->
+                    <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+                        <div class="size-16 bg-orange-50 text-accent-orange rounded-2xl flex items-center justify-center mb-6">
+                            <span class="material-symbols-outlined text-3xl">savings</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">Tiết Kiệm Chi Phí</h3>
+                        <p class="text-slate-500 leading-relaxed text-sm">
+                            Cung cấp cơ hội mua thực phẩm chất lượng với mức giá giảm đến 50-70%, giúp người tiêu dùng tiết kiệm hiệu quả.
+                        </p>
+                    </div>
+
+                    <!-- Mission 3 -->
+                    <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+                        <div class="size-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-6">
+                            <span class="material-symbols-outlined text-3xl">diversity_3</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">Xây Dựng Cộng Đồng</h3>
+                        <p class="text-slate-500 leading-relaxed text-sm">
+                            Tạo ra một hệ sinh thái gắn kết các cá nhân và doanh nghiệp có ý thức môi trường, nâng cao nhận thức bảo vệ Trái Đất.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+
+        <!-- How it works -->
+        <section class="max-w-[1240px] mx-auto py-20 px-6 md:px-20">
+            <div class="text-center mb-16 max-w-2xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-black text-slate-900 mb-4">Hành Trình Của FoodSaver</h2>
+                <p class="text-slate-600">3 bước đơn giản để cùng cứu thực phẩm và nhận bữa ăn ngon mỗi ngày.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+                <!-- Connecting Line (Desktop only) -->
+                <div class="hidden md:block absolute top-[60px] left-1/6 right-1/6 h-0.5 bg-slate-200 -z-10" style="left: 16%; right: 16%;"></div>
+
+                <div class="text-center space-y-4">
+                    <div class="size-20 bg-white border border-slate-200 shadow-xl rounded-full flex items-center justify-center mx-auto text-3xl font-black text-slate-900 relative z-0">
+                        1
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900">Đăng Ký</h3>
+                    <p class="text-slate-500 text-sm">Tải ứng dụng hoặc truy cập website, tạo tài khoản trong 30 giây để bắt đầu.</p>
+                </div>
+
+                <div class="text-center space-y-4">
+                    <div class="size-20 bg-primary shadow-xl shadow-primary/30 rounded-full flex items-center justify-center mx-auto text-3xl font-black text-white relative z-0">
+                        2
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900">Chọn Thực Phẩm</h3>
+                    <p class="text-slate-500 text-sm">Khám phá các suất ăn ưu đãi quanh bạn, đặt trước và thanh toán nhanh chóng.</p>
+                </div>
+
+                <div class="text-center space-y-4">
+                    <div class="size-20 bg-white border border-slate-200 shadow-xl rounded-full flex items-center justify-center mx-auto text-3xl font-black text-slate-900 relative z-0">
+                        3
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900">Nhận Tại Quán</h3>
+                    <p class="text-slate-500 text-sm">Đến cửa hàng theo khung giờ quy định, quét mã và nhận thực phẩm tươi ngon.</p>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- CTA Section -->
+        <section class="max-w-[1240px] mx-auto py-20 px-6 md:px-20">
+            <div class="bg-primary rounded-[2.5rem] p-12 text-center text-white relative overflow-hidden shadow-2xl shadow-primary/20">
+                <div class="absolute inset-0 bg-white/5 pointer-events-none"></div>
+                <!-- Circle decorations -->
+                <div class="absolute -top-24 -right-24 size-64 bg-white/10 rounded-full blur-3xl"></div>
+                <div class="absolute -bottom-24 -left-24 size-64 bg-black/10 rounded-full blur-3xl"></div>
+
+                <h2 class="text-3xl md:text-5xl font-black mb-6 relative z-10">Sẵn sàng tham gia cùng FoodSaver?</h2>
+                <p class="text-lg opacity-90 mb-10 max-w-2xl mx-auto relative z-10">
+                    Bắt đầu hành trình giải cứu thực phẩm, bảo vệ môi trường và tiết kiệm chi phí ngay hôm nay. Hàng ngàn cơ hội đang chờ bạn!
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4 relative z-10">
+                    <a href="Product.html" class="px-8 py-4 bg-white text-slate-900 font-bold rounded-xl hover:bg-slate-50 transition-colors shadow-lg shadow-black/5 flex items-center justify-center gap-2">
+                        Bắt Đầu Ngay
+                    </a>
+                    <a href="login.html" class="px-8 py-4 bg-transparent border-2 border-white/30 text-white font-bold rounded-xl hover:bg-white/10 transition-colors flex items-center justify-center gap-2">
+                        Đăng Ký Đối Tác
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer (FoodSaver) -->
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800 shrink-0">
+      <div class="max-w-[1240px] mx-auto px-6 md:px-20 grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="col-span-1 md:col-span-1">
+          <div class="flex items-center gap-2 text-white mb-6">
+            <span class="material-symbols-outlined text-3xl font-bold text-primary">eco</span>
+            <h2 class="text-xl font-extrabold leading-tight tracking-tight">FoodSaver</h2>
+          </div>
+          <p class="text-sm leading-relaxed mb-6">
+            Cùng chung tay giảm thiểu rác thải thực phẩm. Giải cứu những phần ăn chất lượng với giá ưu đãi.
+          </p>
+          <div class="flex gap-4">
+            <a class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-primary transition-colors text-white" href="https://facebook.com" target="_blank">
+              <span class="material-symbols-outlined text-sm">public</span>
+            </a>
+            <a class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-primary transition-colors text-white" href="Contact-Us.html">
+              <span class="material-symbols-outlined text-sm">alternate_email</span>
+            </a>
+          </div>
+        </div>
+        <div>
+          <h4 class="text-white font-bold mb-6 uppercase text-xs tracking-widest">Khám phá</h4>
+          <ul class="flex flex-col gap-3 text-sm">
+            <li><a class="hover:text-primary transition-colors" href="Product.html">Tìm thực phẩm</a></li>
+            <li><a class="hover:text-primary transition-colors" href="Product.html">Cửa hàng quanh tôi</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#">Cách hoạt động</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white font-bold mb-6 uppercase text-xs tracking-widest">Dành cho đối tác</h4>
+          <ul class="flex flex-col gap-3 text-sm">
+            <li><a class="hover:text-primary transition-colors" href="#">Đăng ký cửa hàng</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#">Kênh đối tác</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#">Câu chuyện thành công</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white font-bold mb-6 uppercase text-xs tracking-widest">Đăng ký nhận tin</h4>
+          <p class="text-sm mb-4">Nhận thông báo về những deal thực phẩm hot nhất gần bạn.</p>
+          <div class="flex gap-2">
+            <input class="bg-slate-800 border-none rounded-lg text-sm w-full focus:ring-1 focus:ring-primary text-white placeholder-slate-500 px-4 py-2" placeholder="Email của bạn..." type="email"/>
+            <button class="bg-primary text-white px-4 rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center">
+              <span class="material-symbols-outlined text-xl">send</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="max-w-[1240px] border-t border-slate-800 mx-auto px-6 md:px-20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
+        <p>© 2024 FoodSaver. All rights reserved.</p>
+        <div class="flex gap-6">
+          <a class="hover:text-white transition-colors" href="#">Chính sách bảo mật</a>
+          <a class="hover:text-white transition-colors" href="#">Điều khoản sử dụng</a>
+        </div>
+      </div>
+    </footer>
+
+</body>
+</html>

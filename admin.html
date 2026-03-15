@@ -1,0 +1,2120 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>FoodSaver Admin | Quản lý Đơn hàng</title>
+    <link rel="icon" type="image/png" href="image/logo.png">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: "#28a745",
+                            50: "#f0fdf4",
+                            100: "#dcfce7",
+                            200: "#bbf7d0",
+                            300: "#86efac",
+                            400: "#4ade80",
+                            500: "#22c55e",
+                            600: "#16a34a",
+                            700: "#15803d",
+                            800: "#166534",
+                            900: "#14532d",
+                            950: "#052e16",
+                        },
+                        secondary: "#fd7e14",
+                        background: {
+                            light: "#f8f9fa",
+                            dark: "#131f16",
+                        },
+                        card: {
+                            dark: "#1a2c1f",
+                        },
+                        border: {
+                            dark: "#2a3f31",
+                        },
+                    },
+                    fontFamily: {
+                        display: ["Plus Jakarta Sans", "sans-serif"],
+                        sans: ["Plus Jakarta Sans", "sans-serif"],
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px -5px rgba(40, 167, 69, 0.3)',
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif;
+        }
+        .material-symbols-rounded {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .dark .glass {
+            background: rgba(26, 11, 13, 0.7);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex antialiased selection:bg-primary/20 selection:text-primary">
+    
+    <!-- Sidebar -->
+    <aside class="w-72 fixed inset-y-0 left-0 bg-white border-r border-slate-200 flex flex-col z-50 transition-all duration-300 ease-in-out">
+        <!-- Logo -->
+        <div class="h-20 flex items-center px-8 border-b border-slate-200">
+            <a href="index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity group">
+                <span class="material-symbols-outlined text-3xl font-bold text-primary">eco</span>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tighter uppercase italic text-slate-900 leading-none">FoodSaver</h1>
+                    <p class="text-[11px] uppercase tracking-wider text-primary font-bold mt-1">QUẢN TRỊ VIÊN</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Navigation -->
+        <div class="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+            <div class="px-4 mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">MENU CHÍNH</div>
+            
+
+            
+            <a href="#" data-tab="orders" class="nav-link flex items-center gap-3 px-4 py-3 bg-green-50 text-primary rounded-xl transition-all relative overflow-hidden">
+                <div class="absolute inset-y-0 left-0 w-1 bg-primary rounded-r-full"></div>
+                <span class="material-symbols-rounded text-[22px]">shopping_bag</span>
+                <span class="text-sm font-bold">Đơn hàng</span>
+            </a>
+            
+            <a href="#" data-tab="inventory" class="nav-link flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl transition-all group">
+                <span class="material-symbols-rounded text-[22px] group-hover:scale-110 transition-transform">inventory_2</span>
+                <span class="text-sm font-semibold">Kho hàng</span>
+            </a>
+            
+            <a href="#" data-tab="promotions" class="nav-link flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl transition-all group">
+                <span class="material-symbols-rounded text-[22px] group-hover:scale-110 transition-transform">local_offer</span>
+                <span class="text-sm font-semibold">Khuyến mãi</span>
+            </a>
+            
+
+            
+            <div class="px-4 mt-8 mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">PHÂN TÍCH</div>
+            
+            <a href="#" data-tab="reports" class="nav-link flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl transition-all group">
+                <span class="material-symbols-rounded text-[22px] group-hover:scale-110 transition-transform">analytics</span>
+                <span class="text-sm font-semibold">Báo cáo</span>
+            </a>
+
+            <div class="px-4 mt-8 mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">HỆ THỐNG</div>
+
+            <a href="#" data-tab="users" class="nav-link flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl transition-all group">
+                <span class="material-symbols-rounded text-[22px] group-hover:scale-110 transition-transform">group</span>
+                <span class="text-sm font-semibold">Người dùng</span>
+            </a>
+
+
+        </div>
+
+        <!-- Footer Profile -->
+        <div class="p-4 border-t border-slate-200">
+            <button id="admin-profile-btn" onclick="handleLogout()" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors text-left">
+                <div class="h-10 w-10 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-sm">
+                    <img id="admin-avatar" src="https://ui-avatars.com/api/?name=Admin&background=28a745&color=fff" alt="Admin" class="h-full w-full object-cover">
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p id="admin-name" class="text-sm font-bold text-slate-900 truncate">Loading...</p>
+                    <p id="admin-email" class="text-xs text-slate-500 truncate">-</p>
+                </div>
+                <span class="material-symbols-rounded text-slate-400">logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 ml-72 flex flex-col min-h-screen transition-all duration-300">
+        
+        <!-- Header -->
+        <header class="h-20 flex items-center justify-between px-8 bg-white border-b border-slate-200 sticky top-0 z-40 transition-all">
+        </header>
+
+        <!-- Page Content -->
+        <div id="page-content" class="p-8 space-y-8">
+            <!-- Content will be loaded here dynamically -->
+        </div>
+    </main>
+
+    <!-- JavaScript -->
+    <script>
+        // Tab content definitions
+        const tabContents = {
+
+            orders: `
+            <!-- Page Header -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Quản lý Đơn hàng</h2>
+                    <div class="flex items-center gap-2 mt-2 text-sm text-slate-500 dark:text-slate-400">
+                        <span>Dashboard</span>
+                        <span class="material-symbols-rounded text-[14px]">chevron_right</span>
+                        <span class="text-primary font-semibold">Đơn hàng</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="window.ordersModule.reload()" class="p-2.5 text-slate-500 hover:text-primary transition-all" title="Reload">
+                        <span class="material-symbols-rounded text-[24px]">refresh</span>
+                    </button>
+                    <button onclick="window.ordersModule.exportCSV()" class="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
+                        <span class="material-symbols-rounded text-[20px]">download</span>
+                        Xuất CSV
+                    </button>
+                    <button onclick="window.ordersModule.createOrder()" class="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 active:scale-95 transition-all">
+                        <span class="material-symbols-rounded text-[20px]">add</span>
+                        Tạo Đơn
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <span class="material-symbols-rounded text-6xl text-orange-500">schedule</span>
+                    </div>
+                    <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">CHỜ XỬ LÝ</p>
+                    <div class="flex items-baseline gap-2 mt-2">
+                        <h3 id="stat-orders-pending" class="text-3xl font-extrabold text-slate-900">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <span class="material-symbols-rounded text-6xl text-blue-500">local_shipping</span>
+                    </div>
+                    <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">ĐANG GIAO</p>
+                     <div class="flex items-baseline gap-2 mt-2">
+                        <h3 id="stat-orders-shipped" class="text-3xl font-extrabold text-slate-900">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <span class="material-symbols-rounded text-6xl text-emerald-500">check_circle</span>
+                    </div>
+                    <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">HOÀN THÀNH</p>
+                     <div class="flex items-baseline gap-2 mt-2">
+                        <h3 id="stat-orders-delivered" class="text-3xl font-extrabold text-slate-900">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <span class="material-symbols-rounded text-6xl text-primary">cancel</span>
+                    </div>
+                    <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">ĐÃ HỦY</p>
+                     <div class="flex items-baseline gap-2 mt-2">
+                        <h3 id="stat-orders-cancelled" class="text-3xl font-extrabold text-slate-900">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                
+                <!-- Filters Toolbar -->
+                <div class="p-6 border-b border-slate-200 flex flex-wrap items-center gap-4">
+                    <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-lg">
+                        <button id="filter-btn-all" onclick="window.ordersModule.setFilter('all')" class="px-4 py-2 bg-white text-slate-900 text-sm font-bold rounded-lg shadow-sm transition-all">Tất cả</button>
+                        <button id="filter-btn-pending" onclick="window.ordersModule.setFilter('pending')" class="px-4 py-2 text-slate-600 hover:text-slate-900 text-sm font-medium rounded-lg transition-all">Chờ xử lý</button>
+                        <button id="filter-btn-shipped" onclick="window.ordersModule.setFilter('shipped')" class="px-4 py-2 text-slate-600 hover:text-slate-900 text-sm font-medium rounded-lg transition-all">Đang giao</button>
+                        <button id="filter-btn-delivered" onclick="window.ordersModule.setFilter('delivered')" class="px-4 py-2 text-slate-600 hover:text-slate-900 text-sm font-medium rounded-lg transition-all">Hoàn thành</button>
+                    </div>
+
+                    <div class="ml-auto flex items-center gap-3">
+                        <div class="relative">
+                            <span class="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">filter_list</span>
+                            <select onchange="window.ordersModule.setSort(this.value)" class="pl-10 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-primary focus:border-primary text-slate-700 appearance-none cursor-pointer">
+                                <option value="newest">Mới nhất</option>
+                                <option value="oldest">Cũ nhất</option>
+                                <option value="highest_total">Tổng tiền cao nhất</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto relative min-h-[300px]">
+                     <!-- Loading State -->
+                     <div id="orders-loading" class="absolute inset-0 bg-white/90 z-10 flex items-center justify-center backdrop-blur-sm" style="display: none;">
+                        <div class="flex flex-col items-center gap-3">
+                            <span class="material-symbols-outlined animate-spin text-primary text-4xl">rotate_right</span>
+                            <p class="text-sm font-medium text-slate-500">Đang tải dữ liệu...</p>
+                        </div>
+                     </div>
+
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200">
+                                <th class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-wider">Mã Đơn</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-wider">Ngày đặt</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-wider">Khách hàng</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-wider">Thanh toán</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-wider">Tổng tiền</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-wider">Trạng thái</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-wider text-right">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-table-body" class="divide-y divide-slate-200">
+                           <!-- Content loaded by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div id="orders-pagination" class="px-6 py-4 border-t border-slate-200 flex items-center justify-between">
+                    <p class="text-sm text-slate-600 font-medium" id="orders-showing-text">Hiển thị <span class="text-slate-900 font-bold">...</span></p>
+                    <div class="flex items-center gap-2" id="orders-pagination-controls">
+                        <!-- Controls generated by JS -->
+                    </div>
+                </div>
+
+                <!-- Order Details Modal -->
+                <div id="order-details-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div class="bg-white dark:bg-card-dark rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] flex flex-col">
+                        <!-- Header -->
+                        <div class="p-6 border-b border-slate-100 dark:border-border-dark flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                                    <span id="modal-order-id">#Order123</span>
+                                    <span id="modal-status"></span>
+                                </h3>
+                                <p class="text-sm text-slate-500 mt-1" id="modal-order-date">Date</p>
+                            </div>
+                            <button onclick="window.ordersModule.closeDetails()" class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-full transition-all">
+                                <span class="material-symbols-rounded">close</span>
+                            </button>
+                        </div>
+
+                        <!-- Content (Scrollable) -->
+                        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                            <!-- Customer Info -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-3">
+                                    <h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Khách hàng</h4>
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                            <span class="material-symbols-rounded text-slate-400">person</span>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-slate-900 dark:text-white" id="modal-customer">Name</p>
+                                            <p class="text-sm text-slate-500" id="modal-phone">Phone</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-y-3">
+                                    <h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Giao hàng & Thanh toán</h4>
+                                    <div class="space-y-2">
+                                        <div class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+                                            <span class="material-symbols-rounded text-[18px] mt-0.5">location_on</span>
+                                            <span id="modal-address">Address</span>
+                                        </div>
+                                        <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                                            <span class="material-symbols-rounded text-[18px]">payments</span>
+                                            <span id="modal-payment">Payment</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Order Items -->
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Sản phẩm</h4>
+                                <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4" id="modal-items">
+                                    <!-- Dynamic Items -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="p-6 border-t border-slate-100 dark:border-border-dark flex items-center justify-between bg-slate-50 dark:bg-slate-900/20 rounded-b-2xl">
+                            <span class="text-slate-500 font-medium">Tổng tiền</span>
+                            <span class="text-2xl font-extrabold text-primary" id="modal-total">0đ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Create Order Modal -->
+                <div id="create-order-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div class="bg-white dark:bg-card-dark rounded-2xl w-full max-w-6xl shadow-2xl max-h-[90vh] flex flex-col">
+                        <!-- Header -->
+                        <div class="p-6 border-b border-slate-100 dark:border-border-dark flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-slate-900 dark:text-white">Tạo Đơn Hàng Mới</h3>
+                                <p class="text-sm text-slate-500 mt-1">Nhập thông tin khách hàng và chọn sản phẩm</p>
+                            </div>
+                            <button onclick="window.ordersModule.closeCreateModal()" class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-full transition-all">
+                                <span class="material-symbols-rounded">close</span>
+                            </button>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="flex-1 overflow-y-auto p-6">
+                            <form id="create-order-form" class="space-y-8">
+                                <!-- Customer Information Section -->
+                                <div class="bg-slate-50/50 dark:bg-white/[0.02] rounded-xl p-6 border border-slate-100 dark:border-border-dark">
+                                    <div class="flex items-center gap-2 mb-6">
+                                        <span class="material-symbols-rounded text-primary">person</span>
+                                        <h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Thông tin khách hàng</h4>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                                Họ và tên <span class="text-red-500">*</span>
+                                            </label>
+                                            <input type="text" id="new-order-fullname" required 
+                                                class="w-full px-4 py-2.5 bg-white dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" 
+                                                placeholder="VD: Nguyễn Văn A">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                                Email <span class="text-red-500">*</span>
+                                            </label>
+                                            <input type="email" id="new-order-email" required 
+                                                class="w-full px-4 py-2.5 bg-white dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" 
+                                                placeholder="email@example.com">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                                Số điện thoại <span class="text-red-500">*</span>
+                                            </label>
+                                            <input type="tel" id="new-order-phone" required 
+                                                class="w-full px-4 py-2.5 bg-white dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" 
+                                                placeholder="0901234567">
+                                        </div>
+                                        
+                                        <div class="md:col-span-2">
+                                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                                Địa chỉ <span class="text-red-500">*</span>
+                                            </label>
+                                            <input type="text" id="new-order-address" required 
+                                                class="w-full px-4 py-2.5 bg-white dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" 
+                                                placeholder="Số nhà, tên đường">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                                Thành phố <span class="text-red-500">*</span>
+                                            </label>
+                                            <input type="text" id="new-order-city" required 
+                                                class="w-full px-4 py-2.5 bg-white dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" 
+                                                placeholder="VD: TP.HCM">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Order Details Section -->
+                                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    <!-- Products Selection (Left - 2 columns) -->
+                                    <div class="lg:col-span-2 space-y-4">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-symbols-rounded text-primary">shopping_bag</span>
+                                            <h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Sản phẩm</h4>
+                                        </div>
+                                        
+                                        <!-- Product Search -->
+                                        <div class="relative">
+                                            <input type="text" id="product-search" 
+                                                class="w-full px-4 py-3 pl-11 bg-white dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" 
+                                                placeholder="Tìm kiếm sản phẩm theo tên hoặc mã...">
+                                            <span class="material-symbols-rounded absolute left-3 top-3 text-slate-400 text-[20px]">search</span>
+                                            
+                                            <!-- Search Results Dropdown -->
+                                            <div id="product-search-results" class="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl shadow-xl z-20 hidden max-h-80 overflow-y-auto">
+                                                <!-- Dynamic search results will be inserted here -->
+                                            </div>
+                                        </div>
+
+                                        <!-- Selected Products List -->
+                                        <div class="border border-slate-200 dark:border-border-dark rounded-xl bg-white dark:bg-card-dark">
+                                            <div id="selected-products-list" class="divide-y divide-slate-100 dark:divide-border-dark min-h-[200px] max-h-[400px] overflow-y-auto">
+                                                <!-- Empty state -->
+                                                <div id="empty-products-state" class="p-12 text-center text-slate-400">
+                                                    <span class="material-symbols-rounded text-5xl opacity-20 block mb-3">shopping_cart</span>
+                                                    <p class="text-sm font-medium">Chưa có sản phẩm nào</p>
+                                                    <p class="text-xs mt-1">Tìm kiếm và thêm sản phẩm vào đơn hàng</p>
+                                                </div>
+                                                <!-- Dynamic product items will be inserted here -->
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Order Summary (Right - 1 column) -->
+                                    <div class="space-y-4">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-symbols-rounded text-primary">receipt_long</span>
+                                            <h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Tổng quan</h4>
+                                        </div>
+                                        
+                                        <div class="bg-slate-50/50 dark:bg-white/[0.02] rounded-xl p-5 border border-slate-100 dark:border-border-dark space-y-4">
+                                            <!-- Payment Method -->
+                                            <div>
+                                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                                    Thanh toán <span class="text-red-500">*</span>
+                                                </label>
+                                                <select id="new-order-payment" required
+                                                    class="w-full px-4 py-2.5 bg-white dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                                                    <option value="COD">Thanh toán khi nhận hàng (COD)</option>
+                                                    <option value="Banking">Chuyển khoản ngân hàng</option>
+                                                    <option value="VNPay">VNPay</option>
+                                                    <option value="Momo">Ví MoMo</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Order Status -->
+                                            <div>
+                                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                                    Trạng thái <span class="text-red-500">*</span>
+                                                </label>
+                                                <select id="new-order-status" required
+                                                    class="w-full px-4 py-2.5 bg-white dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                                                    <option value="pending">Chờ xử lý</option>
+                                                    <option value="processing" selected>Đang xử lý</option>
+                                                    <option value="confirmed">Đã xác nhận</option>
+                                                    <option value="shipping">Đang giao hàng</option>
+                                                    <option value="delivered">Đã giao hàng</option>
+                                                    <option value="cancelled">Đã hủy</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Price Breakdown -->
+                                            <div class="pt-4 border-t border-slate-200 dark:border-border-dark space-y-3">
+                                                <div class="flex justify-between items-center text-sm">
+                                                    <span class="text-slate-600 dark:text-slate-400">Tạm tính:</span>
+                                                    <span id="new-order-subtotal" class="font-semibold text-slate-900 dark:text-white">0đ</span>
+                                                </div>
+                                                <div class="flex justify-between items-center text-sm">
+                                                    <span class="text-slate-600 dark:text-slate-400">Thuế (8%):</span>
+                                                    <span id="new-order-tax" class="font-semibold text-slate-900 dark:text-white">0đ</span>
+                                                </div>
+                                                <div class="pt-3 border-t border-slate-200 dark:border-border-dark flex justify-between items-center">
+                                                    <span class="text-sm font-bold text-slate-900 dark:text-white">Tổng cộng:</span>
+                                                    <span id="new-order-total" class="text-2xl font-bold text-primary">0đ</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Items Count -->
+                                            <div class="pt-3 border-t border-slate-200 dark:border-border-dark">
+                                                <div class="flex items-center gap-2 text-xs text-slate-500">
+                                                    <span class="material-symbols-rounded text-[16px]">inventory_2</span>
+                                                    <span>Số lượng sản phẩm: <span id="new-order-items-count" class="font-semibold text-slate-700 dark:text-slate-300">0</span></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="p-6 border-t border-slate-100 dark:border-border-dark flex justify-between items-center bg-slate-50/50 dark:bg-white/[0.02]">
+                            <div class="text-sm text-slate-500">
+                                <span class="material-symbols-rounded text-[16px] align-middle">info</span>
+                                <span class="align-middle ml-1">Vui lòng kiểm tra kỹ thông tin trước khi tạo đơn</span>
+                            </div>
+                            <div class="flex gap-3">
+                                <button type="button" onclick="window.ordersModule.closeCreateModal()" 
+                                    class="px-6 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+                                    Hủy
+                                </button>
+                                <button type="button" onclick="window.ordersModule.saveOrder()" 
+                                    class="px-8 py-2.5 bg-primary hover:bg-primary-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 active:scale-95 transition-all flex items-center gap-2">
+                                    <span class="material-symbols-rounded text-[20px]">add_shopping_cart</span>
+                                    <span>Tạo Đơn Hàng</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `,
+
+            inventory: `
+            <!-- Page Header -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Inventory Management</h2>
+                    <div class="flex items-center gap-2 mt-2 text-sm text-slate-500 dark:text-slate-400">
+                        <span>Dashboard</span>
+                        <span class="material-symbols-rounded text-[14px]">chevron_right</span>
+                        <span class="text-primary font-semibold">Inventory</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <input type="file" id="csv-file-input" class="hidden" accept=".csv">
+                    <button id="btn-import-csv" class="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
+                        <span class="material-symbols-rounded text-[20px]">upload</span>
+                        Import CSV
+                    </button>
+                    <button class="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 active:scale-95 transition-all" id="btn-add-product">
+                        <span class="material-symbols-rounded text-[20px]">add</span>
+                        Add Product
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-slate-100 dark:border-border-dark shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <span class="material-symbols-rounded text-6xl text-blue-500">inventory_2</span>
+                    </div>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Products</p>
+                    <div class="flex items-baseline gap-2 mt-2">
+                        <h3 id="stat-prod-total" class="text-3xl font-extrabold text-slate-900 dark:text-white">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-slate-100 dark:border-border-dark shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <span class="material-symbols-rounded text-6xl text-emerald-500">check_circle</span>
+                    </div>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">In Stock</p>
+                    <div class="flex items-baseline gap-2 mt-2">
+                        <h3 id="stat-prod-instock" class="text-3xl font-extrabold text-slate-900 dark:text-white">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-slate-100 dark:border-border-dark shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <span class="material-symbols-rounded text-6xl text-yellow-500">warning</span>
+                    </div>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Low Stock</p>
+                    <div class="flex items-baseline gap-2 mt-2">
+                        <h3 id="stat-prod-low" class="text-3xl font-extrabold text-slate-900 dark:text-white">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-slate-100 dark:border-border-dark shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <span class="material-symbols-rounded text-6xl text-primary">cancel</span>
+                    </div>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Out of Stock</p>
+                    <div class="flex items-baseline gap-2 mt-2">
+                        <h3 id="stat-prod-out" class="text-3xl font-extrabold text-slate-900 dark:text-white">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Table -->
+            <div class="bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-2xl overflow-hidden shadow-sm">
+                <!-- Filters -->
+                <!-- Filters -->
+                <div class="p-6 border-b border-slate-100 dark:border-border-dark flex flex-wrap items-center gap-4">
+                    <div class="flex items-center gap-3 w-full">
+                        <div class="relative flex-1">
+                            <span class="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+                            <input type="text" id="product-search-input" placeholder="Search products..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-background-dark/50 border border-slate-200 dark:border-border-dark rounded-xl text-sm font-semibold focus:ring-primary focus:border-primary text-slate-700 dark:text-slate-300">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/50 dark:bg-white/[0.02] border-b border-slate-200 dark:border-border-dark">
+                                <th class="px-6 py-5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Product</th>
+                                <th class="px-6 py-5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">SKU</th>
+                                <th class="px-6 py-5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Category</th>
+                                <th class="px-6 py-5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Price</th>
+                                <th class="px-6 py-5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stock</th>
+                                <th class="px-6 py-5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-border-dark" id="products-table-body">
+                            <!-- Products will be loaded dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div id="products-pagination" class="px-6 py-4 border-t border-slate-100 dark:border-border-dark flex items-center justify-between">
+                    <!-- Pagination content injected by JS -->
+                </div>
+            </div>
+
+            <!-- Product Modal -->
+            <div id="product-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                <div class="bg-white dark:bg-card-dark rounded-2xl w-full max-w-6xl shadow-2xl max-h-[90vh] flex flex-col">
+                     <!-- Modal Header -->
+                     <div class="p-6 border-b border-slate-100 dark:border-border-dark flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800">
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white" id="modal-title">Tạo Sản Phẩm Mới</h3>
+                        <button id="btn-close-modal" class="p-2 text-slate-400 hover:text-rose-500 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-all">
+                            <span class="material-symbols-rounded">close</span>
+                        </button>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-slate-900">
+                        <form id="product-form" class="space-y-6">
+                            <input type="hidden" id="product-id">
+                            
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <!-- Left Column: Main Info -->
+                                <div class="lg:col-span-2 space-y-5">
+                                    <!-- Product Name & Brand -->
+                                    <div class="bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-200 dark:border-border-dark">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
+                                                    <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-blue-600">inventory_2</span>
+                                                    Tên sản phẩm *
+                                                </label>
+                                                <input type="text" id="prod-name" required 
+                                                    class="w-full px-4 py-3 bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
+                                                    <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-purple-600">label</span>
+                                                    Thương hiệu *
+                                                </label>
+                                                <select id="prod-brand" required 
+                                                    class="w-full px-4 py-3 bg-purple-50 dark:bg-slate-800 border border-purple-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
+                                                    <option value="">-- Chọn thương hiệu --</option>
+                                                    <option value="Nike">Nike</option>
+                                                    <option value="Adidas">Adidas</option>
+                                                    <option value="New Balance">New Balance</option>
+                                                    <option value="Converse">Converse</option>
+                                                    <option value="Vans">Vans</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Category & Gender -->
+                                    <div class="bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-200 dark:border-border-dark">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
+                                                    <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-orange-600">category</span>
+                                                    Danh mục *
+                                                </label>
+                                                <select id="prod-category" required 
+                                                    class="w-full px-4 py-3 bg-orange-50 dark:bg-slate-800 border border-orange-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
+                                                    <option value="">-- Chọn danh mục --</option>
+                                                    <option value="lifestyle">Thời trang</option>
+                                                    <option value="running">Chạy bộ</option>
+                                                    <option value="basketball">Bóng rổ</option>
+                                                    <option value="training">Tập luyện</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
+                                                    <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-pink-600">wc</span>
+                                                    Giới tính
+                                                </label>
+                                                <select id="prod-gender" 
+                                                    class="w-full px-4 py-3 bg-pink-50 dark:bg-slate-800 border border-pink-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
+                                                    <option value="unisex">Unisex</option>
+                                                    <option value="male">Nam</option>
+                                                    <option value="female">Nữ</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pricing -->
+                                    <div class="bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-200 dark:border-border-dark">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
+                                                    <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-green-600">payments</span>
+                                                    Giá gốc (₫) *
+                                                </label>
+                                                <input type="number" id="prod-original-price" required min="0" step="1"
+                                                    class="w-full px-4 py-3 bg-green-50 dark:bg-slate-800 border border-green-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
+                                                    <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-emerald-600">sell</span>
+                                                    Giá bán (₫) *
+                                                </label>
+                                                <input type="number" id="prod-price" required min="0" step="1"
+                                                    class="w-full px-4 py-3 bg-emerald-50 dark:bg-slate-800 border border-emerald-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
+                                                    <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-red-600">local_offer</span>
+                                                    Giảm giá (%)
+                                                </label>
+                                                <input type="number" id="prod-discount" readonly
+                                                    class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-semibold text-slate-600 cursor-not-allowed">
+                                                <p class="text-xs text-slate-500 mt-1">Tự động tính từ giá gốc và giá bán</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Stock & Sizes -->
+                                    <div class="bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-200 dark:border-border-dark">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
+                                                    <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-cyan-600">inventory</span>
+                                                    Tồn kho *
+                                                </label>
+                                                <input type="number" id="prod-stock" required min="0" value="0"
+                                                    class="w-full px-4 py-3 bg-cyan-50 dark:bg-slate-800 border border-cyan-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
+                                                    <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-indigo-600">straighten</span>
+                                                    Kích thước *
+                                                </label>
+                                                <input type="text" id="prod-sizes" required placeholder="38, 39, 40, 41, 42, 43"
+                                                    class="w-full px-4 py-3 bg-indigo-50 dark:bg-slate-800 border border-indigo-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
+                                                <p class="text-xs text-slate-500 mt-1">Phân cách bằng dấu phẩy</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Colors -->
+                                    <div class="bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-200 dark:border-border-dark">
+                                        <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
+                                            <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-primary">palette</span>
+                                            Màu sắc *
+                                        </label>
+                                        <input type="text" id="prod-colors" required placeholder="Đen, Trắng, Đỏ"
+                                            class="w-full px-4 py-3 bg-green-50 dark:bg-slate-800 border border-green-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
+                                        <p class="text-xs text-slate-500 mt-1">Phân cách bằng dấu phẩy (VD: "Đen, Trắng, Xanh Navy")</p>
+                                    </div>
+
+                                    <!-- Inventory Management -->
+                                    <div class="bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-200 dark:border-border-dark">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <label class="block text-sm font-bold text-slate-800 dark:text-slate-200">
+                                                <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-purple-600">inventory_2</span>
+                                                Quản lý tồn kho theo màu & size
+                                            </label>
+                                            <button type="button" id="btn-generate-inventory" class="px-3 py-1.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg text-xs font-bold hover:bg-purple-200 transition-colors">
+                                                Tạo bảng tồn kho
+                                            </button>
+                                        </div>
+                                        <div id="inventory-table-container">
+                                            <div class="overflow-x-auto rounded-lg border border-purple-200 dark:border-purple-800">
+                                                <table class="w-full text-xs">
+                                                    <thead>
+                                                        <tr class="bg-purple-50 dark:bg-purple-900/20 border-b border-purple-200 dark:border-purple-800">
+                                                            <th class="px-3 py-2 text-left font-bold text-purple-900 dark:text-purple-300">Màu</th>
+                                                            <th class="px-3 py-2 text-left font-bold text-purple-900 dark:text-purple-300">Ảnh màu</th>
+                                                            <th class="px-3 py-2 text-left font-bold text-purple-900 dark:text-purple-300">Size</th>
+                                                            <th class="px-3 py-2 text-center font-bold text-purple-900 dark:text-purple-300">Số lượng</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="inventory-table-body" class="divide-y divide-purple-100 dark:divide-purple-900/20">
+                                                        <!-- Dynamic inventory rows -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="mt-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                                                <div class="flex items-center justify-between text-sm">
+                                                    <span class="font-semibold text-purple-900 dark:text-purple-300">Tổng tồn kho:</span>
+                                                    <span id="total-inventory" class="text-lg font-bold text-purple-700 dark:text-purple-400">0</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mt-2">Nhập màu sắc và size trước, sau đó nhấn "Tạo bảng tồn kho"</p>
+                                    </div>
+
+                                    <!-- Description -->
+                                    <div class="bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-200 dark:border-border-dark">
+                                        <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
+                                            <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-teal-600">description</span>
+                                            Mô tả sản phẩm *
+                                        </label>
+                                        <textarea id="prod-description" rows="4" required
+                                            class="w-full px-4 py-3 bg-teal-50 dark:bg-slate-800 border border-teal-200 dark:border-slate-600 rounded-lg text-sm focus:ring-2 focus:ring-teal-500"
+                                            placeholder="Mô tả chi tiết về sản phẩm..."></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Right Column: Images & Settings -->
+                                <div class="space-y-5">
+                                    <!-- Main Image Upload -->
+                                    <div class="bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-200 dark:border-border-dark">
+                                        <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
+                                            <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-purple-600">image</span>
+                                            Ảnh chính *
+                                        </label>
+                                        <div class="relative group">
+                                            <div id="image-preview" class="w-full aspect-square bg-purple-50 dark:bg-slate-800 rounded-xl border-2 border-dashed border-purple-300 dark:border-slate-600 flex flex-col items-center justify-center overflow-hidden cursor-pointer hover:border-purple-500 hover:bg-purple-100 dark:hover:bg-slate-700 transition-colors">
+                                                <span class="material-symbols-rounded text-purple-400 text-5xl">add_photo_alternate</span>
+                                                <p class="text-xs text-purple-600 dark:text-purple-400 mt-2 font-semibold">Nhấn để tải ảnh</p>
+                                                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">JPG, PNG, WebP</p>
+                                            </div>
+                                            <input type="file" id="prod-image-file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                                        </div>
+                                        <div class="mt-3">
+                                            <input type="url" id="prod-image-url" 
+                                                class="w-full px-3 py-2 bg-purple-50 dark:bg-slate-800 border border-purple-200 dark:border-slate-600 rounded-lg text-xs" 
+                                                placeholder="Hoặc dán URL ảnh">
+                                        </div>
+                                        <p id="upload-status" class="text-xs text-primary mt-2 font-medium"></p>
+                                    </div>
+
+                                    <!-- Product Badges -->
+                                    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-slate-800 dark:to-slate-800 rounded-xl p-4 border border-amber-200 dark:border-slate-600">
+                                        <h4 class="text-sm font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                                            <span class="material-symbols-rounded text-[18px] text-amber-600">new_releases</span>
+                                            Trạng thái sản phẩm
+                                        </h4>
+                                        
+                                        <div class="space-y-3">
+                                            <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-lg">
+                                                <div>
+                                                    <label class="text-sm font-semibold text-slate-800 dark:text-slate-200">Sản phẩm nổi bật</label>
+                                                    <p class="text-xs text-slate-600 dark:text-slate-400">Hiển thị ở trang chủ</p>
+                                                </div>
+                                                <label class="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" id="prod-featured" class="sr-only peer">
+                                                    <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-amber-500 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-amber-600"></div>
+                                                </label>
+                                            </div>
+
+                                            <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-lg">
+                                                <div>
+                                                    <label class="text-sm font-semibold text-slate-800 dark:text-slate-200">Hàng mới về</label>
+                                                    <p class="text-xs text-slate-600 dark:text-slate-400">Badge "NEW"</p>
+                                                </div>
+                                                <label class="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" id="prod-new" class="sr-only peer">
+                                                    <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-green-500 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-green-600"></div>
+                                                </label>
+                                            </div>
+
+                                            <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-lg">
+                                                <div>
+                                                    <label class="text-sm font-semibold text-slate-800 dark:text-slate-200">Bán chạy</label>
+                                                    <p class="text-xs text-slate-600 dark:text-slate-400">Badge "Best Seller"</p>
+                                                </div>
+                                                <label class="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" id="prod-bestseller" class="sr-only peer">
+                                                    <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-red-500 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-red-600"></div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="p-6 border-t border-slate-200 dark:border-border-dark flex items-center justify-between bg-slate-50 dark:bg-slate-800">
+                        <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                            <span class="material-symbols-rounded text-[14px] text-blue-600">info</span>
+                            <span>* Trường bắt buộc</span>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="button" id="btn-cancel" class="px-6 py-2.5 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-bold hover:bg-slate-100 dark:hover:bg-slate-600 transition-all">
+                                Hủy
+                            </button>
+                            <button type="submit" id="btn-submit-product" form="product-form" class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 active:scale-95 transition-all flex items-center gap-2">
+                                <span class="material-symbols-rounded text-[18px]">save</span>
+                                Lưu Sản Phẩm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View Product Modal -->
+            <div id="view-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                <div class="bg-white dark:bg-card-dark rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-border-dark">
+                    <!-- Modal Header -->
+                    <div class="sticky top-0 z-10 bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6 rounded-t-2xl flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-white/20 rounded-xl backdrop-blur">
+                                <span class="material-symbols-rounded text-white text-2xl">visibility</span>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-white">Thông tin sản phẩm</h3>
+                                <p class="text-blue-100 text-sm mt-0.5">Chi tiết đầy đủ về sản phẩm</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="window.productsModule.closeViewModal()" class="p-2 hover:bg-white/20 rounded-lg transition-colors">
+                            <span class="material-symbols-rounded text-white text-2xl">close</span>
+                        </button>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div class="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Left Column - Image -->
+                        <div class="lg:col-span-1">
+                            <div class="space-y-4">
+                                <div id="view-main-image" class="w-full h-64 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700">
+                                    <span class="material-symbols-rounded text-slate-400 text-6xl">image</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Phù hiệu</h4>
+                                    <p id="view-badges" class="text-sm text-slate-600 dark:text-slate-400">-</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Middle & Right Columns - Info -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <!-- Basic Info -->
+                            <div>
+                                <h4 class="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                                    <span class="material-symbols-rounded text-primary">info</span>
+                                    Thông tin cơ bản
+                                </h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Tên sản phẩm</label>
+                                        <p id="view-name" class="text-sm font-medium text-slate-900 dark:text-white mt-1">-</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Thương hiệu</label>
+                                        <p id="view-brand" class="text-sm font-medium text-slate-900 dark:text-white mt-1">-</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Danh mục</label>
+                                        <p id="view-category" class="text-sm font-medium text-slate-900 dark:text-white mt-1">-</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Giới tính</label>
+                                        <p id="view-gender" class="text-sm font-medium text-slate-900 dark:text-white mt-1">-</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pricing -->
+                            <div>
+                                <h4 class="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                                    <span class="material-symbols-rounded text-primary">payments</span>
+                                    Giá cả
+                                </h4>
+                                <div class="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Giá gốc</label>
+                                        <p id="view-original-price" class="text-sm font-medium text-slate-900 dark:text-white mt-1">-</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Giá bán</label>
+                                        <p id="view-price" class="text-sm font-bold text-primary mt-1">-</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Giảm giá</label>
+                                        <p id="view-discount" class="text-sm font-medium text-rose-600 dark:text-rose-400 mt-1">-</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div>
+                                <h4 class="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                                    <span class="material-symbols-rounded text-primary">description</span>
+                                    Mô tả
+                                </h4>
+                                <p id="view-description" class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">-</p>
+                            </div>
+
+                            <!-- Variants -->
+                            <div>
+                                <h4 class="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                                    <span class="material-symbols-rounded text-primary">palette</span>
+                                    Màu sắc & Kích cỡ
+                                </h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Màu sắc</label>
+                                        <p id="view-colors" class="text-sm font-medium text-slate-900 dark:text-white mt-1">-</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Size</label>
+                                        <p id="view-sizes" class="text-sm font-medium text-slate-900 dark:text-white mt-1">-</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stock -->
+                            <div>
+                                <h4 class="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                                    <span class="material-symbols-rounded text-primary">inventory</span>
+                                    Tồn kho
+                                </h4>
+                                <div class="mb-3">
+                                    <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Tổng số lượng</label>
+                                    <p id="view-total-stock" class="text-2xl font-bold text-primary mt-1">0</p>
+                                </div>
+                                <div id="view-inventory-table"></div>
+                            </div>
+
+                            <!-- Color Images -->
+                            <div>
+                                <h4 class="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                                    <span class="material-symbols-rounded text-primary">photo_library</span>
+                                    Ảnh theo màu
+                                </h4>
+                                <div id="view-color-images"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="px-8 py-5 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 rounded-b-2xl flex justify-end">
+                        <button type="button" onclick="window.productsModule.closeViewModal()" class="px-6 py-2.5 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-bold hover:bg-slate-100 dark:hover:bg-slate-600 transition-all">
+                            Đóng
+                        </button>
+                    </div>
+                </div>
+            </div>
+            `,
+
+            reports: `
+            <!-- Page Header -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Báo cáo & Phân tích</h2>
+                    <div class="flex items-center gap-2 mt-2 text-sm text-slate-500 dark:text-slate-400">
+                        <span>Dashboard</span>
+                        <span class="material-symbols-rounded text-[14px]">chevron_right</span>
+                        <span class="text-primary font-semibold">Báo cáo</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <select id="report-period" onchange="window.reportsModule.updatePeriod(this.value)" class="px-4 py-2.5 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl text-sm font-semibold focus:ring-primary focus:border-primary text-slate-700 dark:text-slate-300">
+                        <option value="30">30 ngày qua</option>
+                        <option value="7">7 ngày qua</option>
+                        <option value="year">Năm nay</option>
+                        <option value="all">Tất cả</option>
+                    </select>
+                    <button onclick="window.reportsModule.exportPDF()" class="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
+                        <span class="material-symbols-rounded text-[20px]">description</span>
+                        <span>Xuất PDF</span>
+                    </button>
+                    <button onclick="window.reportsModule.exportExcel()" class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-600/25 hover:shadow-emerald-600/40 active:scale-95 transition-all">
+                        <span class="material-symbols-rounded text-[20px]">table_chart</span>
+                        <span>Xuất Excel</span>
+                    </button>
+                    <button onclick="window.reportsModule.reload()" class="p-2.5 text-slate-500 hover:text-primary transition-all" title="Tải lại">
+                        <span class="material-symbols-rounded">refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-slate-100 dark:border-border-dark shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Revenue</p>
+                        <span class="material-symbols-rounded text-primary">attach_money</span>
+                    </div>
+                    <h3 id="report-revenue" class="text-3xl font-extrabold text-slate-900 dark:text-white mb-2">...</h3>
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="text-slate-500">Net earnings</span>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-slate-100 dark:border-border-dark shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Average Order Value</p>
+                        <span class="material-symbols-rounded text-blue-500">shopping_cart</span>
+                    </div>
+                    <h3 id="report-aov" class="text-3xl font-extrabold text-slate-900 dark:text-white mb-2">...</h3>
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="text-slate-500">Per order</span>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-slate-100 dark:border-border-dark shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Orders</p>
+                        <span class="material-symbols-rounded text-emerald-500">shopping_bag</span>
+                    </div>
+                    <h3 id="report-orders" class="text-3xl font-extrabold text-slate-900 dark:text-white mb-2">...</h3>
+                     <div class="flex items-center gap-2 text-sm">
+                        <span class="text-slate-500">Delivered orders</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-slate-200 dark:border-border-dark">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Sales Trends</h3>
+                    </div>
+                    <div class="h-80 w-full">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-slate-200 dark:border-border-dark">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Category Performance</h3>
+                    </div>
+                    <div class="h-80 w-full flex items-center justify-center">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Stats -->
+            <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-slate-200 dark:border-border-dark">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Top Performing Products</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-slate-200 dark:border-border-dark">
+                                <th class="pb-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Product</th>
+                                <th class="pb-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Units Sold</th>
+                                <th class="pb-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-top-products" class="divide-y divide-slate-100 dark:divide-border-dark">
+                           <!-- Dynamic content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            `,
+
+            users: `
+            <!-- Page Header -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý Người dùng</h2>
+                    <div class="flex items-center gap-2 mt-2 text-sm text-slate-500">
+                        <span>Dashboard</span>
+                        <span class="material-symbols-rounded text-[14px]">chevron_right</span>
+                        <span class="text-primary font-semibold">Người dùng</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.usersModule.reload()" class="p-2.5 text-slate-500 hover:text-primary transition-all" title="Reload">
+                        <span class="material-symbols-rounded text-[20px] md:text-[24px]">refresh</span>
+                    </button>
+                    <button onclick="window.usersModule.exportCSV()" class="flex items-center gap-2 px-3 md:px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all">
+                        <span class="material-symbols-rounded text-[18px] md:text-[20px]">download</span>
+                        <span class="hidden md:inline">Xuất CSV</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <span class="material-symbols-rounded text-6xl text-blue-500">group</span>
+                    </div>
+                    <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">TỔNG NGƯỜI DÙNG</p>
+                    <div class="flex items-baseline gap-2 mt-2">
+                        <h3 id="stat-users-total" class="text-3xl font-extrabold text-slate-900">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <span class="material-symbols-rounded text-6xl text-purple-500">admin_panel_settings</span>
+                    </div>
+                    <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">ADMIN</p>
+                    <div class="flex items-baseline gap-2 mt-2">
+                        <h3 id="stat-users-admin" class="text-3xl font-extrabold text-slate-900">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <span class="material-symbols-rounded text-6xl text-emerald-500">shopping_bag</span>
+                    </div>
+                    <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">KHÁCH HÀNG</p>
+                    <div class="flex items-baseline gap-2 mt-2">
+                        <h3 id="stat-users-customer" class="text-3xl font-extrabold text-slate-900">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <span class="material-symbols-rounded text-6xl text-yellow-500">person_add</span>
+                    </div>
+                    <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">MỚI (7 NGÀY)</p>
+                    <div class="flex items-baseline gap-2 mt-2">
+                        <h3 id="stat-users-new" class="text-3xl font-extrabold text-slate-900">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                
+                <!-- Filters Toolbar -->
+                <div class="p-4 md:p-6 border-b border-slate-200 space-y-4">
+                    <!-- Filter Buttons - Scrollable on mobile -->
+                    <div class="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+                        <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-lg min-w-max">
+                            <button id="filter-btn-all" onclick="window.usersModule.setFilter('all')" class="px-3 md:px-4 py-2 bg-white text-slate-900 text-xs md:text-sm font-bold rounded-lg shadow-sm transition-all whitespace-nowrap">Tất cả</button>
+                            <button id="filter-btn-admin" onclick="window.usersModule.setFilter('admin')" class="px-3 md:px-4 py-2 text-slate-600 hover:text-slate-900 text-xs md:text-sm font-medium rounded-lg transition-all whitespace-nowrap">Admin</button>
+                            <button id="filter-btn-customer" onclick="window.usersModule.setFilter('customer')" class="px-3 md:px-4 py-2 text-slate-600 hover:text-slate-900 text-xs md:text-sm font-medium rounded-lg transition-all whitespace-nowrap">Khách hàng</button>
+                            <button id="filter-btn-verified" onclick="window.usersModule.setFilter('verified')" class="px-3 md:px-4 py-2 text-slate-600 hover:text-slate-900 text-xs md:text-sm font-medium rounded-lg transition-all whitespace-nowrap">Đã xác thực</button>
+                        </div>
+                    </div>
+
+                    <!-- Search and Sort -->
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                        <div class="relative flex-1">
+                            <span class="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[16px] md:text-[18px]">search</span>
+                            <input type="text" id="users-search-input" placeholder="Tìm kiếm..." class="w-full pl-9 md:pl-10 pr-4 py-2 md:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-primary focus:border-primary text-slate-700">
+                        </div>
+                        <div class="relative flex-shrink-0 sm:w-48">
+                            <span class="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[16px] md:text-[18px]">filter_list</span>
+                            <select onchange="window.usersModule.setSort(this.value)" class="w-full pl-9 md:pl-10 pr-8 py-2 md:py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-primary focus:border-primary text-slate-700 appearance-none cursor-pointer">
+                                <option value="newest">Mới nhất</option>
+                                <option value="oldest">Cũ nhất</option>
+                                <option value="name_asc">Tên A-Z</option>
+                                <option value="name_desc">Tên Z-A</option>
+                                <option value="last_login">Đăng nhập gần nhất</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200">
+                                <th class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-wider">Người dùng</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-wider">Vai trò</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-wider">Đơn hàng</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-wider">Ngày tham gia</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-wider">Đăng nhập cuối</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-wider">Trạng thái</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-wider text-right">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body" class="divide-y divide-slate-200">
+                            <tr><td colspan="7" class="text-center py-8 text-slate-400">Đang tải người dùng...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div id="users-pagination" class="px-4 md:px-6 py-3 md:py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <p class="text-xs md:text-sm text-slate-600 font-medium hidden sm:block" id="users-showing-text">Hiển thị <span class="text-slate-900 font-bold">...</span></p>
+                    <div class="flex items-center gap-1 md:gap-2 overflow-x-auto max-w-full" id="users-pagination-controls">
+                        <!-- Controls generated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Details Modal -->
+            <div id="user-details-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                <div class="bg-white rounded-2xl w-full max-w-3xl shadow-2xl max-h-[90vh] flex flex-col">
+                    <!-- Header -->
+                    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <img id="modal-user-avatar" src="" alt="User" class="h-16 w-16 rounded-full border-2 border-primary">
+                            <div>
+                                <h3 id="modal-user-name" class="text-xl font-bold text-slate-900"></h3>
+                                <p id="modal-user-email" class="text-sm text-slate-500"></p>
+                            </div>
+                        </div>
+                        <button onclick="window.usersModule.closeDetails()" class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-all">
+                            <span class="material-symbols-rounded">close</span>
+                        </button>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                        <!-- User Info Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-4">
+                                <h4 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Thông tin cá nhân</h4>
+                                <div class="space-y-3">
+                                    <div class="flex items-start gap-2">
+                                        <span class="material-symbols-rounded text-slate-400 text-[20px]">badge</span>
+                                        <div>
+                                            <p class="text-xs text-slate-500">Vai trò</p>
+                                            <p id="modal-user-role" class="text-sm font-semibold text-slate-900"></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <span class="material-symbols-rounded text-slate-400 text-[20px]">fingerprint</span>
+                                        <div>
+                                            <p class="text-xs text-slate-500">User ID</p>
+                                            <p id="modal-user-uid" class="text-xs font-mono text-slate-700 break-all"></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <span class="material-symbols-rounded text-slate-400 text-[20px]">phone</span>
+                                        <div>
+                                            <p class="text-xs text-slate-500">Điện thoại</p>
+                                            <p id="modal-user-phone" class="text-sm font-semibold text-slate-900"></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <span class="material-symbols-rounded text-slate-400 text-[20px]">wc</span>
+                                        <div>
+                                            <p class="text-xs text-slate-500">Giới tính</p>
+                                            <p id="modal-user-gender" class="text-sm font-semibold text-slate-900"></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <span class="material-symbols-rounded text-slate-400 text-[20px]">location_on</span>
+                                        <div>
+                                            <p class="text-xs text-slate-500">Địa chỉ</p>
+                                            <p id="modal-user-address" class="text-sm font-semibold text-slate-900"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-4">
+                                <h4 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Hoạt động</h4>
+                                <div class="space-y-3">
+                                    <div class="flex items-start gap-2">
+                                        <span class="material-symbols-rounded text-slate-400 text-[20px]">calendar_month</span>
+                                        <div>
+                                            <p class="text-xs text-slate-500">Ngày tham gia</p>
+                                            <p id="modal-user-created" class="text-sm font-semibold text-slate-900"></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <span class="material-symbols-rounded text-slate-400 text-[20px]">login</span>
+                                        <div>
+                                            <p class="text-xs text-slate-500">Đăng nhập cuối</p>
+                                            <p id="modal-user-last-login" class="text-sm font-semibold text-slate-900"></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <span class="material-symbols-rounded text-slate-400 text-[20px]">verified_user</span>
+                                        <div>
+                                            <p class="text-xs text-slate-500">Xác thực email</p>
+                                            <p id="modal-user-verified" class="text-sm font-semibold"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stats -->
+                        <div class="grid grid-cols-4 gap-4">
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <p class="text-xs text-blue-600 font-semibold uppercase">Đơn hàng</p>
+                                <p id="modal-user-orders" class="text-2xl font-extrabold text-blue-700 mt-1">0</p>
+                            </div>
+                            <div class="bg-emerald-50 p-4 rounded-lg">
+                                <p class="text-xs text-emerald-600 font-semibold uppercase">Tổng chi</p>
+                                <p id="modal-user-spent" class="text-2xl font-extrabold text-emerald-700 mt-1">0đ</p>
+                            </div>
+                            <div class="bg-amber-50 p-4 rounded-lg">
+                                <p class="text-xs text-amber-600 font-semibold uppercase">Điểm tích lũy</p>
+                                <p id="modal-user-loyalty" class="text-2xl font-extrabold text-amber-700 mt-1">0</p>
+                            </div>
+                            <div class="bg-purple-50 p-4 rounded-lg">
+                                <p class="text-xs text-purple-600 font-semibold uppercase">Hạng</p>
+                                <p id="modal-user-tier" class="text-2xl font-extrabold text-purple-700 mt-1">-</p>
+                            </div>
+                        </div>
+
+                        <!-- Recent Orders -->
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Đơn hàng gần đây</h4>
+                            <div id="modal-user-recent-orders" class="bg-slate-50 rounded-xl p-4 space-y-2">
+                                <!-- Dynamic content -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="p-6 border-t border-slate-100 flex justify-end gap-3">
+                        <button onclick="window.usersModule.closeDetails()" class="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all">
+                            Đóng</button>
+                        <button onclick="window.usersModule.editUser(document.getElementById('modal-user-uid').textContent.trim())" class="px-6 py-2.5 bg-primary hover:bg-primary-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 active:scale-95 transition-all">
+                            Chỉnh sửa
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit User Modal -->
+            <div id="edit-user-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                <div class="bg-white rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] flex flex-col">
+                    <!-- Header -->
+                    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                        <h3 class="text-xl font-bold text-slate-900">Chỉnh sửa thông tin người dùng</h3>
+                        <button onclick="window.usersModule.closeEditModal()" class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-all">
+                            <span class="material-symbols-rounded">close</span>
+                        </button>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="flex-1 overflow-y-auto p-6">
+                        <form id="edit-user-form" class="space-y-6">
+                            <input type="hidden" id="edit-user-id">
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Tên hiển thị</label>
+                                    <input type="text" id="edit-user-name" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Email</label>
+                                    <input type="email" id="edit-user-email" disabled class="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-500 cursor-not-allowed">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Số điện thoại</label>
+                                    <input type="tel" id="edit-user-phone" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Giới tính</label>
+                                    <select id="edit-user-gender" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                                        <option value="male">Nam</option>
+                                        <option value="female">Nữ</option>
+                                        <option value="unisex">Khác</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Vai trò</label>
+                                    <select id="edit-user-role" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                                        <option value="customer">Khách hàng</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Điểm tích lũy</label>
+                                    <input type="number" id="edit-user-loyalty" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                                </div>
+                            </div>
+
+                            <div class="border-t border-slate-200 pt-6">
+                                <h4 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Địa chỉ</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-semibold text-slate-700 mb-2">Đường</label>
+                                        <input type="text" id="edit-user-street" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-slate-700 mb-2">Phường/Xã</label>
+                                        <input type="text" id="edit-user-ward" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-slate-700 mb-2">Quận/Huyện</label>
+                                        <input type="text" id="edit-user-district" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-semibold text-slate-700 mb-2">Thành phố</label>
+                                        <input type="text" id="edit-user-city" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                                    </div>
+                                </div>
+                            </div>
+          ction Buttons -->
+            <div class="flex justify-end gap-3">
+                <button onclick="window.settingsModule.resetForm()" class="px-6 py-2.5 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
+            <!-- Action Buttons -->
+            <div class="flex justify-end gap-3">
+                <button onclick="window.settingsModule.resetForm()" class="px-6 py-2.5 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
+                    Cancel
+                </button>
+                <button id="btn-save-settings" onclick="window.settingsModule.saveCurrentTab()" class="px-6 py-2.5 bg-primary hover:bg-primary-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 active:scale-95 transition-all flex items-center gap-2">
+                    <span class="material-symbols-rounded text-[18px]">save</span>
+                    Save Changes
+                </button>
+            </div>
+
+            <!-- Toast Notification Container -->
+            <div id="toast-container" class="fixed top-24 right-8 z-50 space-y-2"></div>
+            `,
+
+
+            promotions: `
+            <!-- Page Header -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý Khuyến Mãi</h2>
+                    <div class="flex items-center gap-2 mt-2 text-sm text-slate-500">
+                        <span class="text-primary font-semibold">Khuyến mãi & Mã giảm giá</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="window.promotionsModule.openModal()" class="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-600 text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg active:scale-95 transition-all">
+                        <span class="material-symbols-rounded text-[20px]">add</span>
+                        Tạo khuyến mãi
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">TỔNG MÃ</p>
+                            <h3 id="stat-promotions-total" class="text-3xl font-extrabold text-slate-900 mt-2">0</h3>
+                        </div>
+                        <span class="material-symbols-rounded text-5xl text-purple-500 opacity-20">local_offer</span>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">ĐANG HOẠT ĐỘNG</p>
+                            <h3 id="stat-promotions-active" class="text-3xl font-extrabold text-green-600 mt-2">0</h3>
+                        </div>
+                        <span class="material-symbols-rounded text-5xl text-green-500 opacity-20">check_circle</span>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">HẾT HẠN</p>
+                            <h3 id="stat-promotions-expired" class="text-3xl font-extrabold text-red-600 mt-2">0</h3>
+                        </div>
+                        <span class="material-symbols-rounded text-5xl text-red-500 opacity-20">event_busy</span>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">TỔNG ĐÃ DÙNG</p>
+                            <h3 id="stat-promotions-used" class="text-3xl font-extrabold text-blue-600 mt-2">0</h3>
+                        </div>
+                        <span class="material-symbols-rounded text-5xl text-blue-500 opacity-20">receipt_long</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-lg">
+                    <button id="filter-btn-all-promotions" onclick="window.promotionsModule.setFilter('all')" class="px-4 py-2 bg-white text-slate-900 text-sm font-bold rounded-lg shadow-sm transition-all">Tất cả</button>
+                    <button id="filter-btn-active-promotions" onclick="window.promotionsModule.setFilter('active')" class="px-4 py-2 text-slate-600 hover:text-slate-900 text-sm font-medium rounded-lg transition-all">Đang hoạt động</button>
+                    <button id="filter-btn-expired-promotions" onclick="window.promotionsModule.setFilter('expired')" class="px-4 py-2 text-slate-600 hover:text-slate-900 text-sm font-medium rounded-lg transition-all">Hết hạn</button>
+                    <button id="filter-btn-inactive-promotions" onclick="window.promotionsModule.setFilter('inactive')" class="px-4 py-2 text-slate-600 hover:text-slate-900 text-sm font-medium rounded-lg transition-all">Đã tắt</button>
+                </div>
+                <button onclick="window.promotionsModule.exportPromotions()" class="flex items-center gap-2 px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-sm font-bold transition-all">
+                    <span class="material-symbols-rounded text-[20px]">download</span>
+                    Xuất dữ liệu
+                </button>
+            </div>
+
+            <!-- Promotions Table -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-200">
+                    <div class="flex items-center gap-3">
+                        <div class="relative flex-1">
+                            <span class="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+                            <input id="search-promotions" type="text" placeholder="Tìm kiếm mã khuyến mãi..." class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                        </div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-slate-50 text-xs uppercase tracking-wider text-slate-600 font-bold">
+                                <th class="px-6 py-4 text-left">Mã</th>
+                                <th class="px-6 py-4 text-left">Loại</th>
+                                <th class="px-6 py-4 text-left">Giá trị</th>
+                                <th class="px-6 py-4 text-left">Số lượng</th>
+                                <th class="px-6 py-4 text-left">Đã dùng</th>
+                                <th class="px-6 py-4 text-left">Trạng thái</th>
+                                <th class="px-6 py-4 text-left">Hạn sử dụng</th>
+                                <th class="px-6 py-4 text-right">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="promotions-table-body" class="divide-y divide-slate-100">
+                            <tr>
+                                <td colspan="8" class="px-6 py-12 text-center text-slate-500">
+                                    <span class="material-symbols-rounded text-6xl text-slate-300 mb-2">local_offer</span>
+                                    <p class="font-medium">Đang tải...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            `
+        };
+
+        // Function to load tab content
+        function loadTab(tabName) {
+            const pageContent = document.getElementById('page-content');
+            if (tabContents[tabName]) {
+                pageContent.innerHTML = tabContents[tabName];
+                
+                // Update active nav link
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('bg-primary/10', 'text-primary');
+                    link.classList.add('text-slate-600', 'dark:text-slate-400', 'hover:bg-slate-50', 'dark:hover:bg-white/5', 'hover:text-primary', 'dark:hover:text-primary');
+                    const existingIndicator = link.querySelector('.absolute');
+                    if (existingIndicator) {
+                        existingIndicator.remove();
+                    }
+                    const spanText = link.querySelector('span:last-child');
+                    if (spanText) {
+                        spanText.classList.remove('font-bold');
+                        spanText.classList.add('font-semibold');
+                    }
+                });
+                
+                const activeLink = document.querySelector(`[data-tab="${tabName}"]`);
+                if (activeLink) {
+                    activeLink.classList.remove('text-slate-600', 'dark:text-slate-400', 'hover:bg-slate-50', 'dark:hover:bg-white/5', 'hover:text-primary', 'dark:hover:text-primary');
+                    activeLink.classList.add('bg-primary/10', 'text-primary');
+                    
+                    const indicator = document.createElement('div');
+                    indicator.className = 'absolute inset-y-0 left-0 w-1 bg-primary rounded-r-full';
+                    activeLink.appendChild(indicator);
+                    
+                    const spanText = activeLink.querySelector('span:last-child');
+                    if (spanText) {
+                        spanText.classList.remove('font-semibold');
+                        spanText.classList.add('font-bold');
+                    }
+                }
+
+                // Reload data if switching to specific tabs
+                const initMap = {
+                    'orders': () => window.ordersModule?.reload(),
+                    'inventory': () => window.productsModule?.reload(),
+                    'users': () => window.usersModule?.init(),
+                    'promotions': () => window.promotionsModule?.init(),
+                    'reports': () => window.reportsModule?.reload()
+                };
+
+                if (initMap[tabName]) {
+                    setTimeout(initMap[tabName], 100);
+                }
+            }
+        }
+
+        // Logout function
+        async function handleLogout() {
+            const confirmed = await window.showConfirm('Bạn có chắc muốn đăng xuất?', {
+                title: 'Xác nhận đăng xuất',
+                type: 'warning',
+                confirmText: 'Đăng xuất',
+                cancelText: 'Hủy'
+            });
+            
+            if (confirmed) {
+                try {
+                    const { getFirebaseAuth } = await import('./js/firebase-config.js');
+                    const auth = getFirebaseAuth();
+                    await auth.signOut();
+                    window.showNotification('Đăng xuất thành công!', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 500);
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    window.showNotification('Không thể đăng xuất. Vui lòng thử lại!', 'error');
+                }
+            }
+        }
+
+        // Load admin user info
+        async function loadAdminInfo() {
+            try {
+                const { getFirebaseAuth, getFirebaseDatabase } = await import('./js/firebase-config.js');
+                const auth = getFirebaseAuth();
+                
+                auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        // Update UI with user info
+                        const nameEl = document.getElementById('admin-name');
+                        const emailEl = document.getElementById('admin-email');
+                        const avatarEl = document.getElementById('admin-avatar');
+                        
+                        if (emailEl) emailEl.textContent = user.email;
+                        
+                        // Get user data from database
+                        const { ref, get } = await import('https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js');
+                        const db = getFirebaseDatabase();
+                        const userRef = ref(db, `users/${user.uid}`);
+                        const snapshot = await get(userRef);
+                        
+                        if (snapshot.exists()) {
+                            const userData = snapshot.val();
+                            if (nameEl) nameEl.textContent = userData.displayName || user.displayName || 'Admin';
+                            if (avatarEl && userData.photoURL) {
+                                avatarEl.src = userData.photoURL;
+                            } else if (avatarEl) {
+                                avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.displayName || user.email)}&background=eb4d58&color=fff`;
+                            }
+                        } else {
+                            if (nameEl) nameEl.textContent = user.displayName || 'Admin';
+                        }
+                    } else {
+                        // Not logged in, redirect to login
+                        window.location.href = 'login.html';
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading admin info:', error);
+            }
+        }
+
+        // Add click event listeners to navigation links
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load admin info
+            loadAdminInfo();
+            
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tabName = this.getAttribute('data-tab');
+                    loadTab(tabName);
+                });
+            });
+            
+            // Load default tab
+            loadTab('orders');
+        });
+    </script>
+
+    <!-- Firebase Dashboard Module -->
+    <script type="module" src="js/admin/orders.js"></script>
+    <script type="module" src="js/admin/products.js"></script>
+    <script type="module" src="js/admin/users.js"></script>
+    <script type="module" src="js/admin/reports.js"></script>
+    <script type="module" src="js/admin/promotions.js"></script>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="fixed inset-0 z-[10000] hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-200" id="confirm-modal-content">
+            <!-- Header -->
+            <div class="p-6 border-b border-slate-700">
+                <div class="flex items-center gap-3">
+                    <span id="confirm-modal-icon" class="material-symbols-rounded text-3xl text-rose-400">warning</span>
+                    <h3 id="confirm-modal-title" class="text-xl font-bold text-white">Xác nhận</h3>
+                </div>
+            </div>
+            
+            <!-- Body -->
+            <div class="p-6">
+                <p id="confirm-modal-message" class="text-slate-200 leading-relaxed whitespace-pre-line"></p>
+                <p id="confirm-modal-submessage" class="text-sm text-slate-400 mt-2 hidden"></p>
+            </div>
+            
+            <!-- Footer -->
+            <div class="p-6 border-t border-slate-700 flex items-center justify-end gap-3">
+                <button id="confirm-modal-cancel" class="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-sm font-bold transition-all">
+                    Cancel
+                </button>
+                <button id="confirm-modal-ok" class="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-purple-500/30 transition-all">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div id="alert-modal" class="fixed inset-0 z-[10000] hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-200" id="alert-modal-content">
+            <!-- Header -->
+            <div class="p-6 border-b border-slate-700">
+                <div class="flex items-center gap-3">
+                    <span id="alert-modal-icon" class="material-symbols-rounded text-3xl text-blue-400">info</span>
+                    <h3 id="alert-modal-title" class="text-xl font-bold text-white">Thông báo</h3>
+                </div>
+            </div>
+            
+            <!-- Body -->
+            <div class="p-6">
+                <p id="alert-modal-message" class="text-slate-200 leading-relaxed whitespace-pre-line"></p>
+            </div>
+            
+            <!-- Footer -->
+            <div class="p-6 border-t border-slate-700 flex items-center justify-end">
+                <button id="alert-modal-ok" class="px-8 py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/30 transition-all">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Modal Functions -->
+    <script>
+        // Confirmation Modal with Promise
+        window.showConfirm = function(message, options = {}) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirm-modal');
+                const modalContent = document.getElementById('confirm-modal-content');
+                const messageEl = document.getElementById('confirm-modal-message');
+                const submessageEl = document.getElementById('confirm-modal-submessage');
+                const titleEl = document.getElementById('confirm-modal-title');
+                const iconEl = document.getElementById('confirm-modal-icon');
+                const okBtn = document.getElementById('confirm-modal-ok');
+                const cancelBtn = document.getElementById('confirm-modal-cancel');
+
+                // Set content
+                messageEl.textContent = message;
+                titleEl.textContent = options.title || 'Xác nhận';
+                
+                // Set submessage if provided
+                if (options.submessage) {
+                    submessageEl.textContent = options.submessage;
+                    submessageEl.classList.remove('hidden');
+                } else {
+                    submessageEl.classList.add('hidden');
+                }
+
+                // Set icon and color based on type
+                const type = options.type || 'warning';
+                const iconMap = {
+                    danger: { icon: 'error', color: 'text-rose-400' },
+                    warning: { icon: 'warning', color: 'text-amber-400' },
+                    info: { icon: 'info', color: 'text-blue-400' },
+                    question: { icon: 'help', color: 'text-purple-400' }
+                };
+                const iconConfig = iconMap[type] || iconMap.warning;
+                iconEl.textContent = iconConfig.icon;
+                iconEl.className = `material-symbols-rounded text-3xl ${iconConfig.color}`;
+
+                // Set button text
+                okBtn.textContent = options.confirmText || 'OK';
+                cancelBtn.textContent = options.cancelText || 'Cancel';
+
+                // Show modal with animation
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => {
+                    modalContent.classList.remove('scale-95');
+                    modalContent.classList.add('scale-100');
+                }, 10);
+
+                // Focus OK button
+                setTimeout(() => okBtn.focus(), 100);
+
+                // Handle buttons
+                const handleOk = () => {
+                    closeModal();
+                    resolve(true);
+                };
+
+                const handleCancel = () => {
+                    closeModal();
+                    resolve(false);
+                };
+
+                const closeModal = () => {
+                    modalContent.classList.remove('scale-100');
+                    modalContent.classList.add('scale-95');
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                        modal.classList.remove('flex');
+                    }, 200);
+                    
+                    // Remove event listeners
+                    okBtn.removeEventListener('click', handleOk);
+                    cancelBtn.removeEventListener('click', handleCancel);
+                    document.removeEventListener('keydown', handleKeyPress);
+                };
+
+                const handleKeyPress = (e) => {
+                    if (e.key === 'Enter') handleOk();
+                    if (e.key === 'Escape') handleCancel();
+                };
+
+                okBtn.addEventListener('click', handleOk);
+                cancelBtn.addEventListener('click', handleCancel);
+                document.addEventListener('keydown', handleKeyPress);
+            });
+        };
+
+        // Alert Modal with Promise
+        window.showAlert = function(message, options = {}) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('alert-modal');
+                const modalContent = document.getElementById('alert-modal-content');
+                const messageEl = document.getElementById('alert-modal-message');
+                const titleEl = document.getElementById('alert-modal-title');
+                const iconEl = document.getElementById('alert-modal-icon');
+                const okBtn = document.getElementById('alert-modal-ok');
+
+                // Set content
+                messageEl.textContent = message;
+                titleEl.textContent = options.title || 'Thông báo';
+
+                // Set icon based on type
+                const type = options.type || 'info';
+                const iconMap = {
+                    success: { icon: 'check_circle', color: 'text-emerald-400' },
+                    error: { icon: 'error', color: 'text-rose-400' },
+                    warning: { icon: 'warning', color: 'text-amber-400' },
+                    info: { icon: 'info', color: 'text-blue-400' }
+                };
+                const iconConfig = iconMap[type] || iconMap.info;
+                iconEl.textContent = iconConfig.icon;
+                iconEl.className = `material-symbols-rounded text-3xl ${iconConfig.color}`;
+
+                // Show modal with animation
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => {
+                    modalContent.classList.remove('scale-95');
+                    modalContent.classList.add('scale-100');
+                }, 10);
+
+                // Focus OK button
+                setTimeout(() => okBtn.focus(), 100);
+
+                const handleOk = () => {
+                    closeModal();
+                    resolve();
+                };
+
+                const closeModal = () => {
+                    modalContent.classList.remove('scale-100');
+                    modalContent.classList.add('scale-95');
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                        modal.classList.remove('flex');
+                    }, 200);
+                    
+                    okBtn.removeEventListener('click', handleOk);
+                    document.removeEventListener('keydown', handleKeyPress);
+                };
+
+                const handleKeyPress = (e) => {
+                    if (e.key === 'Enter' || e.key === 'Escape') handleOk();
+                };
+
+                okBtn.addEventListener('click', handleOk);
+                document.addEventListener('keydown', handleKeyPress);
+            });
+        };
+    </script>
+
+    <!-- Notification Toast Container -->
+    <div id="notification-container" class="fixed top-4 right-4 z-[9999] flex flex-col gap-3 max-w-sm w-full pointer-events-none">
+        <!-- Notifications will be added here dynamically -->
+    </div>
+
+    <!-- Global Notification Script -->
+    <script>
+        // Global notification function
+        window.showNotification = function(message, type = 'info', duration = 5000) {
+            const container = document.getElementById('notification-container');
+            if (!container) return;
+
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'pointer-events-auto transform translate-x-full transition-transform duration-300 ease-out';
+            
+            // Icon and color based on type
+            let icon, bgColor, borderColor, iconColor, progressColor;
+            switch(type) {
+                case 'success':
+                    icon = 'check_circle';
+                    bgColor = 'bg-white';
+                    borderColor = 'border-emerald-200';
+                    iconColor = 'text-emerald-500';
+                    progressColor = 'bg-emerald-500';
+                    break;
+                case 'error':
+                    icon = 'error';
+                    bgColor = 'bg-white';
+                    borderColor = 'border-rose-200';
+                    iconColor = 'text-rose-500';
+                    progressColor = 'bg-rose-500';
+                    break;
+                case 'warning':
+                    icon = 'warning';
+                    bgColor = 'bg-white';
+                    borderColor = 'border-amber-200';
+                    iconColor = 'text-amber-500';
+                    progressColor = 'bg-amber-500';
+                    break;
+                default: // info
+                    icon = 'info';
+                    bgColor = 'bg-white';
+                    borderColor = 'border-blue-200';
+                    iconColor = 'text-blue-500';
+                    progressColor = 'bg-blue-500';
+            }
+
+            notification.innerHTML = `
+                <div class="${bgColor} rounded-xl shadow-lg border-2 ${borderColor} overflow-hidden">
+                    <div class="p-4 flex items-start gap-3">
+                        <span class="material-symbols-rounded ${iconColor} text-[24px] flex-shrink-0">${icon}</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-slate-900 break-words">${message}</p>
+                        </div>
+                        <button onclick="this.closest('div[role=alert]').remove()" 
+                                class="flex-shrink-0 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all">
+                            <span class="material-symbols-rounded text-[18px]">close</span>
+                        </button>
+                    </div>
+                    <div class="h-1 ${progressColor} notification-progress" style="animation: shrink ${duration}ms linear"></div>
+                </div>
+            `;
+            notification.setAttribute('role', 'alert');
+
+            container.appendChild(notification);
+
+            // Trigger slide-in animation
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 10);
+
+            // Auto remove after duration
+            setTimeout(() => {
+                notification.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => notification.remove(), 300);
+            }, duration);
+        };
+
+        // Add CSS for progress bar animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shrink {
+                from { width: 100%; }
+                to { width: 0%; }
+            }
+            .notification-progress {
+                transform-origin: left;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+
+</body>
+</html>
