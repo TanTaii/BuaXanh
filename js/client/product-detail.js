@@ -1,8 +1,8 @@
 // Product Detail Page Logic for X-Sneaker
 // Handles product loading, gallery, options, cart, and related products
 
-import { getFirebaseAuth, getFirebaseFirestore } from './firebase-config.js';
-import { doc, getDoc, collection, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { getFirebaseAuth, getFirebaseFirestore } from '../firebase-config.js';
+import { doc, getDoc, collection, getDocs, setDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 import { initProductReviews } from './product-reviews.js';
 
 // Get Firebase instances
@@ -118,6 +118,17 @@ async function loadRelatedProducts(category, currentProductId, limit = 6) {
  */
 function renderProductData(product) {
     currentProduct = product;
+
+    const detailsContainer = document.getElementById('product-details-list');
+    if (detailsContainer) {
+        detailsContainer.innerHTML = `
+            <div class="flex items-center justify-between gap-3">
+                <div class="text-sm text-slate-600">Mau dang chon: <span id="selected-color-name" class="font-bold text-slate-900">-</span></div>
+                <button id="size-guide-btn" type="button" class="text-sm font-semibold text-primary hover:underline">Bang size</button>
+            </div>
+            <div id="size-container" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
+        `;
+    }
     
     // Update product name
     const nameEl = document.getElementById('product-name');
@@ -226,33 +237,7 @@ function renderProductData(product) {
  */
 function renderColorVariants(colors) {
     if (!colors || colors.length === 0) return;
-    
-    const colorContainer = document.getElementById('color-container');
-    if (!colorContainer) return;
-    
-    const colorMap = {
-        'Đen': '#000000',
-        'Trắng': '#FFFFFF',
-        'Đỏ': '#E30B17',
-        'Xanh Navy': '#1E3A8A',
-        'Vàng': '#FACC15'
-    };
-    
-    colorContainer.innerHTML = colors.map((colorName, index) => {
-        const colorValue = colorMap[colorName] || '#666666';
-        const isFirst = index === 0;
-        
-        return `
-            <button class="color-btn w-10 h-10 rounded-full ${
-                isFirst ? 'border-2 border-primary ring-offset-2 ring-1 ring-primary' : 'border border-gray-200'
-            } transition-all ${colorValue === '#FFFFFF' ? 'shadow-md' : ''}" 
-                    style="background-color: ${colorValue}"
-                    data-color="${colorName}"
-                    title="${colorName}">
-            </button>
-        `;
-    }).join('');
-    
+
     // Set first color as selected
     if (colors.length > 0) {
         selectedColor = colors[0];
@@ -440,7 +425,7 @@ function renderRelatedProducts(products) {
  * Render carousel view (4 products at a time)
  */
 function renderRelatedProductsCarousel() {
-    const container = document.querySelector('.grid.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-4.gap-6');
+    const container = document.getElementById('related-products-container');
     if (!container) return;
     
     if (relatedProducts.length === 0) {
@@ -552,13 +537,13 @@ function setupEventListeners() {
     });
     
     // Add to Cart button
-    const addToCartBtn = document.querySelector('button.bg-primary.hover\\:bg-\\[\\#c4141d\\]');
+    const addToCartBtn = document.getElementById('add-to-cart-btn');
     if (addToCartBtn) {
         addToCartBtn.addEventListener('click', handleAddToCart);
     }
     
     // Add to Wishlist button
-    const addToWishlistBtn = document.querySelector('button.border-2.border-gray-200');
+    const addToWishlistBtn = document.getElementById('add-to-wishlist-btn');
     if (addToWishlistBtn) {
         addToWishlistBtn.addEventListener('click', handleAddToWishlist);
     }
@@ -706,17 +691,18 @@ async function handleAddToWishlist() {
     let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
     const existingIndex = wishlist.findIndex(item => item.id === currentProduct.id);
     
-    const btn = document.querySelector('button.border-2.border-gray-200 span.material-symbols-outlined');
+    const btn = document.querySelector('#add-to-wishlist-btn span.material-symbols-outlined');
     
     if (existingIndex >= 0) {
         wishlist.splice(existingIndex, 1);
-        if (btn) btn.textContent = 'favorite';
+        if (btn) btn.textContent = 'favorite_border';
         window.showToast?.('Đã xóa khỏi danh sách yêu thích', 'info');
         
         if (user) {
             try {
-                const wishlistItemRef = ref(database, `wishlist/${user.uid}/${currentProduct.id}`);
-                await remove(wishlistItemRef);
+                await updateDoc(doc(database, 'wishlist', user.uid), {
+                    [currentProduct.id]: deleteField()
+                });
             } catch (error) {
                 console.error('❌ Lỗi xóa Firebase wishlist:', error);
             }
@@ -732,12 +718,14 @@ async function handleAddToWishlist() {
         
         wishlist.push(wishlistItem);
         if (btn) btn.textContent = 'favorite';
+        btn?.classList?.add('text-red-500');
         window.showToast?.('Đã thêm vào danh sách yêu thích', 'success');
         
         if (user) {
             try {
-                const wishlistItemRef = ref(database, `wishlist/${user.uid}/${currentProduct.id}`);
-                await set(wishlistItemRef, wishlistItem);
+                await setDoc(doc(database, 'wishlist', user.uid), {
+                    [currentProduct.id]: wishlistItem.addedAt
+                }, { merge: true });
             } catch (error) {
                 console.error('❌ Lỗi lưu Firebase wishlist:', error);
             }
@@ -768,8 +756,9 @@ async function toggleWishlistForRelated(productId, button) {
         
         if (user) {
             try {
-                const wishlistItemRef = ref(database, `wishlist/${user.uid}/${productId}`);
-                await remove(wishlistItemRef);
+                await updateDoc(doc(database, 'wishlist', user.uid), {
+                    [productId]: deleteField()
+                });
             } catch (error) {
                 console.error('❌ Lỗi xóa Firebase wishlist:', error);
             }
@@ -796,8 +785,9 @@ async function toggleWishlistForRelated(productId, button) {
             
             if (user) {
                 try {
-                    const wishlistItemRef = ref(database, `wishlist/${user.uid}/${productId}`);
-                    await set(wishlistItemRef, wishlistItem);
+                    await setDoc(doc(database, 'wishlist', user.uid), {
+                        [productId]: wishlistItem.addedAt
+                    }, { merge: true });
                 } catch (error) {
                     console.error('❌ Lỗi lưu Firebase wishlist:', error);
                 }

@@ -6,7 +6,7 @@
  * - Hiển thị sản phẩm Mới (New Arrivals)
  */
 
-import { getFirebaseFirestore } from './firebase-config.js';
+import { getFirebaseFirestore } from '../firebase-config.js';
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
 // Khởi tạo database
@@ -42,25 +42,18 @@ async function loadFlashSaleProducts(limit = 4) {
  */
 async function loadBestSellers(limit = null) {
   try {
-    const productsRef = ref(database, 'products');
-    const snapshot = await get(productsRef);
-    
-    if (snapshot.exists()) {
-      const productsData = snapshot.val();
-      let bestSellers = Object.keys(productsData)
-        .map(key => ({ id: key, ...productsData[key] }))
-        .filter(product => product.isBestSeller || product.salesCount > 0)
-        .sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0)); // Sắp xếp theo số lượng bán
-      
-      if (limit) {
-        bestSellers = bestSellers.slice(0, limit);
-      }
-      
-      console.log(`✅ Đã tải ${bestSellers.length} sản phẩm Bán chạy`);
-      return bestSellers;
+    const snapshot = await getDocs(collection(database, 'products'));
+    let bestSellers = snapshot.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(product => product.isBestSeller || product.salesCount > 0)
+      .sort((a, b) => (b.salesCount || b.sold || 0) - (a.salesCount || a.sold || 0));
+
+    if (limit) {
+      bestSellers = bestSellers.slice(0, limit);
     }
-    
-    return [];
+
+    console.log(`✅ Đã tải ${bestSellers.length} sản phẩm Bán chạy`);
+    return bestSellers;
   } catch (error) {
     console.error('❌ Lỗi tải Best Sellers:', error);
     return [];
@@ -72,25 +65,18 @@ async function loadBestSellers(limit = null) {
  */
 async function loadNewArrivals(limit = null) {
   try {
-    const productsRef = ref(database, 'products');
-    const snapshot = await get(productsRef);
-    
-    if (snapshot.exists()) {
-      const productsData = snapshot.val();
-      let newArrivals = Object.keys(productsData)
-        .map(key => ({ id: key, ...productsData[key] }))
-        .filter(product => product.isNew)
-        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)); // Sắp xếp theo ngày tạo mới nhất
-      
-      if (limit) {
-        newArrivals = newArrivals.slice(0, limit);
-      }
-      
-      console.log(`✅ Đã tải ${newArrivals.length} sản phẩm Mới`);
-      return newArrivals;
+    const snapshot = await getDocs(collection(database, 'products'));
+    let newArrivals = snapshot.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(product => product.isNew)
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+    if (limit) {
+      newArrivals = newArrivals.slice(0, limit);
     }
-    
-    return [];
+
+    console.log(`✅ Đã tải ${newArrivals.length} sản phẩm Mới`);
+    return newArrivals;
   } catch (error) {
     console.error('❌ Lỗi tải New Arrivals:', error);
     return [];

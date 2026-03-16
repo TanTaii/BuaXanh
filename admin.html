@@ -278,7 +278,10 @@
                      <!-- Loading State -->
                      <div id="orders-loading" class="absolute inset-0 bg-white/90 z-10 flex items-center justify-center backdrop-blur-sm" style="display: none;">
                         <div class="flex flex-col items-center gap-3">
-                            <span class="material-symbols-outlined animate-spin text-primary text-4xl">rotate_right</span>
+                            <svg class="animate-spin text-primary" width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                            </svg>
                             <p class="text-sm font-medium text-slate-500">Đang tải dữ liệu...</p>
                         </div>
                      </div>
@@ -1850,54 +1853,64 @@
     </script>
 
     <!-- Confirmation Modal -->
-    <div id="confirm-modal" class="fixed inset-0 z-[10000] hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-        <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-200" id="confirm-modal-content">
+    <div id="confirm-modal" class="fixed inset-0 z-[10000] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-200 border border-slate-200" id="confirm-modal-content">
             <!-- Header -->
-            <div class="p-6 border-b border-slate-700">
-                <div class="flex items-center gap-3">
-                    <span id="confirm-modal-icon" class="material-symbols-rounded text-3xl text-rose-400">warning</span>
-                    <h3 id="confirm-modal-title" class="text-xl font-bold text-white">Xác nhận</h3>
+            <div class="p-6 border-b border-slate-100">
+                <div class="flex items-center gap-4">
+                    <div id="confirm-modal-icon-wrap" class="size-12 rounded-2xl flex items-center justify-center bg-rose-50 flex-shrink-0">
+                        <span id="confirm-modal-icon" class="material-symbols-rounded text-2xl text-rose-500">warning</span>
+                    </div>
+                    <div>
+                        <h3 id="confirm-modal-title" class="text-lg font-extrabold text-slate-900">Xác nhận</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Vui lòng xác nhận hành động của bạn</p>
+                    </div>
                 </div>
             </div>
             
             <!-- Body -->
-            <div class="p-6">
-                <p id="confirm-modal-message" class="text-slate-200 leading-relaxed whitespace-pre-line"></p>
-                <p id="confirm-modal-submessage" class="text-sm text-slate-400 mt-2 hidden"></p>
+            <div class="px-6 py-5">
+                <p id="confirm-modal-message" class="text-slate-700 leading-relaxed whitespace-pre-line"></p>
+                <p id="confirm-modal-submessage" class="text-sm text-slate-500 mt-2 hidden"></p>
             </div>
             
             <!-- Footer -->
-            <div class="p-6 border-t border-slate-700 flex items-center justify-end gap-3">
-                <button id="confirm-modal-cancel" class="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-sm font-bold transition-all">
+            <div class="px-6 pb-6 flex items-center justify-end gap-3">
+                <button id="confirm-modal-cancel" class="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-all">
                     Hủy
                 </button>
-                <button id="confirm-modal-ok" class="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-purple-500/30 transition-all">
-                    OK
+                <button id="confirm-modal-ok" class="px-6 py-2.5 bg-primary hover:bg-primary-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 active:scale-95 transition-all">
+                    Xác nhận
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Alert Modal -->
-    <div id="alert-modal" class="fixed inset-0 z-[10000] hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-        <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-200" id="alert-modal-content">
+    <div id="alert-modal" class="fixed inset-0 z-[10000] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-200 border border-slate-200" id="alert-modal-content">
             <!-- Header -->
-            <div class="p-6 border-b border-slate-700">
-                <div class="flex items-center gap-3">
-                    <span id="alert-modal-icon" class="material-symbols-rounded text-3xl text-blue-400">info</span>
-                    <h3 id="alert-modal-title" class="text-xl font-bold text-white">Thông báo</h3>
+            <div class="p-6 border-b border-slate-100">
+                <div class="flex items-center gap-4">
+                    <div id="alert-modal-icon-wrap" class="size-12 rounded-2xl flex items-center justify-center bg-blue-50 flex-shrink-0">
+                        <span id="alert-modal-icon" class="material-symbols-rounded text-2xl text-blue-500">info</span>
+                    </div>
+                    <div>
+                        <h3 id="alert-modal-title" class="text-lg font-extrabold text-slate-900">Thông báo</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Thông tin từ hệ thống</p>
+                    </div>
                 </div>
             </div>
             
             <!-- Body -->
-            <div class="p-6">
-                <p id="alert-modal-message" class="text-slate-200 leading-relaxed whitespace-pre-line"></p>
+            <div class="px-6 py-5">
+                <p id="alert-modal-message" class="text-slate-700 leading-relaxed whitespace-pre-line"></p>
             </div>
             
             <!-- Footer -->
-            <div class="p-6 border-t border-slate-700 flex items-center justify-end">
-                <button id="alert-modal-ok" class="px-8 py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/30 transition-all">
-                    OK
+            <div class="px-6 pb-6 flex items-center justify-end">
+                <button id="alert-modal-ok" class="px-8 py-2.5 bg-primary hover:bg-primary-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 active:scale-95 transition-all">
+                    Đã hiểu
                 </button>
             </div>
         </div>
@@ -1932,17 +1945,26 @@
                 // Set icon and color based on type
                 const type = options.type || 'warning';
                 const iconMap = {
-                    danger: { icon: 'error', color: 'text-rose-400' },
-                    warning: { icon: 'warning', color: 'text-amber-400' },
-                    info: { icon: 'info', color: 'text-blue-400' },
-                    question: { icon: 'help', color: 'text-purple-400' }
+                    danger:   { icon: 'error',   color: 'text-rose-500',   bg: 'bg-rose-50' },
+                    warning:  { icon: 'warning',  color: 'text-amber-500',  bg: 'bg-amber-50' },
+                    info:     { icon: 'info',     color: 'text-blue-500',   bg: 'bg-blue-50' },
+                    question: { icon: 'help',     color: 'text-violet-500', bg: 'bg-violet-50' }
                 };
                 const iconConfig = iconMap[type] || iconMap.warning;
+                const iconWrapEl = document.getElementById('confirm-modal-icon-wrap');
                 iconEl.textContent = iconConfig.icon;
-                iconEl.className = `material-symbols-rounded text-3xl ${iconConfig.color}`;
+                iconEl.className = `material-symbols-rounded text-2xl ${iconConfig.color}`;
+                if (iconWrapEl) iconWrapEl.className = `size-12 rounded-2xl flex items-center justify-center ${iconConfig.bg} flex-shrink-0`;
+
+                // Confirm button color
+                if (type === 'danger') {
+                    okBtn.className = 'px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-rose-500/25 active:scale-95 transition-all';
+                } else {
+                    okBtn.className = 'px-6 py-2.5 bg-primary hover:bg-primary-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/25 active:scale-95 transition-all';
+                }
 
                 // Set button text
-                okBtn.textContent = options.confirmText || 'OK';
+                okBtn.textContent = options.confirmText || 'Xác nhận';
                 cancelBtn.textContent = options.cancelText || 'Hủy';
 
                 // Show modal with animation
@@ -2009,14 +2031,16 @@
                 // Set icon based on type
                 const type = options.type || 'info';
                 const iconMap = {
-                    success: { icon: 'check_circle', color: 'text-emerald-400' },
-                    error: { icon: 'error', color: 'text-rose-400' },
-                    warning: { icon: 'warning', color: 'text-amber-400' },
-                    info: { icon: 'info', color: 'text-blue-400' }
+                    success: { icon: 'check_circle', color: 'text-emerald-500', bg: 'bg-emerald-50' },
+                    error:   { icon: 'error',        color: 'text-rose-500',    bg: 'bg-rose-50' },
+                    warning: { icon: 'warning',      color: 'text-amber-500',   bg: 'bg-amber-50' },
+                    info:    { icon: 'info',         color: 'text-blue-500',    bg: 'bg-blue-50' }
                 };
                 const iconConfig = iconMap[type] || iconMap.info;
+                const alertIconWrapEl = document.getElementById('alert-modal-icon-wrap');
                 iconEl.textContent = iconConfig.icon;
-                iconEl.className = `material-symbols-rounded text-3xl ${iconConfig.color}`;
+                iconEl.className = `material-symbols-rounded text-2xl ${iconConfig.color}`;
+                if (alertIconWrapEl) alertIconWrapEl.className = `size-12 rounded-2xl flex items-center justify-center ${iconConfig.bg} flex-shrink-0`;
 
                 // Show modal with animation
                 modal.classList.remove('hidden');

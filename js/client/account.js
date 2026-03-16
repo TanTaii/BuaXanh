@@ -29,6 +29,7 @@ let currentUser = null;
 let unsubscribeProfile = null;
 let unsubscribeOrders = null;
 let allUserOrders = []; // Store all orders for quick access
+let allWishlistProducts = []; // Store wishlist products for add-to-cart actions
 let currentOrderFilter = 'all'; // Current filter status
 
 // ============================================================================
@@ -179,7 +180,7 @@ async function createBasicProfile(uid) {
     };
 
     try {
-        await updateDoc(doc(database, `users/${uid}`), basicData);
+        await setDoc(doc(database, `users/${uid}`), basicData, { merge: true });
         console.log('Basic profile created');
     } catch (error) {
         console.error('Error creating profile:', error);
@@ -242,17 +243,21 @@ async function loadUserWishlist(uid) {
                     return null;
                 }));
                 const validProducts = products.filter(p => p !== null);
+                allWishlistProducts = validProducts;
                 renderWishlist(validProducts);
             } else {
+                allWishlistProducts = [];
                 renderWishlist([]);
             }
         } else {
             document.getElementById('wishlist-count').textContent = '0';
+            allWishlistProducts = [];
             renderWishlist([]);
         }
     } catch (error) {
         console.error('Error loading wishlist:', error);
         document.getElementById('wishlist-count').textContent = '0';
+        allWishlistProducts = [];
         renderWishlist([]);
     }
 }
@@ -420,7 +425,7 @@ function renderWishlist(products) {
             <a href="Product-detail.html?id=${product.id}" class="block">
                 <div class="aspect-square bg-gray-100 relative overflow-hidden">
                     <img src="${product.image || product.images?.[0] || 'image/coming_soon.png'}" alt="${product.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                    <button onclick="event.preventDefault(); event.stopPropagation(); addToCart('${product.id}')" class="absolute bottom-3 right-3 bg-white text-black p-2 rounded-full shadow-lg hover:bg-primary hover:text-white transition-colors">
+                    <button onclick="event.preventDefault(); event.stopPropagation(); addWishlistProductToCart('${product.id}')" class="absolute bottom-3 right-3 bg-white text-black p-2 rounded-full shadow-lg hover:bg-primary hover:text-white transition-colors">
                         <span class="material-symbols-outlined text-xl">shopping_cart</span>
                     </button>
                 </div>
@@ -438,24 +443,22 @@ function renderWishlist(products) {
 function setupTabNavigation() {
     const tabs = document.querySelectorAll('.nav-tab');
     const contents = document.querySelectorAll('.tab-content');
+    const activeTabClasses = ['active', 'bg-primary', 'text-white', 'font-bold', 'shadow-md', 'shadow-primary/20'];
+    const inactiveTabClasses = ['text-slate-600', 'hover:bg-white', 'hover:text-slate-900', 'font-medium'];
 
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
             const targetId = tab.dataset.tab;
 
             // Update Active State
-            tabs.forEach(t => t.classList.remove('active', 'bg-primary', 'text-white'));
             tabs.forEach(t => {
-                if (!t.classList.contains('active')) {
-                    t.classList.add('text-gray-600', 'hover:bg-gray-100');
-                    // Remove old active classes just in case
-                    t.classList.remove('bg-primary', 'text-white');
-                }
+                t.classList.remove(...activeTabClasses);
+                t.classList.add(...inactiveTabClasses);
             });
             
             // Set styles for active tab
-            tab.classList.add('active', 'bg-primary', 'text-white');
-            tab.classList.remove('text-gray-600', 'hover:bg-gray-100');
+            tab.classList.remove(...inactiveTabClasses);
+            tab.classList.add(...activeTabClasses);
 
             // Show Content
             contents.forEach(content => {
@@ -1252,6 +1255,29 @@ document.getElementById('close-order-modal')?.addEventListener('click', closeOrd
 // Make functions available globally
 window.showOrderDetails = showOrderDetails;
 window.filterOrders = filterOrders;
+
+function addWishlistProductToCart(productId) {
+    const product = allWishlistProducts.find((item) => item.id === productId);
+    if (!product) {
+        showToast('Khong tim thay san pham trong wishlist', 'error');
+        return;
+    }
+
+    if (!window.addToCart) {
+        showToast('Khong the them vao gio hang luc nay', 'error');
+        return;
+    }
+
+    window.addToCart({
+        id: product.id,
+        name: product.name,
+        price: Number(product.price) || 0,
+        image: product.image || product.images?.[0] || 'image/coming_soon.png',
+        size: 'Free Size'
+    });
+}
+
+window.addWishlistProductToCart = addWishlistProductToCart;
 
 // ============================================================================
 // ORDER FILTER FUNCTIONS

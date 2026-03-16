@@ -3,7 +3,7 @@
  * Handles rendering cart items, updating quantities, removing items, and calculating totals.
  */
 
-import { getFirebaseFirestore } from './firebase-config.js';
+import { getFirebaseFirestore } from '../firebase-config.js';
 import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
 const database = getFirebaseFirestore();

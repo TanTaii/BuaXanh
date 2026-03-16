@@ -198,10 +198,11 @@ function renderPromotionsTable() {
                         <button onclick="window.promotionsModule.openModal('${promo.id}')" class="p-2 hover:bg-slate-100 rounded-lg transition-colors" title="Chỉnh sửa">
                             <span class="material-symbols-rounded text-[20px] text-slate-600">edit</span>
                         </button>
-                        <button onclick="window.promotionsModule.toggleActive('${promo.id}')" class="p-2 hover:bg-slate-100 rounded-lg transition-colors" title="${isActive ? 'Tắt' : 'Bật'}">
-                            <span class="material-symbols-rounded text-[20px] ${isActive ? 'text-green-600' : 'text-gray-400'}">
-                                ${isActive ? 'toggle_on' : 'toggle_off'}
-                            </span>
+                        <button onclick="window.promotionsModule.toggleActive('${promo.id}')" class="p-1.5 hover:bg-slate-100 rounded-lg transition-colors" title="${isActive ? 'Tắt' : 'Bật'}" aria-label="${isActive ? 'Đang bật – nhấn để tắt' : 'Đang tắt – nhấn để bật'}">
+                            <div class="relative inline-flex items-center w-10 h-5.5 cursor-pointer">
+                                <div class="w-10 h-5.5 rounded-full transition-colors duration-200 ${isActive ? 'bg-primary' : 'bg-slate-300'}" style="height:22px"></div>
+                                <div class="absolute top-0.5 ${isActive ? 'left-[calc(100%-18px)]' : 'left-0.5'} w-[18px] h-[18px] bg-white rounded-full shadow transition-all duration-200"></div>
+                            </div>
                         </button>
                         <button onclick="window.promotionsModule.duplicatePromotion('${promo.id}')" class="p-2 hover:bg-blue-50 rounded-lg transition-colors" title="Nhân bản">
                             <span class="material-symbols-rounded text-[20px] text-blue-600">content_copy</span>

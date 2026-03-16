@@ -1,7 +1,7 @@
 // Product Reviews System for X-Sneaker
 // Handles product reviews display, posting, and ratings with Firebase integration
 
-import { getFirebaseDatabase } from './firebase-config.js';
+import { getFirebaseDatabase } from '../firebase-config.js';
 import { ref, get, push, set, update, serverTimestamp, query, orderByChild } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 

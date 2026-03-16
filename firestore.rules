@@ -49,6 +49,11 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // === Wishlist Collection ===
+    match /wishlist/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
     // === Settings Collection ===
     // Stores global app settings (about us, general, contact info)
     match /settings/{document=**} {

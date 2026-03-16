@@ -1,7 +1,7 @@
 // Contact Form Handler for FoodSaver
 // Saves contact form submissions to Firebase Firestore
 
-import { getFirebaseFirestore } from './firebase-config.js';
+import { getFirebaseFirestore } from '../firebase-config.js';
 import { collection, addDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
 const database = getFirebaseFirestore();

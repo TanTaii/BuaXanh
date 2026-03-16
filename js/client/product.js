@@ -1,7 +1,7 @@
 // Product Listing Page Logic for X-Sneaker
 // Handles product loading, filtering, and rendering from Firebase
 
-import { getFirebaseFirestore } from './firebase-config.js';
+import { getFirebaseFirestore } from '../firebase-config.js';
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
 // Get Firebase database instance from shared config

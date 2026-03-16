@@ -13,14 +13,15 @@
     <script src="js/common.js" defer></script>
 
     <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/client/search.js"></script>
     <script type="module" src="js/client/checkout.js"></script>
   </head>
 <body class="bg-[#f8f9fa] text-slate-900 font-display transition-colors duration-300 antialiased relative flex min-h-screen w-full flex-col">
     <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 px-6 md:px-20 py-4 bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm">
-      <div class="flex items-center gap-2 text-primary">
-        <span class="material-symbols-outlined text-3xl font-bold">eco</span>
+      <a href="index.html" class="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity">
+        <img src="image/Logo.png" alt="FoodSaver Logo" class="h-9 w-auto object-contain" />
         <h2 class="text-slate-900 text-xl font-extrabold leading-tight tracking-tight">FoodSaver</h2>
-      </div>
+      </a>
       <div class="flex flex-1 justify-end gap-4 md:gap-10 items-center">
         <nav class="hidden md:flex items-center gap-8">
           <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="Product.html">Sản Phẩm</a>
@@ -39,7 +40,18 @@
             <span class="absolute -top-2 -right-2 bg-primary text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold text-white border border-white" id="cart-count">0</span>
           </a>
         </div>
-        <button id="mobile-menu-btn" class="md:hidden text-slate-700"><span class="material-symbols-outlined">menu</span></button>
+                <button id="mobile-menu-btn" class="md:hidden text-slate-700"><span class="material-symbols-outlined">menu</span></button>
+
+                <div id="mobile-menu" class="fixed inset-0 bg-white z-[60] hidden flex-col items-center justify-center text-slate-900 transition-opacity duration-300">
+                    <button id="close-menu-btn" class="absolute top-6 right-6 text-slate-900 p-2">
+                        <span class="material-symbols-outlined text-4xl">close</span>
+                    </button>
+                    <nav class="flex flex-col items-center gap-8 text-xl font-bold uppercase tracking-widest">
+                        <a href="Product.html" class="hover:text-primary transition-colors">Sản Phẩm</a>
+                        <a href="Contact-Us.html" class="hover:text-primary transition-colors">Liên hệ</a>
+                        <a href="About-us.html" class="hover:text-primary transition-colors">Giới thiệu</a>
+                    </nav>
+                </div>
       </div>
     </header>
 

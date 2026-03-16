@@ -1,4 +1,4 @@
-import { getFirebaseFirestore } from './firebase-config.js';
+import { getFirebaseFirestore } from '../firebase-config.js';
 import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
 const db = getFirebaseFirestore();

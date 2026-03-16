@@ -1,19 +1,5 @@
-
-// Initialize search on page load
-document.addEventListener('DOMContentLoaded', () => {
-  initSearch();
-});
-
 // Initialize search modal
 export function initSearch() {
-  const searchBtn = document.getElementById('global-search-btn');
-  const searchBtns = document.querySelectorAll('button[class*="search"], button .material-symbols-outlined');
-  const searchModal = document.getElementById('search-modal');
-  const closeSearchBtn = document.getElementById('close-search-btn');
-  const searchInput = document.getElementById('search-input');
-  const clearHistoryBtn = document.getElementById('clear-history');
-  const searchTags = document.querySelectorAll('.search-tag');
-
   // Check if we're on Product page
   const isProductPage = window.location.pathname.includes('Product.html');
 
