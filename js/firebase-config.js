@@ -1,9 +1,14 @@
-// Shared Firebase Configuration for FoodSaver
+// Shared Firebase Configuration for Bua Xanh
 // This config is used across all modules to ensure consistency
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager
+} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
 // Firebase Configuration
 export const firebaseConfig = {
@@ -39,7 +44,16 @@ export function getFirebaseAuth() {
 export function getFirebaseFirestore() {
   if (!db) {
     const firebaseApp = getFirebaseApp();
-    db = getFirestore(firebaseApp);
+    try {
+      db = initializeFirestore(firebaseApp, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager()
+        })
+      });
+    } catch (error) {
+      console.warn('Firestore persistence unavailable, falling back to default client:', error?.message || error);
+      db = getFirestore(firebaseApp);
+    }
   }
   return db;
 }

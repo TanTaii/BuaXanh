@@ -1,4 +1,4 @@
-// Base64 Upload Helper for FoodSaver
+// Base64 Upload Helper for Bua Xanh
 // Automatically compresses and converts image files to base64 Data URLs for Firestore
 
 /**

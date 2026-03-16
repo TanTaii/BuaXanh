@@ -4,9 +4,29 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // === Helper Functions ===
+    function isConfiguredAdmin() {
+      return request.auth != null && (
+        request.auth.uid == 'K67V2bYglaaIbo43T4FrSwINdgl1' ||
+        request.auth.token.email == 'kobaohquen379@gmail.com' ||
+        request.auth.token.email == 'quantrifs@gmail.com'
+      );
+    }
+
     // Check if the current user is an Admin
     function isAdmin() {
-      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      return request.auth != null && (
+        isConfiguredAdmin() ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+      );
+    }
+
+    // Check if current user is a shipper
+    function isShipper() {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'shipper';
+    }
+
+    function isStaff() {
+      return isAdmin() || isShipper();
     }
     
     // Check if the user is authenticated
@@ -30,28 +50,58 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /brands/{brandId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // === Promotions Collection ===
     match /promotions/{promoId} {
       // Anyone can validate/read promotions
       allow read: if true;
-      // Only Admins can manage promotions
-      allow write: if isAdmin();
+      // Admins manage promotions; checkout flow can only increment usageCount
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        request.resource.data.diff(resource.data).changedKeys().hasOnly(['usageCount']) &&
+        request.resource.data.usageCount == resource.data.usageCount + 1
+      );
     }
 
     // === Orders Collection ===
     match /orders/{orderId} {
       // Users can only read their own orders; Admins can read all orders
       // Note: Make sure queries match these constraints, e.g. querying where("userId", "==", auth.uid)
-      allow read: if isAuthenticated() && (isAdmin() || request.auth.uid == resource.data.userId);
-      // Any authenticated user can create an order
-      allow create: if isAuthenticated();
-      // Only Admins can update order status or delete orders
-      allow update, delete: if isAdmin();
+      allow read: if isAuthenticated() && (isAdmin() || request.auth.uid == resource.data.userId || request.auth.uid == resource.data.shipperId || request.auth.uid == resource.data.maShipper);
+      // Checkout flow supports both logged-in users and guests
+      allow create: if true;
+      // Admins can update/delete all; assigned shipper can only mark delivery fields
+      allow update: if isAdmin() || (
+        isShipper() &&
+        (request.auth.uid == resource.data.shipperId || request.auth.uid == resource.data.maShipper) &&
+        request.resource.data.diff(resource.data).changedKeys().hasOnly(['status', 'updatedAt', 'deliveredAt'])
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Contact form submissions from website
+    match /contact-submissions/{submissionId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
     }
 
     // === Wishlist Collection ===
     match /wishlist/{userId} {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Optional cart document per user
+    match /cart/{userId} {
+      allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
     }
 
     // === Settings Collection ===
@@ -67,6 +117,35 @@ service cloud.firestore {
     match /posts/{postId} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    match /blogs/{blogId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin() || (
+        isAuthenticated() &&
+        request.resource.data.diff(resource.data).changedKeys().hasOnly(['helpful', 'updatedAt']) &&
+        request.resource.data.helpful == resource.data.helpful + 1
+      );
+      allow delete: if isAdmin();
+    }
+
+    // In-app notifications (order assignment/delivery confirmations)
+    match /notifications/{notificationId} {
+      allow create: if isStaff();
+      allow read: if isAdmin() || (isAuthenticated() && request.auth.uid == resource.data.recipientId);
+      allow update, delete: if isAdmin();
+    }
+
+    // Email queue documents for server-side worker/cloud function
+    match /notification-emails/{emailId} {
+      allow create: if isStaff();
+      allow read, update, delete: if isAdmin();
     }
   }
 }

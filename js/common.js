@@ -37,16 +37,38 @@ window.updateCartCount = function() {
 // Thêm sản phẩm vào giỏ
 window.addToCart = function(product) {
   let cart = window.getCart();
-  const existingItem = cart.find(item => item.name === product.name && item.size === product.size);
+  const maxStock = Number(product.maxStock ?? product.stock ?? 0);
+
+  if (maxStock <= 0) {
+    window.showToast('Sản phẩm này hiện đã hết hàng', 'warning');
+    return false;
+  }
+
+  const existingItem = cart.find(item => {
+    const sameId = item.id && product.id ? item.id === product.id : item.name === product.name;
+    return sameId && item.size === product.size && (item.color || '') === (product.color || '');
+  });
 
   if (existingItem) {
-    existingItem.quantity += 1;
+    const nextQuantity = existingItem.quantity + 1;
+    const allowedStock = Number(product.maxStock ?? existingItem.maxStock ?? maxStock);
+
+    if (nextQuantity > allowedStock) {
+      existingItem.maxStock = allowedStock;
+      window.saveCart(cart);
+      window.showToast(`Chi còn ${allowedStock} san pham co san cho lua chon nay`, 'warning');
+      return false;
+    }
+
+    existingItem.quantity = nextQuantity;
+    existingItem.maxStock = allowedStock;
   } else {
-    cart.push({ ...product, quantity: 1 });
+    cart.push({ ...product, quantity: 1, maxStock });
   }
 
   window.saveCart(cart);
   window.showToast(`Đã thêm <b>${product.name}</b> vào giỏ!`);
+  return true;
 }
 
 // --- 2. Định dạng & Xử lý số liệu ---
@@ -111,8 +133,22 @@ window.showToast = function(message, type = 'success') {
 
   const toast = document.createElement('div');
   toast.className = 'bg-black text-white px-6 py-4 rounded shadow-2xl flex items-center gap-3 transform translate-y-10 opacity-0 transition-all duration-300';
+  const toastPrefix = type === 'error'
+    ? 'Lỗi'
+    : type === 'warning'
+      ? 'Cảnh báo'
+      : type === 'info'
+        ? 'Thông báo'
+        : 'Đã giao';
+  const toastPrefixClass = type === 'error'
+    ? 'text-red-500'
+    : type === 'warning'
+      ? 'text-yellow-400'
+      : type === 'info'
+        ? 'text-sky-400'
+        : 'text-green-500';
   toast.innerHTML = `
-    <span class="material-symbols-outlined ${type === 'error' ? 'text-red-500' : 'text-green-500'}">${type === 'error' ? 'error' : 'check_circle'}</span>
+    <span class="font-bold text-sm ${toastPrefixClass}">${toastPrefix}</span>
     <span class="font-bold text-sm">${message}</span>
   `;
 

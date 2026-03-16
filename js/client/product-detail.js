@@ -1,8 +1,9 @@
-// Product Detail Page Logic for X-Sneaker
+// Product Detail Page Logic for Bua Xanh
 // Handles product loading, gallery, options, cart, and related products
 
 import { getFirebaseAuth, getFirebaseFirestore } from '../firebase-config.js';
-import { doc, getDoc, collection, getDocs, setDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { doc, getDoc, setDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { getCachedCollectionData, getCachedDocData } from '../firestore-cache.js';
 import { initProductReviews } from './product-reviews.js';
 
 // Get Firebase instances
@@ -16,6 +17,176 @@ let selectedSize = null;
 let currentImageIndex = 0;
 let relatedProducts = []; // Store all related products
 let relatedProductsStartIndex = 0; // Current carousel position
+
+const CATEGORY_LABELS = {
+    'tuoi-song': 'Thực phẩm tươi sống',
+    'che-bien-san': 'Thực phẩm chế biến sẵn',
+    'do-hop': 'Đồ hộp',
+    'dong-lanh': 'Thực phẩm đông lạnh',
+    'kho-gia-vi': 'Đồ khô & gia vị',
+    'do-uong': 'Đồ uống'
+};
+
+function getInventoryTotal(inventory) {
+    if (!inventory || typeof inventory !== 'object') return 0;
+
+    return Object.values(inventory).reduce((colorTotal, sizeMap) => {
+        if (!sizeMap || typeof sizeMap !== 'object') return colorTotal;
+        return colorTotal + Object.values(sizeMap).reduce((sum, qty) => sum + (parseInt(qty) || 0), 0);
+    }, 0);
+}
+
+function getProductTotalStock(product) {
+    const inventoryTotal = getInventoryTotal(product?.inventory);
+    if (inventoryTotal > 0 || (product?.inventory && Object.keys(product.inventory).length > 0)) {
+        return inventoryTotal;
+    }
+
+    const stock = parseInt(product?.stock);
+    if (!Number.isNaN(stock)) return stock;
+    return parseInt(product?.quantity) || 0;
+}
+
+function getSelectedVariantStock() {
+    if (!currentProduct || !selectedColor || !selectedSize) return 0;
+
+    const inventory = currentProduct.inventory || {};
+    if (inventory[selectedColor] && inventory[selectedColor][selectedSize] != null) {
+        return parseInt(inventory[selectedColor][selectedSize]) || 0;
+    }
+
+    return getProductTotalStock(currentProduct);
+}
+
+function normalizeVariantKeyPart(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function getVariantPrice(product, color, size) {
+    if (!product) return 0;
+
+    const basePrice = parseInt(product.price) || 0;
+    const variantPrices = product.variantPrices;
+    const colorValue = String(color || '').trim();
+    const sizeValue = String(size || '').trim();
+
+    // Legacy format support: inventory[color][size] = { quantity, price }
+    const legacyInventoryVariant = product.inventory?.[colorValue]?.[sizeValue];
+    if (legacyInventoryVariant && typeof legacyInventoryVariant === 'object') {
+        const legacyPrice = parseInt(legacyInventoryVariant.price);
+        if (!Number.isNaN(legacyPrice) && legacyPrice >= 0) {
+            return legacyPrice;
+        }
+    }
+
+    if (!variantPrices || typeof variantPrices !== 'object') return basePrice;
+
+    // Preferred flat map: { "color|size": price }
+    const directKey = `${colorValue}|${sizeValue}`;
+    const directPrice = parseInt(variantPrices[directKey]);
+    if (!Number.isNaN(directPrice) && directPrice >= 0) {
+        return directPrice;
+    }
+
+    // Support nested format: { color: { size: price } }
+    const nestedPrice = parseInt(variantPrices?.[colorValue]?.[sizeValue]);
+    if (!Number.isNaN(nestedPrice) && nestedPrice >= 0) {
+        return nestedPrice;
+    }
+
+    // Fallback: tolerant key matching (spacing/case/diacritics differences)
+    const normalizedColor = normalizeVariantKeyPart(colorValue);
+    const normalizedSize = normalizeVariantKeyPart(sizeValue);
+    for (const [key, value] of Object.entries(variantPrices)) {
+        const [keyColor = '', keySize = ''] = String(key).split('|');
+        if (
+            normalizeVariantKeyPart(keyColor) === normalizedColor &&
+            normalizeVariantKeyPart(keySize) === normalizedSize
+        ) {
+            const matchedPrice = parseInt(value);
+            if (!Number.isNaN(matchedPrice) && matchedPrice >= 0) {
+                return matchedPrice;
+            }
+        }
+    }
+
+    return basePrice;
+}
+
+function getSelectedVariantPrice() {
+    if (!currentProduct) return 0;
+    if (!selectedColor || !selectedSize) return parseInt(currentProduct.price) || 0;
+    return getVariantPrice(currentProduct, selectedColor, selectedSize);
+}
+
+function updateProductPriceDisplay() {
+    const priceContainer = document.getElementById('product-price');
+    if (!priceContainer || !currentProduct) return;
+
+    const displayPrice = getSelectedVariantPrice();
+    const originalPrice = parseInt(currentProduct.originalPrice) || 0;
+
+    if (originalPrice > displayPrice) {
+        priceContainer.innerHTML = `
+            <span class="text-primary text-3xl font-bold">${formatPrice(displayPrice)}</span>
+            <span class="text-gray-400 line-through text-lg">${formatPrice(originalPrice)}</span>
+        `;
+        return;
+    }
+
+    priceContainer.innerHTML = `
+        <span class="text-primary text-3xl font-bold">${formatPrice(displayPrice)}</span>
+    `;
+}
+
+function formatCategoryLabel(categoryValue) {
+    const normalized = String(categoryValue || '').trim();
+    if (!normalized) return 'Danh mục khác';
+    if (CATEGORY_LABELS[normalized]) return CATEGORY_LABELS[normalized];
+
+    return normalized
+        .replace(/[-_]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function syncPurchaseState() {
+    const addToCartBtn = document.getElementById('add-to-cart-btn');
+    if (!addToCartBtn) return;
+
+    const totalStock = getProductTotalStock(currentProduct);
+    const selectedStock = getSelectedVariantStock();
+    const hasVariantSelection = Boolean(selectedColor && selectedSize);
+    const isSoldOut = totalStock === 0;
+    const isDisabled = isSoldOut || !hasVariantSelection || selectedStock <= 0;
+
+    addToCartBtn.disabled = isDisabled;
+    addToCartBtn.classList.toggle('opacity-60', isDisabled);
+    addToCartBtn.classList.toggle('cursor-not-allowed', isDisabled);
+
+    if (isSoldOut) {
+        addToCartBtn.innerHTML = '<span class="material-symbols-outlined">block</span> Hết Hàng';
+        return;
+    }
+
+    if (!hasVariantSelection) {
+        addToCartBtn.innerHTML = '<span class="material-symbols-outlined">rule</span> Chọn Biến Thể';
+        return;
+    }
+
+    if (selectedStock <= 0) {
+        addToCartBtn.innerHTML = '<span class="material-symbols-outlined">block</span> Hết Hàng';
+        return;
+    }
+
+    addToCartBtn.innerHTML = '<span class="material-symbols-outlined">shopping_cart</span> Thêm Vào Giỏ';
+}
 
 // ============================================================================
 // DATA LOADING
@@ -42,9 +213,11 @@ function getBlogIdFromUrl() {
  */
 async function loadProductById(productId) {
     try {
-        const docSnap = await getDoc(doc(database, 'products', productId));
-        if (docSnap.exists()) {
-            const productData = { id: productId, ...docSnap.data() };
+        const productData = await getCachedDocData('products', productId, {
+            ttlMs: 5 * 60 * 1000,
+            forceRefresh: true
+        });
+        if (productData) {
             console.log('✅ Product loaded:', productData);
             return productData;
         } else {
@@ -70,9 +243,9 @@ async function loadFeaturedProductsFromBlog(blogId, currentProductId, limit = 6)
         if (!blogData.featuredProducts || blogData.featuredProducts.length === 0) {
             return await loadRelatedProducts('', currentProductId, limit);
         }
-        const productsSnapshot = await getDocs(collection(database, 'products'));
+        const cachedProducts = await getCachedCollectionData('products', { ttlMs: 5 * 60 * 1000 });
         const productsData = {};
-        productsSnapshot.docs.forEach(d => { productsData[d.id] = d.data(); });
+        cachedProducts.forEach(product => { productsData[product.id] = product; });
         const featuredProducts = blogData.featuredProducts
             .filter(productId => productId !== currentProductId)
             .map(productId => {
@@ -97,9 +270,7 @@ async function loadFeaturedProductsFromBlog(blogId, currentProductId, limit = 6)
  */
 async function loadRelatedProducts(category, currentProductId, limit = 6) {
     try {
-        const snapshot = await getDocs(collection(database, 'products'));
-        const allProducts = snapshot.docs
-            .map(d => ({ id: d.id, ...d.data() }))
+        const allProducts = (await getCachedCollectionData('products', { ttlMs: 5 * 60 * 1000 }))
             .filter(p => p.id !== currentProductId);
         const shuffled = allProducts.sort(() => 0.5 - Math.random());
         return shuffled.slice(0, limit);
@@ -123,10 +294,12 @@ function renderProductData(product) {
     if (detailsContainer) {
         detailsContainer.innerHTML = `
             <div class="flex items-center justify-between gap-3">
-                <div class="text-sm text-slate-600">Mau dang chon: <span id="selected-color-name" class="font-bold text-slate-900">-</span></div>
-                <button id="size-guide-btn" type="button" class="text-sm font-semibold text-primary hover:underline">Bang size</button>
+                <div class="text-sm text-slate-600">Phân loại đã chọn: <span id="selected-color-name" class="font-bold text-slate-900">-</span></div>
             </div>
-            <div id="size-container" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
+            <div>
+                <div class="text-sm font-semibold text-slate-700 mb-3">Quy cách đóng gói</div>
+                <div id="size-container" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+            </div>
         `;
     }
     
@@ -136,33 +309,21 @@ function renderProductData(product) {
     
     // Update description
     const descEl = document.getElementById('product-description');
-    if (descEl) descEl.textContent = product.description || 'Giày thể thao cao cấp';
+    if (descEl) descEl.textContent = product.description || 'Thực phẩm chất lượng, sẵn sàng giao đến bạn.';
     
-    // Update price container
-    const priceContainer = document.getElementById('product-price');
-    if (priceContainer) {
-        if (product.originalPrice && product.originalPrice > product.price) {
-            priceContainer.innerHTML = `
-                <span class="text-primary text-3xl font-bold">${formatPrice(product.price)}</span>
-                <span class="text-gray-400 line-through text-lg">${formatPrice(product.originalPrice)}</span>
-            `;
-        } else {
-            priceContainer.innerHTML = `
-                <span class="text-primary text-3xl font-bold">${formatPrice(product.price)}</span>
-            `;
-        }
-    }
+    updateProductPriceDisplay();
     
     // Update breadcrumb
     const breadcrumbsContainer = document.getElementById('breadcrumbs');
     if (breadcrumbsContainer) {
-        const categoryName = product.category || 'Giày';
+        const categoryValue = product.category || '';
+        const categoryLabel = formatCategoryLabel(categoryValue);
         breadcrumbsContainer.innerHTML = `
             <a class="text-gray-500 hover:text-primary transition-colors font-medium" href="index.html">Trang chủ</a>
             <span class="text-gray-400">/</span>
             <a class="text-gray-500 hover:text-primary transition-colors font-medium" href="Product.html">Sản phẩm</a>
             <span class="text-gray-400">/</span>
-            <a class="text-gray-500 hover:text-primary transition-colors font-medium" href="Product.html?category=${categoryName}">${categoryName}</a>
+            <a class="text-gray-500 hover:text-primary transition-colors font-medium" href="Product.html?category=${encodeURIComponent(categoryValue)}">${categoryLabel}</a>
             <span class="text-gray-400">/</span>
             <span class="text-[#1b0e0f] dark:text-white font-bold">${product.name}</span>
         `;
@@ -228,6 +389,7 @@ function renderProductData(product) {
     
     // Render color variants first
     renderColorVariants(product.colors || []);
+    syncPurchaseState();
     
     // Sizes will be rendered after color selection
 }
@@ -320,15 +482,16 @@ function renderSizesForColor(color) {
     const sizes = currentProduct.sizes || [];
     const inventory = currentProduct.inventory || {};
     const colorInventory = inventory[color] || {};
+    const fallbackStock = getProductTotalStock(currentProduct);
     
     if (sizes.length === 0) {
-        sizeContainer.innerHTML = '<p class="col-span-4 text-gray-500 text-sm">Không có size</p>';
+        sizeContainer.innerHTML = '<p class="col-span-3 text-gray-500 text-sm">Không có quy cách</p>';
         return;
     }
     
     sizeContainer.innerHTML = sizes.map((size, index) => {
         const sizeValue = typeof size === 'object' ? size.value : size;
-        const stock = colorInventory[sizeValue] || 0;
+        const stock = colorInventory[sizeValue] != null ? (parseInt(colorInventory[sizeValue]) || 0) : fallbackStock;
         const isSoldOut = stock === 0;
         const isFirst = index === 0 && !isSoldOut;
         
@@ -342,7 +505,7 @@ function renderSizesForColor(color) {
                     data-stock="${stock}"
                     ${isSoldOut ? 'disabled' : ''}>
                 ${sizeValue}
-                ${stock > 0 && stock < 5 ? `<span class="block text-[10px] text-orange-500">Còn ${stock}</span>` : ''}
+                ${stock > 0 && stock <= 5 ? `<span class="block text-[10px] text-orange-500">Còn ${stock}</span>` : ''}
             </button>
         `;
     }).join('');
@@ -350,7 +513,8 @@ function renderSizesForColor(color) {
     // Set first available size as selected
     const firstAvailableSize = sizes.find(s => {
         const sizeValue = typeof s === 'object' ? s.value : s;
-        return (colorInventory[sizeValue] || 0) > 0;
+        const stock = colorInventory[sizeValue] != null ? (parseInt(colorInventory[sizeValue]) || 0) : fallbackStock;
+        return stock > 0;
     });
     
     if (firstAvailableSize) {
@@ -358,6 +522,9 @@ function renderSizesForColor(color) {
     } else {
         selectedSize = null;
     }
+
+    updateProductPriceDisplay();
+    syncPurchaseState();
 }
 
 /**
@@ -533,6 +700,8 @@ function setupEventListeners() {
             sizeBtn.classList.add('border-primary', 'bg-primary/5', 'text-primary');
             
             selectedSize = sizeBtn.dataset.size;
+            updateProductPriceDisplay();
+            syncPurchaseState();
         }
     });
     
@@ -546,12 +715,6 @@ function setupEventListeners() {
     const addToWishlistBtn = document.getElementById('add-to-wishlist-btn');
     if (addToWishlistBtn) {
         addToWishlistBtn.addEventListener('click', handleAddToWishlist);
-    }
-    
-    // Size guide button
-    const sizeGuideBtn = document.getElementById('size-guide-btn');
-    if (sizeGuideBtn) {
-        sizeGuideBtn.addEventListener('click', showSizeGuide);
     }
     
     // Wishlist buttons on related products
@@ -609,22 +772,21 @@ function handleAddToCart() {
     }
     
     if (!selectedColor) {
-        window.showToast?.('Vui lòng chọn màu sắc', 'warning');
+        window.showToast?.('Vui lòng chọn phân loại', 'warning');
         return;
     }
     
     if (!selectedSize) {
-        window.showToast?.('Vui lòng chọn kích thước', 'warning');
+        window.showToast?.('Vui lòng chọn quy cách', 'warning');
         return;
     }
     
     // Check stock availability
-    const inventory = currentProduct.inventory || {};
-    const colorInventory = inventory[selectedColor] || {};
-    const stock = colorInventory[selectedSize] || 0;
+    const stock = getSelectedVariantStock();
     
     if (stock === 0) {
         window.showToast?.('Sản phẩm này đã hết hàng', 'error');
+        syncPurchaseState();
         return;
     }
     
@@ -639,7 +801,7 @@ function handleAddToCart() {
     const cartItem = {
         id: currentProduct.id,
         name: currentProduct.name,
-        price: currentProduct.price,
+        price: getSelectedVariantPrice(),
         image: productImage,
         color: selectedColor,
         size: selectedSize,
@@ -796,74 +958,6 @@ async function toggleWishlistForRelated(productId, button) {
     }
     
     localStorage.setItem('wishlist', JSON.stringify(wishlist));
-}
-
-/**
- * Show size guide modal
- */
-function showSizeGuide() {
-    const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4';
-    modal.innerHTML = `
-        <div class="bg-white dark:bg-gray-900 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between z-10">
-                <h2 class="text-2xl font-bold">Bảng Hướng Dẫn Chọn Size</h2>
-                <button class="close-modal text-gray-400 hover:text-gray-600 transition-colors">
-                    <span class="material-symbols-outlined text-3xl">close</span>
-                </button>
-            </div>
-            <div class="p-6">
-                <p class="text-gray-500 mb-6">Chọn size phù hợp với chiều dài bàn chân của bạn (tính bằng cm):</p>
-                <div class="overflow-x-auto">
-                    <table class="w-full border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 dark:bg-gray-800">
-                                <th class="border border-gray-200 dark:border-gray-700 px-4 py-3 text-left font-bold">Size VN</th>
-                                <th class="border border-gray-200 dark:border-gray-700 px-4 py-3 text-left font-bold">US Size</th>
-                                <th class="border border-gray-200 dark:border-gray-700 px-4 py-3 text-left font-bold">EU Size</th>
-                                <th class="border border-gray-200 dark:border-gray-700 px-4 py-3 text-left font-bold">Chiều dài (cm)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td class="border px-4 py-2">36</td><td class="border px-4 py-2">5.5</td><td class="border px-4 py-2">36</td><td class="border px-4 py-2">23.0</td></tr>
-                            <tr><td class="border px-4 py-2">37</td><td class="border px-4 py-2">6</td><td class="border px-4 py-2">37</td><td class="border px-4 py-2">23.5</td></tr>
-                            <tr><td class="border px-4 py-2">38</td><td class="border px-4 py-2">7</td><td class="border px-4 py-2">38</td><td class="border px-4 py-2">24.5</td></tr>
-                            <tr><td class="border px-4 py-2">39</td><td class="border px-4 py-2">7.5</td><td class="border px-4 py-2">39</td><td class="border px-4 py-2">25.0</td></tr>
-                            <tr><td class="border px-4 py-2">40</td><td class="border px-4 py-2">8</td><td class="border px-4 py-2">40</td><td class="border px-4 py-2">25.5</td></tr>
-                            <tr><td class="border px-4 py-2">41</td><td class="border px-4 py-2">8.5</td><td class="border px-4 py-2">41</td><td class="border px-4 py-2">26.0</td></tr>
-                            <tr><td class="border px-4 py-2">42</td><td class="border px-4 py-2">9</td><td class="border px-4 py-2">42</td><td class="border px-4 py-2">26.5</td></tr>
-                            <tr><td class="border px-4 py-2">43</td><td class="border px-4 py-2">9.5</td><td class="border px-4 py-2">43</td><td class="border px-4 py-2">27.0</td></tr>
-                            <tr><td class="border px-4 py-2">44</td><td class="border px-4 py-2">10</td><td class="border px-4 py-2">44</td><td class="border px-4 py-2">27.5</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <h3 class="font-bold mb-2 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-blue-600">lightbulb</span>
-                        Mẹo chọn size:
-                    </h3>
-                    <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-disc list-inside">
-                        <li>Đo chân vào buổi chiều khi bàn chân có xu hướng sưng lên</li>
-                        <li>Để lại khoảng trống 0.5-1cm ở phía trước ngón chân dài nhất</li>
-                        <li>Nếu rơi vào giữa 2 size, chọn size lớn hơn</li>
-                        <li>Đối với giày chạy bộ, nên chọn size lớn hơn 0.5-1 size so với giày thường</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    modal.querySelector('.close-modal').addEventListener('click', () => {
-        modal.remove();
-    });
-    
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.remove();
-        }
-    });
 }
 
 /**

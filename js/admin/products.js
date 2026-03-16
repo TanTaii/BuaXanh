@@ -5,15 +5,271 @@ import {
 import { uploadAvatarDirect, getOptimizedImageUrl } from '../base64-upload.js';
 import { getFirebaseAuth } from '../firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+import { invalidateCache } from '../firestore-cache.js';
 
 const db = getFirebaseFirestore();
 const productsCol = collection(db, 'products');
+const brandsCol = collection(db, 'brands');
+const categoriesCol = collection(db, 'categories');
 
 let currentProducts = {};
 let filteredProducts = []; // For search/filter
 let currentPage = 1;
 const itemsPerPage = 6;
 let isInitialized = false;
+let availableBrands = [];
+let availableCategories = [];
+
+const DEFAULT_BRANDS = [
+    'Vinamilk',
+    'CP Foods',
+    'Vissan',
+    'Acecook',
+    'Hạ Long Canfoco',
+    'Nhà làm'
+];
+
+const DEFAULT_CATEGORIES = [
+    { slug: 'tuoi-song', name: 'Thực phẩm tươi sống' },
+    { slug: 'che-bien-san', name: 'Thực phẩm chế biến sẵn' },
+    { slug: 'do-hop', name: 'Đồ hộp' },
+    { slug: 'dong-lanh', name: 'Thực phẩm đông lạnh' },
+    { slug: 'kho-gia-vi', name: 'Đồ khô & gia vị' },
+    { slug: 'do-uong', name: 'Đồ uống' }
+];
+
+function slugifyText(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
+function getInventoryTotal(inventory) {
+    if (!inventory || typeof inventory !== 'object') return 0;
+
+    return Object.values(inventory).reduce((colorTotal, sizeMap) => {
+        if (!sizeMap || typeof sizeMap !== 'object') return colorTotal;
+        return colorTotal + Object.values(sizeMap).reduce((sum, qty) => sum + (parseInt(qty) || 0), 0);
+    }, 0);
+}
+
+function getProductStock(product) {
+    const inventoryTotal = getInventoryTotal(product?.inventory);
+    if (inventoryTotal > 0 || (product?.inventory && Object.keys(product.inventory).length > 0)) {
+        return inventoryTotal;
+    }
+
+    const stock = parseInt(product?.stock);
+    if (!Number.isNaN(stock)) return stock;
+    return parseInt(product?.quantity) || 0;
+}
+
+function normalizeBrandDoc(docData) {
+    const name = (docData?.name || docData?.label || docData?.title || '').trim();
+    return {
+        id: docData.id,
+        name: name || docData.id
+    };
+}
+
+function normalizeCategoryDoc(docData) {
+    const slug = (docData?.slug || docData?.value || docData?.id || '').trim();
+    const name = (docData?.name || docData?.label || docData?.title || slug).trim();
+    return {
+        id: docData.id,
+        slug: slug || slugifyText(name),
+        name
+    };
+}
+
+function buildFallbackBrands(productsMap = currentProducts) {
+    const names = new Set(DEFAULT_BRANDS);
+
+    Object.values(productsMap || {}).forEach((product) => {
+        const brandName = String(product?.brand || '').trim();
+        if (brandName) names.add(brandName);
+    });
+
+    return [...names]
+        .map((name) => ({ id: slugifyText(name) || name, name }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+}
+
+function buildFallbackCategories(productsMap = currentProducts) {
+    const categoryMap = new Map(
+        DEFAULT_CATEGORIES.map((category) => [category.slug, { ...category, id: category.slug }])
+    );
+
+    Object.values(productsMap || {}).forEach((product) => {
+        const categoryValue = String(product?.category || '').trim();
+        if (!categoryValue) return;
+
+        if (!categoryMap.has(categoryValue)) {
+            categoryMap.set(categoryValue, {
+                id: categoryValue,
+                slug: categoryValue,
+                name: categoryValue.replace(/-/g, ' ')
+            });
+        }
+    });
+
+    return [...categoryMap.values()].sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+}
+
+function mergeBrandOptions(primaryBrands = [], fallbackBrands = []) {
+    const brandMap = new Map();
+
+    [...primaryBrands, ...fallbackBrands].forEach((brand) => {
+        if (!brand?.name) return;
+        const key = brand.name.toLowerCase();
+        if (!brandMap.has(key)) {
+            brandMap.set(key, brand);
+        }
+    });
+
+    return [...brandMap.values()].sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+}
+
+function mergeCategoryOptions(primaryCategories = [], fallbackCategories = []) {
+    const categoryMap = new Map();
+
+    [...primaryCategories, ...fallbackCategories].forEach((category) => {
+        if (!category?.slug) return;
+        if (!categoryMap.has(category.slug)) {
+            categoryMap.set(category.slug, category);
+        }
+    });
+
+    return [...categoryMap.values()].sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+}
+
+async function loadReferenceData() {
+    try {
+        const [brandsSnapshot, categoriesSnapshot] = await Promise.all([
+            getDocs(brandsCol),
+            getDocs(categoriesCol)
+        ]);
+
+        availableBrands = brandsSnapshot.docs
+            .map((brandDoc) => normalizeBrandDoc({ id: brandDoc.id, ...brandDoc.data() }))
+            .filter((brand) => brand.name)
+            .sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+
+        availableCategories = categoriesSnapshot.docs
+            .map((categoryDoc) => normalizeCategoryDoc({ id: categoryDoc.id, ...categoryDoc.data() }))
+            .filter((category) => category.slug && category.name)
+            .sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+    } catch (error) {
+        console.warn('Unable to load brands/categories from Firestore, using fallback data:', error);
+        availableBrands = buildFallbackBrands();
+        availableCategories = buildFallbackCategories();
+    }
+
+    if (availableBrands.length === 0) {
+        availableBrands = buildFallbackBrands();
+    }
+
+    if (availableCategories.length === 0) {
+        availableCategories = buildFallbackCategories();
+    }
+
+    renderBrandOptions();
+    renderCategoryOptions();
+}
+
+function renderBrandOptions(selectedBrand = '') {
+    const brandSelect = document.getElementById('prod-brand');
+    if (!brandSelect) return;
+
+    const mergedBrands = [...availableBrands];
+    if (selectedBrand && !mergedBrands.some((brand) => brand.name === selectedBrand)) {
+        mergedBrands.push({ id: slugifyText(selectedBrand), name: selectedBrand });
+    }
+
+    const options = mergedBrands.map((brand) => `
+        <option value="${brand.name}" ${brand.name === selectedBrand ? 'selected' : ''}>${brand.name}</option>
+    `).join('');
+
+    brandSelect.innerHTML = `
+        <option value="">-- Chọn thương hiệu/nhà cung cấp --</option>
+        ${options}
+    `;
+}
+
+function renderCategoryOptions(selectedCategory = '') {
+    const categorySelect = document.getElementById('prod-category');
+    if (!categorySelect) return;
+
+    const mergedCategories = [...availableCategories];
+    if (selectedCategory && !mergedCategories.some((category) => category.slug === selectedCategory)) {
+        mergedCategories.push({ id: selectedCategory, slug: selectedCategory, name: selectedCategory.replace(/-/g, ' ') });
+    }
+
+    const options = mergedCategories.map((category) => `
+        <option value="${category.slug}" ${category.slug === selectedCategory ? 'selected' : ''}>${category.name}</option>
+    `).join('');
+
+    categorySelect.innerHTML = `
+        <option value="">-- Chọn danh mục --</option>
+        ${options}
+    `;
+}
+
+function toggleNewBrandInput(forceVisible) {
+    const wrapper = document.getElementById('new-brand-wrapper');
+    const input = document.getElementById('prod-brand-new');
+    if (!wrapper || !input) return;
+
+    const shouldShow = typeof forceVisible === 'boolean' ? forceVisible : wrapper.classList.contains('hidden');
+    wrapper.classList.toggle('hidden', !shouldShow);
+
+    if (shouldShow) {
+        input.focus();
+    } else {
+        input.value = '';
+    }
+}
+
+async function ensureBrandExists(brandName) {
+    const normalizedName = String(brandName || '').trim();
+    if (!normalizedName) return '';
+
+    const existingBrand = availableBrands.find((brand) => brand.name.toLowerCase() === normalizedName.toLowerCase());
+    if (existingBrand) {
+        return existingBrand.name;
+    }
+
+    const slug = slugifyText(normalizedName) || `brand-${Date.now()}`;
+    await setDoc(doc(db, 'brands', slug), {
+        name: normalizedName,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+    }, { merge: true });
+
+    await loadReferenceData();
+    invalidateCache('brands');
+    return normalizedName;
+}
+
+function normalizeStorageGroup(value) {
+    const storage = ['ambient', 'chilled', 'frozen', 'ready'];
+    if (storage.includes(value)) return value;
+    return 'ambient';
+}
+
+function getStorageGroupLabel(value) {
+    const normalized = normalizeStorageGroup(value);
+    const map = {
+        ambient: 'Nhiệt độ thường',
+        chilled: 'Mát (0 - 8°C)',
+        frozen: 'Đông lạnh (-18°C)',
+        ready: 'Dùng ngay / mở nắp dùng liền'
+    };
+    return map[normalized] || 'Nhiệt độ thường';
+}
 
 function formatCurrency(amount) {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
@@ -25,9 +281,9 @@ function formatCurrency(amount) {
 function renderStats() {
     const products = Object.values(currentProducts);
     const total = products.length;
-    const inStock = products.filter(p => (parseInt(p.quantity) || 0) > 10).length;
-    const lowStock = products.filter(p => (parseInt(p.quantity) || 0) > 0 && (parseInt(p.quantity) || 0) <= 10).length;
-    const outStock = products.filter(p => (parseInt(p.quantity) || 0) === 0).length;
+    const inStock = products.filter(p => getProductStock(p) > 5).length;
+    const lowStock = products.filter(p => getProductStock(p) > 0 && getProductStock(p) <= 5).length;
+    const outStock = products.filter(p => getProductStock(p) === 0).length;
 
     const setStat = (id, val) => {
         const el = document.getElementById(id);
@@ -144,11 +400,11 @@ function renderTable(products) {
         const imgUrl = product.image ? getOptimizedImageUrl(product.image, { width: 40, height: 40 }) : 'https://placehold.co/40';
         
         // Status Logic
-        const qty = parseInt(product.quantity) || 0;
+        const qty = getProductStock(product);
         let statusHtml = '';
         if (qty === 0) {
             statusHtml = '<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20">Hết hàng</span>';
-        } else if (qty <= 10) {
+           } else if (qty <= 5) {
              statusHtml = '<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-yellow-100 dark:bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-500/20">Sắp hết</span>';
         } else {
              statusHtml = '<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">Còn hàng</span>';
@@ -214,6 +470,10 @@ function loadProducts() {
         snapshot.docs.forEach(docSnap => {
             currentProducts[docSnap.id] = { id: docSnap.id, ...docSnap.data() };
         });
+        availableBrands = mergeBrandOptions(availableBrands, buildFallbackBrands(currentProducts));
+        availableCategories = mergeCategoryOptions(availableCategories, buildFallbackCategories(currentProducts));
+        renderBrandOptions(document.getElementById('prod-brand')?.value || '');
+        renderCategoryOptions(document.getElementById('prod-category')?.value || '');
         applyFilterAndRender();
     }, (error) => {
         console.error('Error loading products:', error);
@@ -244,9 +504,17 @@ function closeModal() {
     if(form) {
         form.reset();
         document.getElementById('product-id').value = '';
+        const variantPricesField = document.getElementById('product-variant-prices');
+        if (variantPricesField) {
+            variantPricesField.value = '{}';
+        }
         document.getElementById('prod-image-url').value = '';
+        document.getElementById('prod-gender').value = 'ambient';
+        renderBrandOptions();
+        renderCategoryOptions();
+        toggleNewBrandInput(false);
         if(previewDiv) previewDiv.innerHTML = '<span class="material-symbols-rounded text-slate-400 text-4xl">image</span>';
-        document.getElementById('modal-title').innerText = 'Thêm Sản Phẩm Mới';
+        document.getElementById('modal-title').innerText = 'Tạo Sản Phẩm Mới';
         
         // Clear inventory table body but keep the table structure
         const inventoryTableBody = document.getElementById('inventory-table-body');
@@ -276,12 +544,17 @@ function openViewModal(id) {
     document.getElementById('view-name').textContent = product.name || '-';
     document.getElementById('view-brand').textContent = product.brand || '-';
     document.getElementById('view-category').textContent = product.category || '-';
-    document.getElementById('view-gender').textContent = product.gender === 'male' ? 'Nam' : product.gender === 'female' ? 'Nữ' : 'Unisex';
+    document.getElementById('view-gender').textContent = getStorageGroupLabel(product.gender);
     document.getElementById('view-price').textContent = (product.price || 0).toLocaleString('vi-VN') + 'đ';
     document.getElementById('view-original-price').textContent = (product.originalPrice || 0).toLocaleString('vi-VN') + 'đ';
     document.getElementById('view-discount').textContent = (product.discount || 0) + '%';
     document.getElementById('view-description').textContent = product.description || '-';
-    document.getElementById('view-total-stock').textContent = product.stock || 0;
+    document.getElementById('view-total-stock').textContent = getProductStock(product);
+    document.getElementById('view-origin').textContent = product.origin || '-';
+    document.getElementById('view-shelf-life').textContent = product.shelfLifeDays ? `${product.shelfLifeDays} ngày` : '-';
+    document.getElementById('view-expiry-date').textContent = product.expiryDate || '-';
+    document.getElementById('view-storage-temp').textContent = product.storageTemp || '-';
+    document.getElementById('view-ingredients').textContent = product.ingredients || '-';
 
     // Colors and sizes
     const colors = product.colors || [];
@@ -336,20 +609,25 @@ function openEditModal(id) {
 
     document.getElementById('product-id').value = id;
     document.getElementById('prod-name').value = product.name || '';
-    document.getElementById('prod-brand').value = product.brand || '';
-    document.getElementById('prod-category').value = product.category || '';
-    document.getElementById('prod-gender').value = product.gender || 'unisex';
+    renderBrandOptions(product.brand || '');
+    renderCategoryOptions(product.category || '');
+    document.getElementById('prod-gender').value = normalizeStorageGroup(product.gender);
     document.getElementById('prod-price').value = product.price || 0;
     document.getElementById('prod-original-price').value = product.originalPrice || 0;
     document.getElementById('prod-discount').value = product.discount || 0;
     document.getElementById('prod-description').value = product.description || '';
+    document.getElementById('prod-origin').value = product.origin || '';
+    document.getElementById('prod-shelf-life').value = product.shelfLifeDays || '';
+    document.getElementById('prod-expiry-date').value = product.expiryDate || '';
+    document.getElementById('prod-storage-temp').value = product.storageTemp || '';
+    document.getElementById('prod-ingredients').value = product.ingredients || '';
     
     // Load colors and sizes
     const colors = product.colors || [];
     const sizes = product.sizes || [];
     document.getElementById('prod-colors').value = colors.join(', ');
     document.getElementById('prod-sizes').value = sizes.join(', ');
-    document.getElementById('prod-stock').value = product.stock || 0;
+    toggleNewBrandInput(false);
     
     // Load badges
     document.getElementById('prod-featured').checked = product.featured || false;
@@ -366,7 +644,7 @@ function openEditModal(id) {
 
     // Load inventory data
     if (product.inventory && colors.length > 0 && sizes.length > 0) {
-        loadInventoryData(product.inventory, colors, sizes);
+        loadInventoryData(product.inventory, colors, sizes, product.variantPrices || {});
     }
     
     // Load color images
@@ -411,20 +689,52 @@ async function handleFormSubmit(e) {
         // Get inventory data
         const inventory = getInventoryData();
         const colorImages = getColorImages();
+        const newBrandName = document.getElementById('prod-brand-new')?.value?.trim() || '';
+        const selectedBrand = document.getElementById('prod-brand')?.value || '';
+        const brandName = newBrandName || selectedBrand;
+
+        if (!brandName) {
+            throw new Error('Vui lòng chọn hoặc tạo nhãn hàng / nhà cung cấp');
+        }
+
+        if (!inventory) {
+            throw new Error('Vui lòng tạo bảng tồn kho theo biến thể và nhập số lượng');
+        }
+
+        const totalStock = getInventoryTotal(inventory);
+        const savedBrandName = await ensureBrandExists(brandName);
+        
+        // Get variant prices
+        const variantPricesField = document.getElementById('product-variant-prices');
+        let variantPrices = {};
+        if (variantPricesField && variantPricesField.value) {
+            try {
+                variantPrices = JSON.parse(variantPricesField.value);
+            } catch (e) {
+                console.warn('Could not parse variant prices:', e);
+            }
+        }
 
         const productData = {
             name: document.getElementById('prod-name')?.value || '',
-            brand: document.getElementById('prod-brand')?.value || '',
+            brand: savedBrandName,
             category: document.getElementById('prod-category')?.value || '',
-            gender: document.getElementById('prod-gender')?.value || 'unisex',
+            gender: normalizeStorageGroup(document.getElementById('prod-gender')?.value || 'ambient'),
             price: parseInt(document.getElementById('prod-price')?.value) || 0,
             originalPrice: parseInt(document.getElementById('prod-original-price')?.value) || 0,
             discount: parseInt(document.getElementById('prod-discount')?.value) || 0,
             description: document.getElementById('prod-description')?.value || '',
+            origin: document.getElementById('prod-origin')?.value?.trim() || '',
+            shelfLifeDays: parseInt(document.getElementById('prod-shelf-life')?.value) || 0,
+            expiryDate: document.getElementById('prod-expiry-date')?.value || '',
+            storageTemp: document.getElementById('prod-storage-temp')?.value?.trim() || '',
+            ingredients: document.getElementById('prod-ingredients')?.value?.trim() || '',
             colors: colors,
             sizes: sizes.map(s => isNaN(s) ? s : parseInt(s)),
-            stock: parseInt(document.getElementById('prod-stock')?.value) || 0,
+            stock: totalStock,
+            quantity: totalStock,
             inventory: inventory || {},
+            variantPrices: Object.keys(variantPrices).length > 0 ? variantPrices : {},
             colorImages: colorImages || {},
             images: imageUrl ? [imageUrl] : [],
             featured: document.getElementById('prod-featured')?.checked || false,
@@ -450,6 +760,9 @@ async function handleFormSubmit(e) {
             await addDoc(productsCol, productData);
         }
 
+        invalidateCache('products');
+        invalidateCache('brands');
+        invalidateCache('categories');
         closeModal();
         if (window.showToast) {
             window.showToast('Lưu sản phẩm thành công!', 'success');
@@ -531,13 +844,14 @@ async function importCSV(file) {
         if (window.showToast) {
             window.showToast(`Import hoàn tất! Thành công: ${successCount}, Thất bại: ${failCount}`, successCount > 0 ? 'success' : 'warning');
         }
+        invalidateCache('products');
         loadProducts(); // Refresh
     };
     reader.readAsText(file);
 }
 
 // Reload function: Re-binds events and re-renders
-function reload() {
+async function reload() {
     console.log('Products Module: Reloading...');
     
     // 1. Re-bind static button events if elements exist
@@ -550,6 +864,7 @@ function reload() {
     const searchInput = document.getElementById('product-search-input');
     const btnImport = document.getElementById('btn-import-csv');
     const csvInput = document.getElementById('csv-file-input');
+    const btnAddBrand = document.getElementById('btn-add-brand-option');
 
     if (btnAdd) {
         btnAdd.replaceWith(btnAdd.cloneNode(true)); // Remove old listeners
@@ -594,6 +909,10 @@ function reload() {
         };
     }
 
+    if (btnAddBrand) {
+        btnAddBrand.onclick = () => toggleNewBrandInput();
+    }
+
     // Inventory Management
     const btnGenerateInventory = document.getElementById('btn-generate-inventory');
     if (btnGenerateInventory) {
@@ -621,6 +940,8 @@ function reload() {
         priceInput.oninput = calculateDiscount;
     }
 
+    await loadReferenceData();
+
     // 2. Load Data
     loadProducts();
 }
@@ -632,8 +953,8 @@ function reload() {
 function generateViewInventoryTable(inventory, colors, sizes) {
     let html = '<table class="w-full border-collapse border border-slate-200 dark:border-slate-700 text-sm">';
     html += '<thead><tr class="bg-slate-100 dark:bg-slate-800">';
-    html += '<th class="border border-slate-200 dark:border-slate-700 px-3 py-2 text-left">Màu</th>';
-    html += '<th class="border border-slate-200 dark:border-slate-700 px-3 py-2 text-left">Size</th>';
+    html += '<th class="border border-slate-200 dark:border-slate-700 px-3 py-2 text-left">Biến thể</th>';
+    html += '<th class="border border-slate-200 dark:border-slate-700 px-3 py-2 text-left">Quy cách</th>';
     html += '<th class="border border-slate-200 dark:border-slate-700 px-3 py-2 text-right">Số lượng</th>';
     html += '</tr></thead><tbody>';
     
@@ -686,7 +1007,7 @@ function generateInventoryTable() {
     
     if (!colorsText || !sizesText) {
         if (window.showToast) {
-            window.showToast('Vui lòng nhập màu sắc và size trước!', 'warning');
+            window.showToast('Vui lòng nhập biến thể và quy cách trước!', 'warning');
         }
         return;
     }
@@ -696,7 +1017,7 @@ function generateInventoryTable() {
     
     if (colors.length === 0 || sizes.length === 0) {
         if (window.showToast) {
-            window.showToast('Màu sắc hoặc size không hợp lệ!', 'warning');
+            window.showToast('Biến thể hoặc quy cách không hợp lệ!', 'warning');
         }
         return;
     }
@@ -740,13 +1061,21 @@ function generateInventoryTable() {
                                data-size="${size}"
                                class="inventory-input w-full px-2 py-1 text-center bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-700 rounded text-sm font-semibold focus:ring-2 focus:ring-purple-500">
                     </td>
+                    <td class="px-3 py-2">
+                        <input type="number" 
+                               min="0" 
+                               value="" 
+                               data-color="${color}" 
+                               data-size="${size}"
+                               class="variant-price-input w-full px-2 py-1 text-center bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-700 rounded text-sm font-semibold focus:ring-2 focus:ring-purple-500"
+                               placeholder="Để trống = dùng giá chung">
+                    </td>
                 </tr>
             `;
         });
     });
     
     tbody.innerHTML = html;
-    // No need to toggle visibility anymore since table is always visible
     
     // Add event listeners for auto-calculate total
     document.querySelectorAll('.inventory-input').forEach(input => {
@@ -806,16 +1135,12 @@ function updateTotalInventory() {
         totalEl.textContent = total;
     }
     
-    // Also update stock field
-    const stockInput = document.getElementById('prod-stock');
-    if (stockInput) {
-        stockInput.value = total;
-    }
 }
 
 function getInventoryData() {
     const inputs = document.querySelectorAll('.inventory-input');
     const inventory = {};
+    const variantPrices = {};
     
     inputs.forEach(input => {
         const color = input.dataset.color;
@@ -826,7 +1151,20 @@ function getInventoryData() {
             inventory[color] = {};
         }
         inventory[color][size] = quantity;
+        
+        // Get price for this variant
+        const priceInput = document.querySelector(`.variant-price-input[data-color="${color}"][data-size="${size}"]`);
+        if (priceInput && priceInput.value) {
+            const variantKey = `${color}|${size}`;
+            variantPrices[variantKey] = parseInt(priceInput.value) || null;
+        }
     });
+    
+    // Store variant prices globally or in hidden field
+    const variantPricesField = document.getElementById('product-variant-prices');
+    if (variantPricesField) {
+        variantPricesField.value = JSON.stringify(variantPrices);
+    }
     
     return Object.keys(inventory).length > 0 ? inventory : null;
 }
@@ -847,7 +1185,7 @@ function getColorImages() {
     return Object.keys(colorImages).length > 0 ? colorImages : null;
 }
 
-function loadInventoryData(inventory, colors, sizes) {
+function loadInventoryData(inventory, colors, sizes, variantPrices = {}) {
     if (!inventory || typeof inventory !== 'object') return;
     
     // First generate the table
@@ -862,14 +1200,39 @@ function loadInventoryData(inventory, colors, sizes) {
     
     // Then populate values
     setTimeout(() => {
+        const normalizedVariantPrices = (variantPrices && typeof variantPrices === 'object') ? variantPrices : {};
+
         Object.keys(inventory).forEach(color => {
             Object.keys(inventory[color]).forEach(size => {
                 const input = document.querySelector(`.inventory-input[data-color="${color}"][data-size="${size}"]`);
+                const priceInput = document.querySelector(`.variant-price-input[data-color="${color}"][data-size="${size}"]`);
+                const variantKey = `${color}|${size}`;
                 if (input) {
-                    input.value = inventory[color][size] || 0;
+                    const value = inventory[color][size];
+                    // Handle both number and object format (for per-variant pricing)
+                    if (typeof value === 'object' && value !== null) {
+                        input.value = value.quantity || 0;
+                        // Load variant price if available
+                        if (priceInput && value.price != null && value.price !== '') {
+                            priceInput.value = value.price;
+                        }
+                    } else {
+                        input.value = value || 0;
+                    }
+
+                    // Prefer dedicated variantPrices map when available.
+                    if (priceInput && normalizedVariantPrices[variantKey] != null && normalizedVariantPrices[variantKey] !== '') {
+                        priceInput.value = normalizedVariantPrices[variantKey];
+                    }
                 }
             });
         });
+
+        const variantPricesField = document.getElementById('product-variant-prices');
+        if (variantPricesField) {
+            variantPricesField.value = JSON.stringify(normalizedVariantPrices);
+        }
+
         updateTotalInventory();
     }, 100);
 }

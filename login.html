@@ -1,10 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>FoodSaver | Đăng Nhập / Đăng Ký</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <title>Bữa Xanh | Đăng Nhập / Đăng Ký</title>
+    <link rel="icon" type="image/png" href="image/Logo.png" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
@@ -13,19 +14,6 @@
     <script src="js/common.js" defer></script>
     <script type="module" src="js/client/search.js"></script>
     
-    <!-- Facebook SDK -->
-    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=0&version=v18.0&appId=738896779283040"></script>
-    <script>
-      window.fbAsyncInit = function() {
-        FB.init({
-          appId      : '738896779283040',
-          cookie     : true,
-          xfbml      : false,
-          version    : 'v18.0'
-        });
-      };
-    </script>
-    
     <!-- Google Identity Services (One Tap) -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -33,16 +21,17 @@
 <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
 <div class="layout-container flex h-full grow flex-col">
 
-    <!-- Top Navigation Bar (FoodSaver) -->
+    <!-- Top Navigation Bar (Bữa Xanh) -->
     <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 px-6 md:px-20 py-4 bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm">
       <a href="index.html" class="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity">
-        <img src="image/Logo.png" alt="FoodSaver Logo" class="h-9 w-auto object-contain" />
-        <h2 class="text-slate-900 text-xl font-extrabold leading-tight tracking-tight">FoodSaver</h2>
+        <img src="image/Logo.png" alt="Bữa Xanh Logo" class="h-9 w-auto object-contain" />
+        <h2 class="text-slate-900 text-xl font-extrabold leading-tight tracking-tight">Bữa Xanh</h2>
       </a>
       <div class="flex flex-1 justify-end gap-4 md:gap-10 items-center">
         <nav class="hidden md:flex items-center gap-8">
+          <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="index.html">Trang chủ</a>
           <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="Product.html">Sản Phẩm</a>
-          <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="Contact-Us.html">Liên hệ</a>
+          <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="Contact-Us.html">Liên Hệ</a>
           <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="About-us.html">Giới thiệu</a>
         </nav>
         <!-- Search Button -->
@@ -50,7 +39,7 @@
           <span class="material-symbols-outlined">search</span>
         </button>
         <!-- Auth buttons -->
-        <div class="flex gap-3" id="auth-buttons">
+        <div class="flex gap-4 items-center" id="auth-buttons">
           <a href="login.html" class="hover:text-primary transition-colors flex items-center justify-center text-slate-700 account-link">
             <span class="material-symbols-outlined">person</span>
           </a>
@@ -72,6 +61,7 @@
               <span class="material-symbols-outlined text-4xl">close</span>
           </button>
           <nav class="flex flex-col items-center gap-8 text-xl font-bold uppercase tracking-widest">
+              <a href="index.html" class="hover:text-primary transition-colors">Trang chủ</a>
               <a href="Product.html" class="hover:text-primary transition-colors">Sản Phẩm</a>
               <a href="Contact-Us.html" class="hover:text-primary transition-colors">Liên hệ</a>
               <a href="About-us.html" class="hover:text-primary transition-colors">Giới thiệu</a>
@@ -123,7 +113,7 @@
 <span class="text-primary">lãng phí thực phẩm</span>
 </h1>
 <p class="text-lg text-slate-600 max-w-md">
-                                Tham gia cùng FoodSaver để kết nối với những nguồn thực phẩm tươi ngon, tiết kiệm chi phí và bảo vệ môi trường xanh của chúng ta.
+                                Tham gia cùng Bữa Xanh để kết nối với những nguồn thực phẩm tươi ngon, tiết kiệm chi phí và bảo vệ môi trường xanh của chúng ta.
                             </p>
 </div>
 <div class="relative rounded-xl overflow-hidden shadow-2xl aspect-[4/3] group">
@@ -250,14 +240,10 @@
 <span class="bg-white px-3 text-slate-400 font-medium">Hoặc kết nối qua</span>
 </div>
 </div>
-<div class="grid grid-cols-2 gap-4">
+<div class="grid grid-cols-1 gap-4">
 <button id="google-btn" class="flex items-center justify-center gap-2 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors" type="button">
 <img alt="Google icon" class="w-5 h-5" data-alt="Google logo icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCK9yQs_UCKOopY_H5AjUE1Go_1me6PC7y0kevYbJA1IrM8kmJo8hVBH4Oaik4H7boVk35Ai4xFxK-BMyeV9USX5xJrzjtJROpxyP3Ge3As04IFZ-xUx5Oh7JPcmHFw43utSD0qZjFNC31ZSPMWz9eUw55GQCjU_CX3JlqjoOdjiJFKBVyBYx9JpTZrysfd4fGwr3hJ3Sx-Imz5zo1VXWQsbgWWhCxaK85UwKeZiLd0er9EKlE2PyYIk_ZTgv95eSAnydsru4CJgy8"/>
 <span class="text-sm font-semibold">Google</span>
-</button>
-<button id="facebook-btn" class="flex items-center justify-center gap-2 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors" type="button">
-<img alt="Facebook icon" class="w-5 h-5" data-alt="Facebook logo icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqoulU6u0zGqoRCy_-o9ALovIPolN7ESDvKMlY6YBC7Uk1yNhQw4xtoQLJXPkZXXijgK7BmY6qKnd0GqiPFWi7LjFDF9CnVgj-r6scI85pnyidLIhFQtewETm3t2_okrOPLTvgoygxiNziPUxio1mJtTLzNmZP2cW8102VTq_BdbxLOplc7IklNKsaIVAx4GTJUrU0C1vPzEj7IVx0PdIOXHQcgUzxO1mg8RBqruGIiKW5Vh-Rh2AiZGPWOScve7782yIy-Yy1VUY"/>
-<span class="text-sm font-semibold">Facebook</span>
 </button>
 </div>
 </div>
@@ -286,13 +272,13 @@
     </div>
     </div>
 
-    <!-- Footer (FoodSaver) -->
+    <!-- Footer (Bữa Xanh) -->
     <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
       <div class="max-w-[1240px] mx-auto px-6 md:px-20 grid grid-cols-1 md:grid-cols-4 gap-8">
         <div class="col-span-1 md:col-span-1">
           <div class="flex items-center gap-2 text-white mb-6">
-            <span class="material-symbols-outlined text-3xl font-bold text-primary">eco</span>
-            <h2 class="text-xl font-extrabold leading-tight tracking-tight">FoodSaver</h2>
+            <img src="image/Logo.png" alt="Bữa Xanh Logo" class="h-8 w-auto object-contain" />
+            <h2 class="text-xl font-extrabold leading-tight tracking-tight">Bữa Xanh</h2>
           </div>
           <p class="text-sm leading-relaxed mb-6">
             Cùng chung tay giảm thiểu rác thải thực phẩm. Giải cứu những phần ăn chất lượng với giá ưu đãi.
@@ -334,7 +320,7 @@
         </div>
       </div>
       <div class="max-w-[1240px] border-t border-slate-800 mx-auto px-6 md:px-20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-        <p>© 2024 FoodSaver. All rights reserved.</p>
+        <p>© 2024 Bữa Xanh. All rights reserved.</p>
         <div class="flex gap-6">
           <a class="hover:text-white transition-colors" href="#">Chính sách bảo mật</a>
           <a class="hover:text-white transition-colors" href="#">Điều khoản sử dụng</a>
@@ -368,7 +354,7 @@
                     tabRegister.className = "flex-1 pb-4 text-sm font-bold border-b-2 border-primary text-primary transition-colors text-center";
                     tabLogin.className = "flex-1 pb-4 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition-colors text-center";
                     if (formTitle) formTitle.innerText = "Tạo tài khoản mới";
-                    if (formSubtitle) formSubtitle.innerText = "Tham gia cộng đồng FoodSaver ngay hôm nay.";
+                    if (formSubtitle) formSubtitle.innerText = "Tham gia cộng đồng Bữa Xanh ngay hôm nay.";
                 });
 
                 if (window.location.search.includes('tab=register')) {
@@ -378,7 +364,7 @@
         });
     </script>
     <script type="module">
-        import { loginUser, registerUser, loginWithGoogle, loginWithFacebook } from './js/auth.js';
+        import { loginUser, registerUser, loginWithGoogle } from './js/auth.js';
         // Email Login
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -418,13 +404,6 @@
         document.getElementById('google-btn').addEventListener('click', async () => {
             try {
                 await loginWithGoogle();
-            } catch (error) {}
-        });
-
-        // Facebook Login
-        document.getElementById('facebook-btn').addEventListener('click', async () => {
-             try {
-                await loginWithFacebook();
             } catch (error) {}
         });
 

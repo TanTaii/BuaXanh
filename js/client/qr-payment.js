@@ -1,5 +1,4 @@
 /**
- * QR Payment Module for X-Sneaker
  * Generates QR code for bank transfer using VietQR API
  * Simulates payment verification
  */
@@ -7,8 +6,8 @@
 // Cấu hình ngân hàng (có thể thay đổi theo nhu cầu)
 const BANK_CONFIG = {
     bankId: '970436',          // Vietcombank (Vietcombank: 970436, Techcombank: 970407)
-    accountNo: '1030790398',   // Số tài khoản nhận tiền
-    accountName: 'CONG TY X-SNEAKER',
+    accountNo: '1111111111',   // Số tài khoản nhận tiền
+    accountName: 'CONG TY ',
     template: 'compact2'       // Template QR code
 };
 

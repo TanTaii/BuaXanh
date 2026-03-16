@@ -1,5 +1,5 @@
 /**
- * Cart Functionality for X-Sneaker
+ * Cart Functionality for Bua Xanh
  * Handles rendering cart items, updating quantities, removing items, and calculating totals.
  */
 
@@ -119,6 +119,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateQuantity(index, change) {
         let cart = window.getCart();
         if (cart[index]) {
+            const maxStock = Number(cart[index].maxStock || 0);
+            const nextQuantity = cart[index].quantity + change;
+
+            if (change > 0 && maxStock > 0 && nextQuantity > maxStock) {
+                window.showToast(`Chỉ còn ${maxStock} sản phẩm cho lựa chọn này`, 'warning');
+                return;
+            }
+
             cart[index].quantity += change;
             
             if (cart[index].quantity < 1) {

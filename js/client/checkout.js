@@ -5,7 +5,7 @@
 
 import { initAuthStateObserver, getUserData } from '../auth.js';
 import { getFirebaseAuth, getFirebaseFirestore } from '../firebase-config.js';
-import { collection, addDoc, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { collection, addDoc, doc, updateDoc, increment, getDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 import { showQRPaymentModal } from './qr-payment.js';
 
 const auth = getFirebaseAuth();
@@ -120,6 +120,76 @@ document.addEventListener('DOMContentLoaded', () => {
         if (taxEl) taxEl.textContent = window.formatPrice(tax);
         if (totalEl) totalEl.textContent = window.formatPrice(_currentTotal);
     }
+
+    function getProductAvailableStock(product, item) {
+        const inventory = product.inventory || {};
+        if (item.color && item.size && inventory[item.color] && inventory[item.color][item.size] != null) {
+            return parseInt(inventory[item.color][item.size]) || 0;
+        }
+
+        if (inventory && Object.keys(inventory).length > 0) {
+            return Object.values(inventory).reduce((colorTotal, sizeMap) => {
+                if (!sizeMap || typeof sizeMap !== 'object') return colorTotal;
+                return colorTotal + Object.values(sizeMap).reduce((sum, qty) => sum + (parseInt(qty) || 0), 0);
+            }, 0);
+        }
+
+        const stock = parseInt(product.stock);
+        if (!Number.isNaN(stock)) return stock;
+        return parseInt(product.quantity) || 0;
+    }
+
+    async function validateCartStockBeforeCheckout() {
+        const cart = window.getCart ? window.getCart() : [];
+        const adjustedCart = [];
+        const issues = [];
+        let cartChanged = false;
+
+        for (const item of cart) {
+            if (!item.id) {
+                adjustedCart.push(item);
+                continue;
+            }
+
+            const productSnap = await getDoc(doc(database, 'products', item.id));
+            if (!productSnap.exists()) {
+                cartChanged = true;
+                issues.push(`${item.name}: sản phẩm không còn tồn tại.`);
+                continue;
+            }
+
+            const product = productSnap.data();
+            const availableStock = getProductAvailableStock(product, item);
+
+            if (availableStock <= 0) {
+                cartChanged = true;
+                issues.push(`${item.name}: đã hết hàng.`);
+                continue;
+            }
+
+            const nextQuantity = Math.min(item.quantity, availableStock);
+            if (nextQuantity !== item.quantity) {
+                cartChanged = true;
+                issues.push(`${item.name}: chỉ còn ${availableStock} sản phẩm phù hợp.`);
+            }
+
+            adjustedCart.push({
+                ...item,
+                quantity: nextQuantity,
+                maxStock: availableStock
+            });
+        }
+
+        if (cartChanged) {
+            window.saveCart(adjustedCart);
+            loadOrderSummary();
+        }
+
+        return {
+            isValid: issues.length === 0,
+            issues
+        };
+    }
     
     /**
      * Calculate discount amount based on coupon
@@ -173,6 +243,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!fullname || !email || !phone || !address || !city) {
                 window.showToast('Vui lòng điền đầy đủ thông tin bắt buộc!', 'error');
+                return;
+            }
+
+            const stockValidation = await validateCartStockBeforeCheckout();
+            if (!stockValidation.isValid) {
+                window.showToast(stockValidation.issues[0] || 'Giỏ hàng đã được cập nhật theo tồn kho mới nhất.', 'warning');
                 return;
             }
 

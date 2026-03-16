@@ -1,5 +1,5 @@
 import { getFirebaseFirestore } from '../firebase-config.js';
-import { collection, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { addDoc, collection, doc, getDocs, query, updateDoc, where } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
 const db = getFirebaseFirestore();
 
@@ -24,6 +24,34 @@ let currentFilter = 'all';
 let currentSort = 'newest';
 let currentPage = 1;
 const itemsPerPage = 5;
+let allShippers = [];
+
+function normalizeStatus(status) {
+    const value = String(status || '').toLowerCase();
+    if (value === 'processing' || value === 'confirmed') return 'preparing';
+    if (value === 'shipped') return 'shipping';
+    if (!value) return 'pending';
+    return value;
+}
+
+function getStatusDisplayText(status) {
+    const normalized = normalizeStatus(status);
+    const map = {
+        pending: 'Chờ xử lý',
+        preparing: 'Đang chuẩn bị',
+        shipping: 'Đang giao',
+        delivered: 'Đã giao',
+        cancelled: 'Đã hủy'
+    };
+    return map[normalized] || 'Không rõ';
+}
+
+function shouldAutoBackToPending(order) {
+    const normalized = normalizeStatus(order.status);
+    const hasShipper = Boolean(order.shipperId || order.maShipper);
+    if (hasShipper) return false;
+    return normalized !== 'pending' && normalized !== 'cancelled' && normalized !== 'delivered';
+}
 
 /**
  * Initialize Orders Module
@@ -44,9 +72,23 @@ async function reload() {
     if (tableBody) tableBody.innerHTML = '';
 
     try {
-        const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js");
         const snapshot = await getDocs(collection(db, 'orders'));
         allOrders = snapshot.docs.map(d => ({ key: d.id, ...d.data() }));
+
+        const ordersNeedReset = allOrders.filter(shouldAutoBackToPending);
+        if (ordersNeedReset.length) {
+            await Promise.all(ordersNeedReset.map((order) => updateDoc(doc(db, 'orders', order.key), {
+                status: 'pending',
+                updatedAt: Date.now()
+            })));
+
+            allOrders = allOrders.map((order) => {
+                if (!shouldAutoBackToPending(order)) return order;
+                return { ...order, status: 'pending', updatedAt: Date.now() };
+            });
+        }
+
+        await loadShippers();
         applyFilterAndSort();
         renderStats();
     } catch (error) {
@@ -65,7 +107,11 @@ function applyFilterAndSort() {
     if (currentFilter === 'all') {
         filteredOrders = [...allOrders];
     } else {
-        filteredOrders = allOrders.filter(o => (o.status || '').toLowerCase() === currentFilter.toLowerCase());
+        filteredOrders = allOrders.filter(o => {
+            const status = normalizeStatus(o.status);
+            if (currentFilter === 'shipped') return status === 'shipping';
+            return status === currentFilter;
+        });
     }
 
     // 2. Sort
@@ -176,10 +222,10 @@ function updateFilterUI() {
  * Render Statistics
  */
 function renderStats() {
-    const pending = allOrders.filter(o => o.status === 'pending').length;
-    const shipped = allOrders.filter(o => o.status === 'shipped').length;
-    const delivered = allOrders.filter(o => o.status === 'delivered').length;
-    const cancelled = allOrders.filter(o => o.status === 'cancelled').length;
+    const pending = allOrders.filter(o => normalizeStatus(o.status) === 'pending').length;
+    const shipped = allOrders.filter(o => normalizeStatus(o.status) === 'shipping').length;
+    const delivered = allOrders.filter(o => normalizeStatus(o.status) === 'delivered').length;
+    const cancelled = allOrders.filter(o => normalizeStatus(o.status) === 'cancelled').length;
 
     const setStat = (id, val) => {
         const el = document.getElementById(id);
@@ -216,7 +262,14 @@ function renderTable() {
     const items = filteredOrders.slice(start, end);
 
     tableBody.innerHTML = items.map((order, index) => {
-        const statusConfig = getStatusConfig(order.status);
+        const normalizedStatus = normalizeStatus(order.status);
+        const statusConfig = getStatusConfig(normalizedStatus);
+        const hasShipper = Boolean(order.shipperId || order.maShipper);
+        const isDelivered = normalizedStatus === 'delivered';
+        const shipperName = order.shipperName || '-';
+        const shipperStateClass = (order.shipperId || order.maShipper) ? 'text-emerald-600' : 'text-slate-400';
+        // Chỉ cho phép bấm nút chọn shipper khi đơn chưa có shipper và trạng thái là pending
+        const canAssignShipper = !hasShipper && normalizedStatus === 'pending';
         // Determine if dropdown should open upwards (if it's one of the last 2 items)
         const isLastRows = index >= items.length - 2;
         const dropdownPositionClass = isLastRows ? 'bottom-full mb-1' : 'top-full mt-1';
@@ -246,6 +299,7 @@ function renderTable() {
                         <div>
                             <p class="text-sm font-semibold text-slate-900 dark:text-white">${order.customerName || 'Khách vãng lai'}</p>
                             <p class="text-xs text-slate-500">${order.customerPhone || ''}</p>
+                            <p class="text-xs ${shipperStateClass}">Shipper: ${shipperName}</p>
                         </div>
                     </div>
                 </td>
@@ -265,23 +319,26 @@ function renderTable() {
                     </span>
                 </td>
                 <td class="px-6 py-4 text-right">
-                    <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="flex items-center justify-end gap-1">
                         <button class="p-2 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-all" 
                             title="Xem chi tiết" onclick="window.ordersModule.showDetails('${order.key}')">
                             <span class="material-symbols-rounded text-[20px]">visibility</span>
                         </button>
+                        <button class="p-2 ${hasShipper ? 'text-cyan-700 bg-cyan-50 hover:bg-cyan-100' : 'text-primary bg-primary/10 hover:bg-primary/20'} rounded-lg transition-all ${isDelivered ? 'opacity-50 pointer-events-none' : (canAssignShipper || hasShipper ? '' : 'opacity-50 pointer-events-none')}" 
+                            title="${isDelivered ? 'Đơn đã giao - không thể đổi nhân viên giao' : (hasShipper ? 'Đổi nhân viên giao' : 'Chọn nhân viên giao')}"
+                            onclick="${isDelivered ? 'return false;' : `window.ordersModule.assignShipper('${order.key}')`}">
+                            <span class="material-symbols-rounded text-[20px]">local_shipping</span>
+                        </button>
                         <div class="relative">
-                            <button class="edit-status-btn p-2 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-all" 
-                                title="Cập nhật trạng thái" 
+                            <button class="edit-status-btn p-2 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-all ${isDelivered ? 'opacity-50 pointer-events-none' : ''}" 
+                                title="${isDelivered ? 'Đơn đã giao - không thể cập nhật trạng thái' : 'Cập nhật trạng thái'}" 
                                 data-order-id="${order.key}">
                                 <span class="material-symbols-rounded text-[20px]">edit_square</span>
                             </button>
                             <!-- Dropdown Menu for Status -->
-                            <div class="status-dropdown absolute right-0 ${dropdownPositionClass} w-40 bg-white dark:bg-card-dark rounded-xl shadow-xl border border-slate-100 dark:border-border-dark hidden z-10 overflow-hidden">
+                            <div class="status-dropdown absolute right-0 ${dropdownPositionClass} w-40 bg-white dark:bg-card-dark rounded-xl shadow-xl border border-slate-100 dark:border-border-dark hidden z-10 overflow-hidden ${isDelivered ? 'pointer-events-none opacity-0' : ''}">
                                 <div class="py-1">
                                     <button onclick="window.ordersModule.updateStatus('${order.key}', 'pending'); window.ordersModule.closeAllDropdowns();" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-white/5 text-orange-600">Chờ xử lý</button>
-                                    <button onclick="window.ordersModule.updateStatus('${order.key}', 'shipped'); window.ordersModule.closeAllDropdowns();" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-white/5 text-blue-600">Đang giao</button>
-                                    <button onclick="window.ordersModule.updateStatus('${order.key}', 'delivered'); window.ordersModule.closeAllDropdowns();" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-white/5 text-emerald-600">Đã giao</button>
                                     <button onclick="window.ordersModule.updateStatus('${order.key}', 'cancelled'); window.ordersModule.closeAllDropdowns();" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-white/5 text-rose-600">Đã hủy</button>
                                 </div>
                             </div>
@@ -346,11 +403,13 @@ function renderPagination() {
  * Get Status Styling Config
  */
 function getStatusConfig(status) {
-    status = (status || '').toLowerCase();
+    status = normalizeStatus(status);
     switch (status) {
         case 'pending':
             return { label: 'Chờ xử lý', class: 'bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-500 border border-orange-200 dark:border-orange-500/20', dotClass: 'bg-orange-500' };
-        case 'shipped':
+        case 'preparing':
+            return { label: 'Đang chuẩn bị', class: 'bg-violet-100 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-500/20', dotClass: 'bg-violet-500' };
+        case 'shipping':
             return { label: 'Đang giao', class: 'bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-500 border border-blue-200 dark:border-blue-500/20', dotClass: 'bg-blue-500' };
         case 'delivered':
             return { label: 'Đã giao', class: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20', dotClass: 'bg-emerald-500' };
@@ -374,8 +433,21 @@ function getInitials(name) {
  * Update Order Status
  */
 async function updateStatus(orderId, newStatus) {
+    const order = allOrders.find(o => o.key === orderId);
+    if (!order) return;
+
+    const normalizedNewStatus = normalizeStatus(newStatus);
+    const allowedStatuses = ['pending', 'cancelled'];
+    if (!allowedStatuses.includes(normalizedNewStatus)) {
+        if (window.showToast) {
+            window.showToast('Chỉ được chuyển sang Chờ xử lý hoặc Đã hủy.', 'warning');
+        }
+        return;
+    }
+
+    const newStatusLabel = getStatusDisplayText(normalizedNewStatus);
     const confirmed = await window.showConfirm(
-        `Bạn có chắc muốn chuyển trạng thái đơn hàng thành "${newStatus}"?`,
+        `Bạn có chắc muốn chuyển trạng thái đơn hàng thành "${newStatusLabel}"?`,
         {
             title: 'Xác nhận cập nhật',
             type: 'info',
@@ -389,14 +461,14 @@ async function updateStatus(orderId, newStatus) {
     try {
         const orderRef = doc(db, `orders/${orderId}`);
         await updateDoc(orderRef, {
-            status: newStatus,
+            status: normalizedNewStatus,
             updatedAt: Date.now()
         });
         
         // Cập nhật state local ngay để giao diện thấy phản hồi nhanh
         const orderIndex = allOrders.findIndex(o => o.key === orderId);
         if (orderIndex !== -1) {
-            allOrders[orderIndex].status = newStatus;
+            allOrders[orderIndex].status = normalizedNewStatus;
             allOrders[orderIndex].updatedAt = Date.now();
         }
         applyFilterAndSort();
@@ -429,11 +501,15 @@ function showDetails(orderId) {
         if (el) el.textContent = val || 'N/A';
     };
 
+    const customerName = order.customerName || order.customerInfo?.fullname || order.shippingInfo?.name || 'Khách hàng';
+    const customerPhone = order.customerPhone || order.customerInfo?.phone || order.phone || '';
+    const shippingAddress = order.shippingAddress || [order.customerInfo?.address, order.customerInfo?.city].filter(Boolean).join(', ');
+
     setText('modal-order-id', `#${order.orderId || order.key.substring(0, 8)}`);
     setText('modal-order-date', formatDate(order.createdAt));
-    setText('modal-customer', order.customerName);
-    setText('modal-phone', order.customerPhone);
-    setText('modal-address', order.shippingAddress);
+    setText('modal-customer', customerName);
+    setText('modal-phone', customerPhone);
+    setText('modal-address', shippingAddress);
     setText('modal-payment', order.paymentMethod);
     setText('modal-total', formatCurrency(order.total || 0));
 
@@ -533,6 +609,196 @@ function handleDropdownClick(e) {
     if (dropdown) {
         dropdown.classList.toggle('hidden');
     }
+}
+
+async function loadShippers() {
+    const roleQuery = query(collection(db, 'users'), where('role', '==', 'shipper'));
+    const roleSnapshot = await getDocs(roleQuery);
+    const byRole = roleSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const legacyQuery = query(collection(db, 'users'), where('isShipper', '==', true));
+    const legacySnapshot = await getDocs(legacyQuery);
+    const byLegacy = legacySnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const unique = new Map();
+    [...byRole, ...byLegacy].forEach(shipper => {
+        unique.set(shipper.id, shipper);
+    });
+    allShippers = [...unique.values()];
+}
+
+function getShipperWorkloads() {
+    const loads = {};
+    allOrders.forEach(order => {
+        const status = normalizeStatus(order.status);
+        if (!order.shipperId) return;
+        if (status === 'shipping' || status === 'preparing') {
+            loads[order.shipperId] = (loads[order.shipperId] || 0) + 1;
+        }
+    });
+    return loads;
+}
+
+function ensureShipperModal() {
+    let modal = document.getElementById('assign-shipper-modal');
+    if (modal) return modal;
+
+    modal = document.createElement('div');
+    modal.id = 'assign-shipper-modal';
+    modal.className = 'fixed inset-0 z-[10002] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-slate-200">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="text-xl font-bold text-slate-900">Chỉ định giao hàng</h3>
+                <button id="assign-shipper-close" class="p-2 text-slate-400 hover:text-rose-500">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p id="assign-order-label" class="text-sm text-slate-600"></p>
+                <label class="block text-sm font-semibold text-slate-700">Chọn shipper</label>
+                <select id="assign-shipper-select" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm"></select>
+                <p class="text-xs text-slate-500">Mẹo: ưu tiên shipper có trạng thái "Đang rảnh" để giao nhanh hơn.</p>
+            </div>
+            <div class="px-6 pb-6 flex justify-end gap-3">
+                <button id="assign-shipper-cancel" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-semibold">Hủy</button>
+                <button id="assign-shipper-confirm" class="px-5 py-2.5 rounded-xl bg-primary text-white font-bold">Giao đơn</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    const close = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    };
+
+    modal.querySelector('#assign-shipper-close')?.addEventListener('click', close);
+    modal.querySelector('#assign-shipper-cancel')?.addEventListener('click', close);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) close();
+    });
+
+    return modal;
+}
+
+async function assignShipper(orderId) {
+    const order = allOrders.find(o => o.key === orderId);
+    if (!order) return;
+
+    if (!allShippers.length) {
+        await loadShippers();
+    }
+
+    if (!allShippers.length) {
+        if (window.showToast) {
+            window.showToast('Chưa có tài khoản shipper nào. Hãy tạo role Shipper trong Người dùng.', 'warning');
+        }
+        return;
+    }
+
+    const modal = ensureShipperModal();
+    const select = modal.querySelector('#assign-shipper-select');
+    const label = modal.querySelector('#assign-order-label');
+    const confirmBtn = modal.querySelector('#assign-shipper-confirm');
+    const workloads = getShipperWorkloads();
+    const availableShippers = allShippers.filter(shipper => {
+        const load = workloads[shipper.id] || 0;
+        return load === 0 || order.shipperId === shipper.id;
+    });
+
+    if (!availableShippers.length) {
+        if (window.showToast) {
+            window.showToast('Hiện chưa có nhân viên rảnh để nhận đơn mới.', 'warning');
+        }
+        return;
+    }
+
+    if (label) {
+        label.textContent = `Đơn #${order.orderId || order.key.slice(0, 8)} - ${order.customerName || 'Khách hàng'}`;
+    }
+
+    select.innerHTML = availableShippers.map(shipper => {
+        const load = workloads[shipper.id] || 0;
+        const statusText = load === 0 ? 'Sẵn sàng nhận đơn' : `Đang xử lý ${load} đơn`;
+        return `<option value="${shipper.id}" ${order.shipperId === shipper.id ? 'selected' : ''}>${shipper.displayName || shipper.email || shipper.id} - ${statusText}</option>`;
+    }).join('');
+
+    confirmBtn.onclick = async () => {
+        const shipperId = select.value;
+        const selected = allShippers.find(s => s.id === shipperId);
+        if (!selected) return;
+
+        try {
+            await updateDoc(doc(db, 'orders', orderId), {
+                shipperId,
+                maShipper: shipperId,
+                shipperName: selected.displayName || selected.email || 'Shipper',
+                shipperPhone: selected.phone || '',
+                assignedAt: Date.now(),
+                status: 'shipping',
+                updatedAt: Date.now()
+            });
+
+            try {
+                await addDoc(collection(db, 'notifications'), {
+                    type: 'order-assigned',
+                    recipientId: shipperId,
+                    recipientRole: 'shipper',
+                    orderId,
+                    orderCode: order.orderId || orderId,
+                    title: 'Bạn có đơn giao mới',
+                    message: `Đơn #${order.orderId || orderId} đã được chỉ định cho bạn.`,
+                    createdAt: Date.now(),
+                    read: false
+                });
+
+                await addDoc(collection(db, 'notification-emails'), {
+                    channel: 'email',
+                    to: selected.email || '',
+                    subject: `Bữa Xanh - Đơn mới #${order.orderId || orderId}`,
+                    template: 'shipper-order-assigned',
+                    payload: {
+                        shipperName: selected.displayName || selected.email || 'Nhân viên',
+                        orderId: order.orderId || orderId,
+                        customerName: order.customerName || order.customerInfo?.fullname || 'Khách hàng'
+                    },
+                    status: 'queued',
+                    createdAt: Date.now()
+                });
+            } catch (notifyError) {
+                console.warn('Cannot queue assignment notifications:', notifyError?.message || notifyError);
+            }
+
+            const orderIndex = allOrders.findIndex(o => o.key === orderId);
+            if (orderIndex !== -1) {
+                allOrders[orderIndex].shipperId = shipperId;
+                allOrders[orderIndex].maShipper = shipperId;
+                allOrders[orderIndex].shipperName = selected.displayName || selected.email || 'Shipper';
+                allOrders[orderIndex].shipperPhone = selected.phone || '';
+                allOrders[orderIndex].status = 'shipping';
+                allOrders[orderIndex].updatedAt = Date.now();
+            }
+
+            applyFilterAndSort();
+            renderStats();
+
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+
+            if (window.showToast) {
+                window.showToast('Đã giao đơn cho nhân viên rảnh và chuyển sang trạng thái Đang giao.', 'success');
+            }
+        } catch (error) {
+            console.error('Assign shipper error:', error);
+            if (window.showToast) {
+                window.showToast('Không thể chỉ định shipper cho đơn này', 'error');
+            }
+        }
+    };
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
 }
 
 // Export module
@@ -893,6 +1159,7 @@ window.ordersModule = {
     init,
     reload,
     updateStatus,
+    assignShipper,
     showDetails,
     closeDetails,
     closeAllDropdowns,

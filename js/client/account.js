@@ -1,4 +1,4 @@
-// Account Page Logic for X-Sneaker
+// Account Page Logic for Bua Xanh
 // Handles user profile display, editing, and real-time updates
 
 import { getFirebaseAuth, getFirebaseFirestore } from '../firebase-config.js';
@@ -189,30 +189,37 @@ async function createBasicProfile(uid) {
 
 async function loadUserOrders(uid) {
     try {
+        if (unsubscribeOrders) {
+            unsubscribeOrders();
+        }
+
         // Query orders by userId using Firebase query
         const ordersRef = collection(database, 'orders');
         const userOrdersQuery = query(ordersRef, where('userId', '==', uid));
-        
-        const snapshot = await getDocs(userOrdersQuery);
-        
-        if (!snapshot.empty) {
-            // Convert to array and sort by createdAt
-            const userOrders = snapshot.docs
-                .map(doc => ({ ...doc.data(), id: doc.id }))
-                .sort((a, b) => b.createdAt - a.createdAt);
-            
-            // Store orders globally for modal access
-            allUserOrders = userOrders;
-            
-            console.log('User orders loaded:', userOrders.length);
-            renderOrderHistory(userOrders);
-            updateOrderStats(userOrders);
-        } else {
-            console.log('No orders found for user');
+
+        unsubscribeOrders = onSnapshot(userOrdersQuery, (snapshot) => {
+            if (!snapshot.empty) {
+                const userOrders = snapshot.docs
+                    .map((docSnapshot) => normalizeOrder({ ...docSnapshot.data(), id: docSnapshot.id }))
+                    .sort((a, b) => b.createdAt - a.createdAt);
+
+                allUserOrders = userOrders;
+
+                console.log('User orders loaded:', userOrders.length);
+                renderOrderHistory(userOrders);
+                updateOrderStats(userOrders);
+            } else {
+                console.log('No orders found for user');
+                allUserOrders = [];
+                renderOrderHistory([]);
+                updateOrderStats([]);
+            }
+        }, (error) => {
+            console.error('Error loading orders:', error);
             allUserOrders = [];
             renderOrderHistory([]);
             updateOrderStats([]);
-        }
+        });
     } catch (error) {
         console.error('Error loading orders:', error);
         // If permission denied or error, show empty state
@@ -297,6 +304,13 @@ function renderUserProfile(userData) {
         adminBtn.classList.add('flex');
     }
 
+    // Show shipper portal button for shipper role
+    const shipperBtn = document.getElementById('shipper-panel-btn');
+    if (shipperBtn && userData.role === 'shipper') {
+        shipperBtn.classList.remove('hidden');
+        shipperBtn.classList.add('flex');
+    }
+
     // Populate Detailed Info Card
     const infoName = document.getElementById('info-displayname');
     const infoEmail = document.getElementById('info-email');
@@ -339,9 +353,14 @@ function renderOrderHistory(orders) {
     if (currentOrderFilter !== 'all') {
         if (currentOrderFilter === 'pending') {
             // "Chờ xử lý" bao gồm cả pending và processing (legacy)
-            filteredOrders = orders.filter(order => order.status === 'pending' || order.status === 'processing');
+            filteredOrders = orders.filter(order => {
+                const status = normalizeOrderStatus(order.status);
+                return status === 'pending' || status === 'processing';
+            });
+        } else if (currentOrderFilter === 'shipped') {
+            filteredOrders = orders.filter(order => normalizeOrderStatus(order.status) === 'shipping');
         } else {
-            filteredOrders = orders.filter(order => order.status === currentOrderFilter);
+            filteredOrders = orders.filter(order => normalizeOrderStatus(order.status) === currentOrderFilter);
         }
         console.log(`✅ Filtered orders (${currentOrderFilter}):`, filteredOrders.length);
     }
@@ -389,7 +408,7 @@ function renderOrderHistory(orders) {
                     </div>
                 </td>
                 <td class="px-6 py-5">
-                    ${getStatusBadge(order.status)}
+                    ${getStatusBadge(normalizeOrderStatus(order.status))}
                 </td>
                 <td class="px-6 py-5 font-bold text-sm">${formatPrice(order.total)}</td>
                 <td class="px-6 py-5 text-right">
@@ -942,6 +961,10 @@ function getStatusBadge(status) {
             text: 'Chờ xử lý',  // Hiển thị như pending
             class: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
         },
+        'shipping': {
+            text: 'Đang giao hàng',
+            class: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+        },
         'shipped': {
             text: 'Đang giao hàng',
             class: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
@@ -1031,9 +1054,10 @@ function showOrderDetails(orderId) {
     // Luôn hiển thị cả 2 nút
     confirmBtn.classList.remove('hidden');
     cancelBtn.classList.remove('hidden');
+    const normalizedStatus = normalizeOrderStatus(order.status);
     
-    // Nút "Đã nhận hàng" - chỉ enable khi status = 'shipped'
-    if (order.status === 'shipped') {
+    // Nút "Đã nhận hàng" - chỉ enable khi status = 'shipping'
+    if (normalizedStatus === 'shipping') {
         confirmBtn.disabled = false;
         confirmBtn.className = 'flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium';
         confirmBtn.onclick = () => confirmOrderReceived(orderId);
@@ -1044,8 +1068,8 @@ function showOrderDetails(orderId) {
     }// pending hoặc processing đều cho phép hủy
         
     
-    // Nút "Hủy đơn hàng" - disable khi shipped/delivered/cancelled
-    if (order.status !== 'shipped' && order.status !== 'delivered' && order.status !== 'cancelled') {
+    // Nút "Hủy đơn hàng" - disable khi shipping/delivered/cancelled
+    if (normalizedStatus !== 'shipping' && normalizedStatus !== 'delivered' && normalizedStatus !== 'cancelled') {
         cancelBtn.disabled = false;
         cancelBtn.className = 'flex-1 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium';
         cancelBtn.onclick = () => cancelOrder(orderId);
@@ -1326,6 +1350,25 @@ function getFilterLabel(status) {
         'cancelled': 'đã hủy'
     };
     return labels[status] || '';
+}
+
+function normalizeOrderStatus(status) {
+    const value = String(status || '').toLowerCase();
+    if (value === 'shipped') return 'shipping';
+    if (!value) return 'pending';
+    return value;
+}
+
+function normalizeOrder(order) {
+    const createdAt = typeof order.createdAt?.toMillis === 'function' ? order.createdAt.toMillis() : (order.createdAt || 0);
+    const updatedAt = typeof order.updatedAt?.toMillis === 'function' ? order.updatedAt.toMillis() : (order.updatedAt || 0);
+
+    return {
+        ...order,
+        status: normalizeOrderStatus(order.status),
+        createdAt,
+        updatedAt
+    };
 }
 
 // ============================================================================

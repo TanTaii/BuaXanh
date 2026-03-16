@@ -1,4 +1,4 @@
-// Firebase Authentication Module for FoodSaver
+// Firebase Authentication Module for Bua Xanh
 // Version: 2.0.0 - Firestore
 
 import { getFirebaseAuth, getFirebaseFirestore } from './firebase-config.js';
@@ -25,8 +25,15 @@ import {
 const auth = getFirebaseAuth();
 const db = getFirebaseFirestore();
 
-// Admin email
-const ADMIN_EMAIL = 'quantrifs@gmail.com'; // User specified admin email
+// Configured admin accounts
+const ADMIN_EMAILS = new Set([
+  'quantrifs@gmail.com',
+  'kobaohquen379@gmail.com',
+]);
+
+const ADMIN_UIDS = new Set([
+  'K67V2bYglaaIbo43T4FrSwINdgl1',
+]);
 
 // Providers
 const googleProvider = new GoogleAuthProvider();
@@ -59,14 +66,23 @@ function setLoading(button, isLoading) {
   }
 }
 
+function isConfiguredAdmin(user) {
+  const email = user?.email?.toLowerCase();
+  return Boolean(user && (ADMIN_UIDS.has(user.uid) || (email && ADMIN_EMAILS.has(email))));
+}
+
 /**
  * Save user data to Firestore
  */
 async function saveUserToDatabase(user, additionalData = {}) {
   try {
     const userRef = doc(db, 'users', user.uid);
+    const existingSnapshot = await getDoc(userRef);
+    const existingData = existingSnapshot.exists() ? existingSnapshot.data() : {};
 
-    const isAdmin = user.email === ADMIN_EMAIL;
+    const isAdmin = isConfiguredAdmin(user);
+    const currentRole = existingData.role;
+    const role = isAdmin ? 'admin' : (currentRole || 'customer');
 
     const userData = {
       uid: user.uid,
@@ -81,18 +97,29 @@ async function saveUserToDatabase(user, additionalData = {}) {
     await setDoc(userRef, {
       ...userData,
       createdAt: serverTimestamp(),
-      role: isAdmin ? 'admin' : 'customer',
-      isAdmin,
+      role,
+      isAdmin: role === 'admin',
+      isShipper: role === 'shipper',
       addresses: [],
       wishlist: [],
       loyaltyPoints: 0,
     }, { merge: true });
 
-    return userData;
+    return { ...userData, role };
   } catch (error) {
     console.error('Error saving user to Firestore:', error);
     throw error;
   }
+}
+
+function getRedirectByRole(userData, user) {
+  if (userData?.role === 'admin' || isConfiguredAdmin(user)) {
+    return 'admin.html';
+  }
+  if (userData?.role === 'shipper') {
+    return 'Delivery.html';
+  }
+  return 'Account.html';
 }
 
 /**
@@ -124,9 +151,9 @@ export async function registerUser(email, password, displayName, gender = 'other
     const user = userCredential.user;
     await updateProfile(user, { displayName });
     const normalizedGender = ['male', 'female', 'other', 'unisex'].includes(gender) ? gender : 'other';
-    void saveUserToDatabase(user, { displayName, gender: normalizedGender });
+    const savedUser = await saveUserToDatabase(user, { displayName, gender: normalizedGender });
     showToast(`Chào mừng ${displayName}! Đăng ký thành công.`);
-    window.location.href = 'Account.html';
+    window.location.href = getRedirectByRole(savedUser, user);
   } catch (error) {
     console.error('Registration error:', error);
     let errorMessage = 'Đăng ký thất bại. Vui lòng thử lại.';
@@ -148,9 +175,9 @@ export async function loginUser(email, password) {
     setLoading(submitButton, true);
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-    void saveUserToDatabase(user);
+    const savedUser = await saveUserToDatabase(user);
     showToast(`Chào mừng trở lại, ${user.displayName || 'bạn'}!`);
-    window.location.href = user.email === ADMIN_EMAIL ? 'admin.html' : 'Account.html';
+    window.location.href = getRedirectByRole(savedUser, user);
   } catch (error) {
     console.error('Login error:', error);
     let errorMessage = 'Đăng nhập thất bại. Vui lòng thử lại.';
@@ -172,9 +199,9 @@ export async function loginWithGoogle() {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
-    void saveUserToDatabase(user);
+    const savedUser = await saveUserToDatabase(user);
     showToast(`Chào mừng ${user.displayName}!`);
-    window.location.href = user.email === ADMIN_EMAIL ? 'admin.html' : 'Account.html';
+    window.location.href = getRedirectByRole(savedUser, user);
   } catch (error) {
     console.error('Google login error:', error);
     let errorMessage = 'Đăng nhập Google thất bại!';
@@ -199,9 +226,9 @@ async function tryGoogleSilentSignIn() {
             const credential = GoogleAuthProvider.credential(response.credential);
             const result = await signInWithCredential(auth, credential);
             const user = result.user;
-            await saveUserToDatabase(user);
+            const savedUser = await saveUserToDatabase(user);
             showToast(`Chào mừng ${user.displayName}!`);
-            window.location.href = user.email === ADMIN_EMAIL ? 'admin.html' : 'Account.html';
+            window.location.href = getRedirectByRole(savedUser, user);
             resolve(true);
           } catch (error) {
             console.error('Google One Tap sign-in failed:', error);
@@ -226,9 +253,9 @@ export async function loginWithFacebook() {
   try {
     const result = await signInWithPopup(auth, facebookProvider);
     const user = result.user;
-    void saveUserToDatabase(user);
+    const savedUser = await saveUserToDatabase(user);
     showToast(`Chào mừng ${user.displayName}!`);
-    window.location.href = user.email === ADMIN_EMAIL ? 'admin.html' : 'Account.html';
+    window.location.href = getRedirectByRole(savedUser, user);
   } catch (error) {
     console.error('Facebook login error:', error);
     let errorMessage = 'Đăng nhập Facebook thất bại!';
@@ -255,9 +282,9 @@ async function handleFacebookLogin(accessToken) {
     const credential = FacebookAuthProvider.credential(accessToken);
     const result = await signInWithCredential(auth, credential);
     const user = result.user;
-    await saveUserToDatabase(user);
+    const savedUser = await saveUserToDatabase(user);
     showToast(`Chào mừng ${user.displayName}!`);
-    window.location.href = user.email === ADMIN_EMAIL ? 'admin.html' : 'Account.html';
+    window.location.href = getRedirectByRole(savedUser, user);
   } catch (error) {
     console.error('Facebook auto-login error:', error);
     throw error;
@@ -302,7 +329,7 @@ export function isUserLoggedIn() { return auth.currentUser !== null; }
 
 export function initAuthStateObserver(callback) {
   onAuthStateChanged(auth, async (user) => {
-    let isAdmin = false;
+    let isAdmin = isConfiguredAdmin(user);
     if (user) {
       const userData = await getUserData(user.uid);
       if (userData && userData.isAdmin) {

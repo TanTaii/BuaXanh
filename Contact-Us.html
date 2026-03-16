@@ -1,10 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>FoodSaver | Liên Hệ</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <title>Bữa Xanh | Liên Hệ</title>
+    <link rel="icon" type="image/png" href="image/Logo.png" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
@@ -17,16 +18,17 @@
 </head>
 <body class="bg-[#f6f8f6] text-slate-900 font-display min-h-screen flex flex-col">
 
-    <!-- Top Navigation Bar (FoodSaver) -->
+    <!-- Top Navigation Bar (Bữa Xanh) -->
     <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 px-6 md:px-20 py-4 bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm">
       <a href="index.html" class="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity">
-        <img src="image/Logo.png" alt="FoodSaver Logo" class="h-9 w-auto object-contain" />
-        <h2 class="text-slate-900 text-xl font-extrabold leading-tight tracking-tight">FoodSaver</h2>
+        <img src="image/Logo.png" alt="Bữa Xanh Logo" class="h-9 w-auto object-contain" />
+        <h2 class="text-slate-900 text-xl font-extrabold leading-tight tracking-tight">Bữa Xanh</h2>
       </a>
       <div class="flex flex-1 justify-end gap-4 md:gap-10 items-center">
         <nav class="hidden md:flex items-center gap-8">
+          <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="index.html">Trang chủ</a>
           <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="Product.html">Sản Phẩm</a>
-          <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="Contact-Us.html">Liên hệ</a>
+          <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="Contact-Us.html">Liên Hệ</a>
           <a class="text-slate-700 text-sm font-semibold hover:text-primary transition-colors" href="About-us.html">Giới thiệu</a>
         </nav>
         <!-- Search Button -->
@@ -34,7 +36,7 @@
           <span class="material-symbols-outlined">search</span>
         </button>
         <!-- Auth buttons -->
-        <div class="flex gap-3 items-center" id="auth-buttons">
+        <div class="flex gap-4 items-center" id="auth-buttons">
           <a href="login.html" class="hover:text-primary transition-colors flex items-center justify-center text-slate-700 account-link">
             <span class="material-symbols-outlined">person</span>
           </a>
@@ -56,6 +58,7 @@
               <span class="material-symbols-outlined text-4xl">close</span>
           </button>
           <nav class="flex flex-col items-center gap-8 text-xl font-bold uppercase tracking-widest">
+              <a href="index.html" class="hover:text-primary transition-colors">Trang chủ</a>
               <a href="Product.html" class="hover:text-primary transition-colors">Sản Phẩm</a>
               <a href="Contact-Us.html" class="hover:text-primary transition-colors">Liên hệ</a>
               <a href="About-us.html" class="hover:text-primary transition-colors">Giới thiệu</a>
@@ -166,7 +169,7 @@
                         </div>
                         <div class="pt-1 flex-1 min-w-0">
                             <p class="text-xs font-bold uppercase tracking-widest text-slate-400">Email</p>
-                            <p id="contact-email" class="mt-1 text-lg font-bold text-slate-900 break-all">hello@foodsaver.vn</p>
+                            <p id="contact-email" class="mt-1 text-lg font-bold text-slate-900 break-all">hello@buaxanh.vn</p>
                         </div>
                     </div>
                 </div>
@@ -190,7 +193,7 @@
                         allowfullscreen="" 
                         loading="lazy" 
                         referrerpolicy="no-referrer-when-downgrade"
-                        title="Bản đồ vị trí FoodSaver">
+                        title="Bản đồ vị trí Bữa Xanh">
                     </iframe>
                 </div>
             </div>
@@ -211,7 +214,7 @@
                     <div class="size-12 bg-green-50 rounded-full flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
                         <span class="material-symbols-outlined">map</span>
                     </div>
-                    <p class="text-xl font-bold text-slate-900 mb-3">FoodSaver hoạt động ở đâu?</p>
+                    <p class="text-xl font-bold text-slate-900 mb-3">Bữa Xanh hoạt động ở đâu?</p>
                     <p class="text-sm text-slate-600 leading-relaxed font-medium">Chúng tôi đang mở rộng mạng lưới tại các thành phố lớn ở Việt Nam.</p>
                 </div>
                 <div class="rounded-3xl border border-slate-100 p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer bg-white group">
@@ -219,19 +222,19 @@
                         <span class="material-symbols-outlined">storefront</span>
                     </div>
                     <p class="text-xl font-bold text-slate-900 mb-3">Hỗ trợ đối tác?</p>
-                    <p class="text-sm text-slate-600 leading-relaxed font-medium">Dành cho nhà hàng, siêu thị muốn tham gia mạng lưới FoodSaver.</p>
+                    <p class="text-sm text-slate-600 leading-relaxed font-medium">Dành cho nhà hàng, siêu thị muốn tham gia mạng lưới Bữa Xanh.</p>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Footer (FoodSaver) -->
+    <!-- Footer (Bữa Xanh) -->
     <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800 shrink-0">
       <div class="max-w-[1240px] mx-auto px-6 md:px-20 grid grid-cols-1 md:grid-cols-4 gap-8">
         <div class="col-span-1 md:col-span-1">
           <div class="flex items-center gap-2 text-white mb-6">
-            <span class="material-symbols-outlined text-3xl font-bold text-primary">eco</span>
-            <h2 class="text-xl font-extrabold leading-tight tracking-tight">FoodSaver</h2>
+            <img src="image/Logo.png" alt="Bữa Xanh Logo" class="h-8 w-auto object-contain" />
+            <h2 class="text-xl font-extrabold leading-tight tracking-tight">Bữa Xanh</h2>
           </div>
           <p class="text-sm leading-relaxed mb-6">
             Cùng chung tay giảm thiểu rác thải thực phẩm. Giải cứu những phần ăn chất lượng với giá ưu đãi.
@@ -273,7 +276,7 @@
         </div>
       </div>
       <div class="max-w-[1240px] border-t border-slate-800 mx-auto px-6 md:px-20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-        <p>© 2024 FoodSaver. All rights reserved.</p>
+        <p>© 2024 Bữa Xanh. All rights reserved.</p>
         <div class="flex gap-6">
           <a class="hover:text-white transition-colors" href="#">Chính sách bảo mật</a>
           <a class="hover:text-white transition-colors" href="#">Điều khoản sử dụng</a>

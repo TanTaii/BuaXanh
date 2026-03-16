@@ -1,12 +1,11 @@
-// Product Reviews System for X-Sneaker
-// Handles product reviews display, posting, and ratings with Firebase integration
+// Product reviews are stored in Firestore so customer and admin use one source of truth.
 
-import { getFirebaseDatabase } from '../firebase-config.js';
-import { ref, get, push, set, update, serverTimestamp, query, orderByChild } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+import { getFirebaseAuth, getFirebaseFirestore } from '../firebase-config.js';
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+import { addDoc, collection, doc, getDocs, increment, query, updateDoc, where } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
-const database = getFirebaseDatabase();
-const auth = getAuth();
+const database = getFirebaseFirestore();
+const auth = getFirebaseAuth();
 
 let currentUser = null;
 let currentProductId = null;
@@ -87,21 +86,16 @@ function initAuth() {
 
 async function loadReviews(productId) {
     try {
-        const reviewsRef = ref(database, `reviews/${productId}`);
-        const snapshot = await get(reviewsRef);
-        
-        if (snapshot.exists()) {
-            const reviewsData = snapshot.val();
-            allReviews = Object.keys(reviewsData)
-                .map(key => ({ id: key, ...reviewsData[key] }))
-                .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-            
-            console.log(`✅ Loaded ${allReviews.length} reviews`);
-            return allReviews;
-        }
-        
-        console.log('ℹ️ No reviews yet');
-        return [];
+        const reviewsQuery = query(collection(database, 'reviews'), where('productId', '==', productId));
+        const snapshot = await getDocs(reviewsQuery);
+
+        allReviews = snapshot.docs
+            .map((reviewDoc) => normalizeReview({ id: reviewDoc.id, ...reviewDoc.data() }))
+            .filter((review) => review.status !== 'rejected')
+            .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+        console.log(`✅ Loaded ${allReviews.length} reviews from Firestore`);
+        return allReviews;
     } catch (error) {
         console.error('❌ Error loading reviews:', error);
         return [];
@@ -163,11 +157,9 @@ async function postReview(productId, reviewData) {
     }
     
     try {
-        const reviewsRef = ref(database, `reviews/${productId}`);
-        const newReviewRef = push(reviewsRef);
-        
         const review = {
             productId,
+            productName: document.getElementById('product-name')?.textContent?.trim() || '',
             userId: currentUser.uid,
             userEmail: currentUser.email,
             userName: reviewData.userName || currentUser.displayName || currentUser.email.split('@')[0],
@@ -178,11 +170,12 @@ async function postReview(productId, reviewData) {
             images: reviewData.images || [],
             verified: reviewData.verified || false,
             helpful: 0,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
+            status: 'approved',
+            createdAt: Date.now(),
+            updatedAt: Date.now()
         };
-        
-        await set(newReviewRef, review);
+
+        await addDoc(collection(database, 'reviews'), review);
         
         console.log('✅ Review posted successfully');
         return true;
@@ -200,21 +193,11 @@ async function markReviewHelpful(productId, reviewId) {
     }
     
     try {
-        const reviewRef = ref(database, `reviews/${productId}/${reviewId}`);
-        const snapshot = await get(reviewRef);
-        
-        if (snapshot.exists()) {
-            const review = snapshot.val();
-            const currentHelpful = review.helpful || 0;
-            
-            await update(reviewRef, {
-                helpful: currentHelpful + 1
-            });
-            
-            return true;
-        }
-        
-        return false;
+        await updateDoc(doc(database, 'reviews', reviewId), {
+            helpful: increment(1),
+            updatedAt: Date.now()
+        });
+        return true;
     } catch (error) {
         console.error('Error marking review helpful:', error);
         return false;
@@ -317,6 +300,7 @@ async function renderReviews(reviews, sortBy = 'recent') {
 function renderReview(review) {
     const timeAgo = formatTimestamp(review.createdAt);
     const stars = renderStars(review.rating, 'text-base');
+    const displayName = review.userName || 'Ẩn danh';
     
     return `
         <div class="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-100 dark:border-gray-800">
@@ -324,14 +308,14 @@ function renderReview(review) {
             <div class="flex items-start gap-4 mb-4">
                 <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
                     ${review.userAvatar ? `
-                        <img src="${review.userAvatar}" alt="${review.userName}" class="w-full h-full object-cover"/>
+                        <img src="${review.userAvatar}" alt="${displayName}" class="w-full h-full object-cover"/>
                     ` : `
-                        <span class="text-primary font-bold text-lg">${review.userName.charAt(0).toUpperCase()}</span>
+                        <span class="text-primary font-bold text-lg">${displayName.charAt(0).toUpperCase()}</span>
                     `}
                 </div>
                 <div class="flex-1">
                     <div class="flex items-center gap-2 mb-1">
-                        <h4 class="font-bold text-base">${escapeHtml(review.userName)}</h4>
+                        <h4 class="font-bold text-base">${escapeHtml(displayName)}</h4>
                         ${review.verified ? `
                             <span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
                                 Đã mua hàng
@@ -688,7 +672,7 @@ function renderStars(rating, sizeClass = 'text-sm') {
 function formatTimestamp(timestamp) {
     if (!timestamp) return 'Vừa xong';
     
-    const date = new Date(timestamp);
+    const date = new Date(normalizeTimestamp(timestamp));
     const now = new Date();
     const diffMs = now - date;
     const diffDays = Math.floor(diffMs / 86400000);
@@ -704,6 +688,25 @@ function formatTimestamp(timestamp) {
         month: 'short',
         day: 'numeric'
     });
+}
+
+function normalizeTimestamp(value) {
+    if (!value) return 0;
+    if (typeof value === 'number') return value;
+    if (typeof value?.toMillis === 'function') return value.toMillis();
+    if (typeof value?.seconds === 'number') return (value.seconds * 1000) + Math.floor((value.nanoseconds || 0) / 1000000);
+    return Number(value) || 0;
+}
+
+function normalizeReview(review) {
+    return {
+        ...review,
+        createdAt: normalizeTimestamp(review.createdAt),
+        updatedAt: normalizeTimestamp(review.updatedAt),
+        helpful: Number(review.helpful || 0),
+        rating: Number(review.rating || 0),
+        status: review.status || 'approved'
+    };
 }
 
 function escapeHtml(text) {

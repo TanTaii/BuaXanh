@@ -73,10 +73,10 @@ function loadAllSettings() {
     onSnapshot(settingsDocRef, (snapshot) => {
         const data = snapshot.data() || {};
         
-        setValue('setting-site-name', data.siteName || 'X-Sneaker');
-        setValue('setting-store-email', data.storeEmail || 'info@xsneaker.com');
-        setValue('setting-store-phone', data.storePhone || '+1 (555) 123-4567');
-        setValue('setting-store-address', data.storeAddress || '123 Sneaker Street, Fashion District, NY 10001');
+        setValue('setting-site-name', data.siteName || 'Bữa Xanh');
+        setValue('setting-store-email', data.storeEmail || 'hello@buaxanh.vn');
+        setValue('setting-store-phone', data.storePhone || '+84 24 123 4567');
+        setValue('setting-store-address', data.storeAddress || 'Quận 1, TP. Hồ Chí Minh, Việt Nam');
         setValue('setting-currency', data.currency || 'VND');
         setValue('setting-timezone', data.timezone || 'UTC+7');
         setValue('setting-date-format', data.dateFormat || 'DD/MM/YYYY');
@@ -107,7 +107,7 @@ function loadAllSettings() {
         setValue('smtp-username', smtp.username || '');
         setValue('smtp-password', smtp.password || '');
         setValue('smtp-encryption', smtp.encryption || 'tls');
-        setValue('smtp-from-name', smtp.fromName || 'X-Sneaker Store');
+        setValue('smtp-from-name', smtp.fromName || 'Bữa Xanh');
         const emailNotif = notifications.emailNotifications || {};
         setCheckbox('notif-order-confirmation', emailNotif.orderConfirmation !== false);
         setCheckbox('notif-order-shipped', emailNotif.orderShipped !== false);
@@ -433,7 +433,7 @@ async function exportData() {
         const url = URL.createObjectURL(dataBlob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `x-sneaker-backup-${new Date().toISOString().split('T')[0]}.json`;
+        link.download = `bua-xanh-backup-${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

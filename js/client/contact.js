@@ -1,4 +1,4 @@
-// Contact Form Handler for FoodSaver
+// Contact Form Handler for Bua Xanh
 // Saves contact form submissions to Firebase Firestore
 
 import { getFirebaseFirestore } from '../firebase-config.js';
@@ -155,7 +155,7 @@ function showSuccessMessage() {
         <span class="material-symbols-outlined text-6xl text-green-600 dark:text-green-400 mb-4">check_circle</span>
         <h3 class="text-2xl font-bold text-green-900 dark:text-green-100 mb-2">Gửi Thành Công!</h3>
         <p class="text-green-700 dark:text-green-300 mb-6">
-            Cảm ơn bạn đã liên hệ với X-Sneaker. Chúng tôi sẽ phản hồi trong vòng 24-48 giờ.
+            Cảm ơn bạn đã liên hệ với Bữa Xanh. Chúng tôi sẽ phản hồi trong vòng 24-48 giờ.
         </p>
         <button onclick="location.reload()" class="bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3 rounded-lg transition-colors">
             Gửi Tin Nhắn Khác

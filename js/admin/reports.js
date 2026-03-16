@@ -6,28 +6,43 @@ const db = getFirebaseFirestore();
 // State
 let allOrders = [];
 let allProducts = {};
-let currentPeriod = '30'; // Default 30 days
+let currentPeriod = 'all'; // Default all orders
 let charts = {
     sales: null,
     category: null
 };
 
-// Formatting Utilities
-const formatCurrency = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount).replace('$', '$'); // Using $ for UI consistency with mockup, or VND if preferred. The mockup used $. But orders.js used VND.
-// Wait, orders.js used VND. I should use VND to be consistent with orders.js unless user wants USD.
-// orders.js: return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-// admin.html mockup (Report tab) used $.
-// I should probably switch to VND to match the rest of the application (orders, products).
-// "124,563" in template.
-// I will use VND.
-
 const formatVND = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+
+function normalizeTimestamp(value) {
+    if (!value) return 0;
+    if (typeof value === 'number') return value;
+    if (typeof value?.toMillis === 'function') return value.toMillis();
+    if (typeof value?.seconds === 'number') return (value.seconds * 1000) + Math.floor((value.nanoseconds || 0) / 1000000);
+    return Number(value) || 0;
+}
+
+function normalizeOrderStatus(status) {
+    const normalized = String(status || '').toLowerCase();
+    if (normalized === 'shipped') return 'shipping';
+    return normalized || 'pending';
+}
+
+function formatCategoryLabel(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return 'Khác';
+    return raw.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+}
 
 /**
  * Initialize Reports Module
  */
 function init() {
     console.log('Reports Module Initialized');
+    const periodSelect = document.getElementById('report-period');
+    if (periodSelect) {
+        periodSelect.value = currentPeriod;
+    }
     // Auto-load data on init
     reload();
 }
@@ -48,8 +63,8 @@ async function reload() {
         const ordersSnapshot = await getDocs(collection(db, 'orders'));
         // Sort orders by createdAt client-side since we removed orderBy
         allOrders = ordersSnapshot.docs.map(d => ({ key: d.id, ...d.data() })).sort((a, b) => {
-            const timeA = a.createdAt || 0;
-            const timeB = b.createdAt || 0;
+            const timeA = normalizeTimestamp(a.createdAt);
+            const timeB = normalizeTimestamp(b.createdAt);
             return timeA - timeB; // ascending
         });
 
@@ -73,7 +88,7 @@ function updatePeriod(period) {
  * Process Data and Render stats/charts
  */
 function processData() {
-    // Filter orders by period & status
+    // Filter orders by period
     const now = new Date();
     let startDate = new Date(0); // Beginning of time
 
@@ -86,29 +101,23 @@ function processData() {
     }
     // 'all' keeps startDate as 0
 
-    const validOrders = allOrders.filter(o => {
-        // Filter by date
-        const oDate = new Date(o.createdAt);
+    const periodOrders = allOrders.filter(o => {
+        const oDate = new Date(normalizeTimestamp(o.createdAt));
         if (oDate < startDate) return false;
-        
-        // Filter by status (only count delivered/completed for revenue? or all non-cancelled?)
-        // Usually Revenue = Delivered + Shipped or just Delivered.
-        // Let's use all except cancelled for "Sales" activity, but for "Revenue" strict accounting usually means Delivered.
-        // For dashboard trends, usually we show what's happening.
-        // I will exclude 'cancelled'.
-        return (o.status !== 'cancelled');
+        return true;
     });
 
-    const deliveredOrders = validOrders.filter(o => o.status === 'delivered');
+    // Exclude cancelled orders from revenue/analytics but still keep period count for totals.
+    const reportableOrders = periodOrders.filter((o) => normalizeOrderStatus(o.status) !== 'cancelled');
 
     // --- Metrics ---
     let totalRevenue = 0;
-    deliveredOrders.forEach(o => {
+    reportableOrders.forEach(o => {
         totalRevenue += parseFloat(o.total || 0);
     });
 
-    const totalOrdersCount = validOrders.length;
-    const aov = totalOrdersCount > 0 ? totalRevenue / deliveredOrders.length : 0; // AOV usually based on revenue generating orders
+    const totalOrdersCount = periodOrders.length;
+    const aov = totalOrdersCount > 0 ? totalRevenue / totalOrdersCount : 0;
 
     // Update UI Metrics
     setText('report-revenue', formatVND(totalRevenue));
@@ -119,28 +128,25 @@ function processData() {
     
     // 1. Sales Trend (Revenue by Date)
     const salesByDate = {};
-    validOrders.forEach(o => {
-        if (o.status === 'cancelled') return;
-        const date = new Date(o.createdAt).toLocaleDateString('vi-VN'); // dd/mm/yyyy
+    reportableOrders.forEach(o => {
+        const date = new Date(normalizeTimestamp(o.createdAt)).toLocaleDateString('vi-VN');
         salesByDate[date] = (salesByDate[date] || 0) + parseFloat(o.total || 0);
     });
 
-    // 2. Category Performance (by Brand)
-    const salesByBrand = {};
+    // 2. Category Performance (by category)
+    const salesByCategory = {};
     // 3. Top Products
     const productStats = {};
 
-    validOrders.forEach(o => {
-        if (o.status === 'cancelled') return;
+    reportableOrders.forEach(o => {
         if (!o.items) return;
 
         o.items.forEach(item => {
             const product = allProducts[item.id] || {};
-            const brand = product.brand || 'Other';
+            const category = formatCategoryLabel(product.category || item.category || 'Khác');
             const revenue = (item.price * item.quantity);
 
-            // Category (Brand)
-            salesByBrand[brand] = (salesByBrand[brand] || 0) + revenue;
+            salesByCategory[category] = (salesByCategory[category] || 0) + revenue;
 
             // Product Stats
             if (!productStats[item.id]) {
@@ -156,14 +162,14 @@ function processData() {
         });
     });
 
-    renderCharts(salesByDate, salesByBrand);
+    renderCharts(salesByDate, salesByCategory);
     renderTopProducts(productStats);
 }
 
 /**
  * Render Charts using Chart.js
  */
-function renderCharts(salesData, brandData) {
+function renderCharts(salesData, categoryData) {
     // --- Sales Chart ---
     const salesCtx = document.getElementById('salesChart');
     if (salesCtx) {
@@ -174,7 +180,7 @@ function renderCharts(salesData, brandData) {
             data: {
                 labels: Object.keys(salesData),
                 datasets: [{
-                    label: 'Revenue (VND)',
+                    label: 'Doanh thu (VND)',
                     data: Object.values(salesData),
                     borderColor: '#e71823', // Primary color
                     backgroundColor: 'rgba(231, 24, 35, 0.1)',
@@ -200,19 +206,19 @@ function renderCharts(salesData, brandData) {
     if (catCtx) {
         if (charts.category) charts.category.destroy();
 
-        const brands = Object.keys(brandData);
-        const data = Object.values(brandData);
+        const categories = Object.keys(categoryData);
+        const data = Object.values(categoryData);
         
         // Colors palette
-        const colors = ['#e71823', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+        const colors = ['#e71823', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#14b8a6', '#f97316'];
 
         charts.category = new Chart(catCtx, {
             type: 'doughnut',
             data: {
-                labels: brands,
+                labels: categories,
                 datasets: [{
                     data: data,
-                    backgroundColor: colors.slice(0, brands.length),
+                    backgroundColor: categories.map((_, index) => colors[index % colors.length]),
                     borderWidth: 0
                 }]
             },
@@ -288,7 +294,7 @@ async function exportPDF() {
             <html>
             <head>
                 <meta charset="utf-8">
-                <title>Báo Cáo Doanh Thu - X-Sneaker</title>
+                <title>Báo Cáo Doanh Thu - Bữa Xanh</title>
                 <style>
                     body {
                         font-family: Arial, sans-serif;
@@ -385,7 +391,7 @@ async function exportPDF() {
             </head>
             <body>
                 <div class="header">
-                    <div class="logo">X-SNEAKER</div>
+                    <div class="logo">BỮA XANH</div>
                     <div class="report-title">BÁO CÁO DOANH THU & PHÂN TÍCH</div>
                     <div class="period">Kỳ báo cáo: ${periodText}</div>
                     <div class="generated-date">Ngày xuất: ${new Date().toLocaleDateString('vi-VN')} ${new Date().toLocaleTimeString('vi-VN')}</div>
@@ -423,8 +429,8 @@ async function exportPDF() {
                 </div>
 
                 <div class="footer">
-                    <p>© ${new Date().getFullYear()} X-Sneaker. Báo cáo được tạo tự động từ hệ thống quản lý.</p>
-                    <p>Mọi thắc mắc vui lòng liên hệ: support@x-sneaker.com</p>
+                    <p>© ${new Date().getFullYear()} Bữa Xanh. Báo cáo được tạo tự động từ hệ thống quản lý.</p>
+                    <p>Mọi thắc mắc vui lòng liên hệ: hello@buaxanh.vn</p>
                 </div>
             </body>
             </html>
@@ -459,7 +465,7 @@ function exportExcel() {
         let csvContent = '\uFEFF'; // UTF-8 BOM for Excel
         
         // Header
-        csvContent += 'BÁO CÁO DOANH THU - X-SNEAKER\n';
+        csvContent += 'BÁO CÁO DOANH THU - BỮA XANH\n';
         csvContent += `Kỳ báo cáo: ${getPeriodText()}\n`;
         csvContent += `Ngày xuất: ${new Date().toLocaleDateString('vi-VN')} ${new Date().toLocaleTimeString('vi-VN')}\n\n`;
         

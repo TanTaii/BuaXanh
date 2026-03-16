@@ -11,6 +11,53 @@ import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.8.0/f
 
 // Khởi tạo database
 const database = getFirebaseFirestore();
+const HOME_PRODUCTS_CACHE_KEY = 'bua-xanh-home-products-cache-v1';
+const LEGACY_HOME_PRODUCTS_CACHE_KEYS = ['foodsaver-home-products-cache-v1'];
+const HOME_PRODUCTS_CACHE_TTL_MS = 60 * 1000;
+let productsCacheMemory = null;
+
+async function getAllProductsData() {
+  if (productsCacheMemory) {
+    return productsCacheMemory;
+  }
+
+  try {
+    const cacheKeys = [HOME_PRODUCTS_CACHE_KEY, ...LEGACY_HOME_PRODUCTS_CACHE_KEYS];
+    for (const cacheKey of cacheKeys) {
+      const cachedRaw = sessionStorage.getItem(cacheKey);
+      if (!cachedRaw) continue;
+
+      const cached = JSON.parse(cachedRaw);
+      if (cached?.timestamp && Array.isArray(cached?.data)) {
+        if (Date.now() - cached.timestamp < HOME_PRODUCTS_CACHE_TTL_MS) {
+          productsCacheMemory = cached.data;
+          if (cacheKey !== HOME_PRODUCTS_CACHE_KEY) {
+            sessionStorage.setItem(HOME_PRODUCTS_CACHE_KEY, cachedRaw);
+            sessionStorage.removeItem(cacheKey);
+          }
+          return productsCacheMemory;
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('⚠️ Không đọc được cache products trang chủ:', error);
+  }
+
+  const snapshot = await getDocs(collection(database, 'products'));
+  const products = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  productsCacheMemory = products;
+
+  try {
+    sessionStorage.setItem(HOME_PRODUCTS_CACHE_KEY, JSON.stringify({
+      timestamp: Date.now(),
+      data: products
+    }));
+  } catch (error) {
+    console.warn('⚠️ Không ghi được cache products trang chủ:', error);
+  }
+
+  return products;
+}
 
 // ============================================================================
 // PHẦN 1: TẢI DỮ LIỆU (DATA LOADING)
@@ -23,9 +70,8 @@ const database = getFirebaseFirestore();
  */
 async function loadFlashSaleProducts(limit = 4) {
   try {
-    const snapshot = await getDocs(collection(database, 'products'));
-    const flashSaleProducts = snapshot.docs
-      .map(d => ({ id: d.id, ...d.data() }))
+    const allProducts = await getAllProductsData();
+    const flashSaleProducts = allProducts
       .filter(product => (product.discount && product.discount > 0) || product.isFlashSale)
       .sort((a, b) => (b.discount || 0) - (a.discount || 0))
       .slice(0, limit);
@@ -42,9 +88,8 @@ async function loadFlashSaleProducts(limit = 4) {
  */
 async function loadBestSellers(limit = null) {
   try {
-    const snapshot = await getDocs(collection(database, 'products'));
-    let bestSellers = snapshot.docs
-      .map(d => ({ id: d.id, ...d.data() }))
+    const allProducts = await getAllProductsData();
+    let bestSellers = allProducts
       .filter(product => product.isBestSeller || product.salesCount > 0)
       .sort((a, b) => (b.salesCount || b.sold || 0) - (a.salesCount || a.sold || 0));
 
@@ -65,9 +110,8 @@ async function loadBestSellers(limit = null) {
  */
 async function loadNewArrivals(limit = null) {
   try {
-    const snapshot = await getDocs(collection(database, 'products'));
-    let newArrivals = snapshot.docs
-      .map(d => ({ id: d.id, ...d.data() }))
+    const allProducts = await getAllProductsData();
+    let newArrivals = allProducts
       .filter(product => product.isNew)
       .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 

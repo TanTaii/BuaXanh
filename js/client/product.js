@@ -1,8 +1,8 @@
-// Product Listing Page Logic for X-Sneaker
+// Product Listing Page Logic for Bua Xanh
 // Handles product loading, filtering, and rendering from Firebase
 
 import { getFirebaseFirestore } from '../firebase-config.js';
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { getCachedCollectionData } from '../firestore-cache.js';
 
 // Get Firebase database instance from shared config
 const database = getFirebaseFirestore();
@@ -11,21 +11,143 @@ const database = getFirebaseFirestore();
 let allProducts = [];
 let allBrands = [];
 let allCategories = [];
+const MAX_PRICE = 5000000;
+const DEFAULT_CATEGORIES = [
+    { slug: 'tuoi-song', name: 'Thực phẩm tươi sống' },
+    { slug: 'che-bien-san', name: 'Thực phẩm chế biến sẵn' },
+    { slug: 'do-hop', name: 'Đồ hộp' },
+    { slug: 'dong-lanh', name: 'Thực phẩm đông lạnh' },
+    { slug: 'kho-gia-vi', name: 'Đồ khô & gia vị' },
+    { slug: 'do-uong', name: 'Đồ uống' }
+];
 let currentFilters = {
     categories: [],
     brands: [],
     genders: [],
     sizes: [],
     priceMin: 0,
-    priceMax: 10000000, // 10 million VND
+    priceMax: MAX_PRICE,
     searchTerm: '' // Add search term to filters
 };
 let currentPage = 1;
 let itemsPerPage = 12;
 let currentSort = 'popular'; // popular, price-asc, price-desc, newest
 let searchTimeout = null;
-const RECENT_SEARCHES_KEY = 'x-sneaker-product-recent-searches';
+const RECENT_SEARCHES_KEY = 'bua-xanh-product-recent-searches';
 const MAX_RECENT_SEARCHES = 5;
+
+function slugifyText(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
+function formatLabel(value) {
+    return String(value || '')
+        .replace(/[-_]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function normalizeBrandOption(brand) {
+    const name = String(brand?.name || brand?.label || brand?.title || brand || '').trim();
+    if (!name) return null;
+
+    return {
+        value: name,
+        label: name
+    };
+}
+
+function normalizeCategoryOption(category) {
+    const slug = String(category?.slug || category?.value || category?.id || category || '').trim();
+    const name = String(category?.name || category?.label || category?.title || '').trim();
+    const value = slug || slugifyText(name);
+    if (!value) return null;
+
+    const matchedDefault = DEFAULT_CATEGORIES.find((item) => item.slug === value);
+
+    return {
+        value,
+        label: name || matchedDefault?.name || formatLabel(value)
+    };
+}
+
+function getMergedBrandOptions() {
+    const brandMap = new Map();
+
+    allBrands.forEach((brand) => {
+        const normalized = normalizeBrandOption(brand);
+        if (normalized) brandMap.set(normalized.value.toLowerCase(), normalized);
+    });
+
+    allProducts.forEach((product) => {
+        const normalized = normalizeBrandOption(product?.brand);
+        if (normalized && !brandMap.has(normalized.value.toLowerCase())) {
+            brandMap.set(normalized.value.toLowerCase(), normalized);
+        }
+    });
+
+    return [...brandMap.values()].sort((a, b) => a.label.localeCompare(b.label, 'vi'));
+}
+
+function getMergedCategoryOptions() {
+    const categoryMap = new Map();
+
+    DEFAULT_CATEGORIES.forEach((category) => {
+        const normalized = normalizeCategoryOption(category);
+        if (normalized) categoryMap.set(normalized.value, normalized);
+    });
+
+    allCategories.forEach((category) => {
+        const normalized = normalizeCategoryOption(category);
+        if (normalized) categoryMap.set(normalized.value, normalized);
+    });
+
+    allProducts.forEach((product) => {
+        const normalized = normalizeCategoryOption(product?.category);
+        if (normalized && !categoryMap.has(normalized.value)) {
+            categoryMap.set(normalized.value, normalized);
+        }
+    });
+
+    return [...categoryMap.values()].sort((a, b) => a.label.localeCompare(b.label, 'vi'));
+}
+
+function renderCheckboxFilters(containerId, filterType, options, emptyMessage) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    if (!options.length) {
+        container.innerHTML = `<p class="text-sm text-slate-400">${emptyMessage}</p>`;
+        return;
+    }
+
+    container.innerHTML = options.map((option) => {
+        const checked = currentFilters[filterType].includes(option.value);
+        return `
+            <label class="flex items-center gap-3 rounded-lg px-2 py-2 cursor-pointer hover:bg-slate-50 transition-colors">
+                <input
+                    type="checkbox"
+                    value="${option.value}"
+                    data-filter="${filterType === 'categories' ? 'category' : 'brand'}"
+                    class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    ${checked ? 'checked' : ''}
+                />
+                <span class="text-sm font-medium text-slate-700">${option.label}</span>
+            </label>
+        `;
+    }).join('');
+}
+
+function renderDynamicFilters() {
+    renderCheckboxFilters('category-filters', 'categories', getMergedCategoryOptions(), 'Chưa có danh mục.');
+    renderCheckboxFilters('brand-filters', 'brands', getMergedBrandOptions(), 'Chưa có nhãn hàng.');
+}
 
 // ============================================================================
 // DATA LOADING
@@ -33,8 +155,7 @@ const MAX_RECENT_SEARCHES = 5;
 
 async function loadAllProducts() {
     try {
-        const snapshot = await getDocs(collection(database, 'products'));
-        allProducts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        allProducts = await getCachedCollectionData('products', { ttlMs: 5 * 60 * 1000 });
         console.log(`✅ Loaded ${allProducts.length} products from Firestore`);
         return allProducts;
     } catch (error) {
@@ -45,22 +166,20 @@ async function loadAllProducts() {
 
 async function loadBrands() {
     try {
-        const snapshot = await getDocs(collection(database, 'brands'));
-        allBrands = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        allBrands = await getCachedCollectionData('brands', { ttlMs: 30 * 60 * 1000 });
         return allBrands;
     } catch (error) {
-        console.error('Error loading brands:', error);
+        console.warn('Error loading brands, fallback to product data:', error);
         return [];
     }
 }
 
 async function loadCategories() {
     try {
-        const snapshot = await getDocs(collection(database, 'categories'));
-        allCategories = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        allCategories = await getCachedCollectionData('categories', { ttlMs: 30 * 60 * 1000 });
         return allCategories;
     } catch (error) {
-        console.error('Error loading categories:', error);
+        console.warn('Error loading categories, fallback to product data:', error);
         return [];
     }
 }
@@ -157,6 +276,34 @@ function updateFilterFromCheckbox(type, value, isChecked) {
 }
 
 // ============================================================================
+// STOCK MANAGEMENT
+// ============================================================================
+
+function getInventoryTotal(inventory) {
+    if (!inventory || typeof inventory !== 'object') return 0;
+
+    return Object.values(inventory).reduce((colorTotal, sizeMap) => {
+        if (!sizeMap || typeof sizeMap !== 'object') return colorTotal;
+        return colorTotal + Object.values(sizeMap).reduce((sum, qty) => sum + (parseInt(qty) || 0), 0);
+    }, 0);
+}
+
+function getProductTotalStock(product) {
+    const inventoryTotal = getInventoryTotal(product?.inventory);
+    if (inventoryTotal > 0 || (product?.inventory && Object.keys(product.inventory).length > 0)) {
+        return inventoryTotal;
+    }
+
+    const stock = parseInt(product?.stock);
+    if (!Number.isNaN(stock)) return stock;
+    return parseInt(product?.quantity) || 0;
+}
+
+function isProductOutOfStock(product) {
+    return getProductTotalStock(product) === 0;
+}
+
+// ============================================================================
 // RENDERING
 // ============================================================================
 
@@ -190,35 +337,83 @@ function renderProducts(products) {
         
         const discountPercent = product.discount || 0;
         const hasDiscount = discountPercent > 0;
+        const isOutOfStock = isProductOutOfStock(product);
+        
+        // Out of stock product styling
+        const outOfStockClass = isOutOfStock ? 'opacity-60 pointer-events-none' : '';
+        const productImageClass = isOutOfStock ? 'group-hover:scale-100' : 'group-hover:scale-110';
 
         return `
-            <div class="group relative flex flex-col">
+            <div class="group relative flex flex-col ${outOfStockClass}">
                 <div class="relative aspect-square bg-[#f3f3f3] dark:bg-[#2a1a1b] rounded-xl overflow-hidden mb-4">
-                    <a href="Product-detail.html?id=${product.id}">
-                        <img class="w-full h-full object-contain p-8 group-hover:scale-110 transition-transform duration-500" 
+                    ${isOutOfStock ? `<div class="absolute inset-0 bg-black/40 z-10 flex items-center justify-center">
+                        <div class="text-center">
+                            <span class="material-symbols-outlined text-5xl text-white mb-2">block</span>
+                            <p class="text-white font-bold text-lg">Hết Hàng</p>
+                        </div>
+                    </div>` : ''}
+                    <a href="${isOutOfStock ? '#' : `Product-detail.html?id=${product.id}`}" ${isOutOfStock ? 'onclick="return false"' : ''}>
+                        <img class="w-full h-full object-contain p-8 transition-transform duration-500 ${productImageClass}" 
                              src="${mainImage}"
                              alt="${product.name}"
                              onerror="if(this.src!='image/coming_soon.png'){this.src='image/coming_soon.png'}"/>
                     </a>
-                    ${hasDiscount ? `<div class="absolute top-4 left-4 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded">${discountPercent}% OFF</div>` : ''}
-                    ${product.isNew ? `<div class="absolute top-4 left-4 bg-black text-white text-[10px] font-bold px-2 py-1 rounded">MỚI</div>` : ''}
-                    <button class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black text-white text-xs font-bold px-6 py-3 rounded-lg opacity-0 group-hover:opacity-100 transition-all transform translate-y-4 group-hover:translate-y-0 w-[80%] whitespace-nowrap">
+                    ${isOutOfStock ? `<div class="absolute top-4 left-4 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded">HẾT HÀNG</div>` : ''}
+                    ${!isOutOfStock && hasDiscount ? `<div class="absolute top-4 left-4 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded">${discountPercent}% OFF</div>` : ''}
+                    ${!isOutOfStock && product.isNew ? `<div class="absolute top-4 left-4 bg-black text-white text-[10px] font-bold px-2 py-1 rounded">MỚI</div>` : ''}
+                    ${!isOutOfStock ? `<button type="button" class="quick-add-btn absolute bottom-4 left-1/2 -translate-x-1/2 bg-black text-white text-xs font-bold px-6 py-3 rounded-lg opacity-0 group-hover:opacity-100 transition-all transform translate-y-4 group-hover:translate-y-0 w-[80%] whitespace-nowrap" data-product-id="${product.id}">
                         THÊM NHANH
-                    </button>
+                    </button>` : ''}
                 </div>
                 <div class="flex flex-col gap-1">
                     <p class="text-gray-500 text-xs font-semibold uppercase tracking-wider">${product.brand || 'Brand'}</p>
-                    <a href="Product-detail.html?id=${product.id}">
+                    <a href="${isOutOfStock ? '#' : `Product-detail.html?id=${product.id}`}" ${isOutOfStock ? 'onclick="return false"' : ''}>
                         <h3 class="text-base font-bold text-gray-900 dark:text-white leading-tight hover:text-primary transition-colors">${product.name}</h3>
                     </a>
                     <div class="flex items-center gap-2 mt-1">
                         <p class="text-primary font-bold text-lg">${formatPrice(product.price)}</p>
-                        ${hasDiscount && product.originalPrice ? `<span class="text-gray-400 line-through text-sm">${formatPrice(product.originalPrice)}</span>` : ''}
+                        ${!isOutOfStock && hasDiscount && product.originalPrice ? `<span class="text-gray-400 line-through text-sm">${formatPrice(product.originalPrice)}</span>` : ''}
                     </div>
                 </div>
             </div>
         `;
     }).join('');
+
+    // Quick add behavior: add directly to cart without redirecting to detail page.
+    container.querySelectorAll('.quick-add-btn').forEach((btn) => {
+        btn.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const productId = btn.dataset.productId;
+            const product = paginatedProducts.find((item) => item.id === productId);
+            if (!product) return;
+
+            const maxStock = getProductTotalStock(product);
+            if (maxStock <= 0) {
+                window.showToast?.('Sản phẩm này đã hết hàng', 'warning');
+                return;
+            }
+
+            const mainImage = Array.isArray(product.images) && product.images.length > 0
+                ? product.images[0]
+                : 'image/coming_soon.png';
+
+            const defaultSize = Array.isArray(product.sizes) && product.sizes.length > 0
+                ? String(typeof product.sizes[0] === 'object' ? product.sizes[0].value : product.sizes[0])
+                : 'Free Size';
+
+            window.addToCart?.({
+                id: product.id,
+                name: product.name,
+                price: parseInt(product.price) || 0,
+                image: mainImage,
+                size: defaultSize,
+                color: '',
+                maxStock
+            });
+        });
+    });
     
     // Render pagination controls
     renderPagination(products.length);
@@ -267,6 +462,8 @@ async function init() {
         loadBrands(),
         loadCategories()
     ]);
+
+    renderDynamicFilters();
 
     // Setup event listeners for filters
     setupFilterListeners();
@@ -321,8 +518,8 @@ function setupFilterListeners() {
             const priceRangeTrack = document.getElementById('price-range-track');
             
             if (priceMin) priceMin.value = 0;
-            if (priceMax) priceMax.value = 10000000;
-            if (priceDisplay) priceDisplay.textContent = '0₫ - 10.000.000₫';
+            if (priceMax) priceMax.value = MAX_PRICE;
+            if (priceDisplay) priceDisplay.textContent = '0₫ - 5.000.000₫';
             if (priceRangeTrack) {
                 priceRangeTrack.style.left = '0%';
                 priceRangeTrack.style.right = '0%';
@@ -335,7 +532,8 @@ function setupFilterListeners() {
                 genders: [],
                 sizes: [],
                 priceMin: 0,
-                priceMax: 10000000
+                priceMax: MAX_PRICE,
+                searchTerm: ''
             };
 
             renderProducts(allProducts);
@@ -349,7 +547,10 @@ function setupFilterListeners() {
     const priceRangeTrack = document.getElementById('price-range-track');
     
     if (priceMin && priceMax && priceDisplay && priceRangeTrack) {
-        const maxPrice = 10000000; // 10 million
+        priceMin.max = String(MAX_PRICE);
+        priceMax.max = String(MAX_PRICE);
+        priceMax.value = String(Math.min(parseInt(priceMax.value) || MAX_PRICE, MAX_PRICE));
+        const maxPrice = MAX_PRICE;
         
         function updatePriceRange() {
             let minVal = parseInt(priceMin.value);
@@ -707,7 +908,7 @@ function saveRecentSearch(searchTerm) {
 
 function getRecentSearches() {
     try {
-        const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
+        const stored = localStorage.getItem(RECENT_SEARCHES_KEY) || localStorage.getItem('x-sneaker-product-recent-searches');
         return stored ? JSON.parse(stored) : [];
     } catch (error) {
         console.error('Error loading recent searches:', error);

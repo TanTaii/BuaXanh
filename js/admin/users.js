@@ -1,5 +1,5 @@
 /**
- * X-Sneaker Admin - Users Management Module
+ * Bua Xanh Admin - Users Management Module
  * Manages user data, roles, and permissions
  */
 
@@ -109,7 +109,7 @@ function getUserStats(userId) {
 function updateStats() {
     const totalUsers = state.users.length;
     const adminUsers = state.users.filter(u => u.role === 'admin' || u.isAdmin).length;
-    const customerUsers = state.users.filter(u => u.role === 'customer' || !u.isAdmin).length;
+    const customerUsers = state.users.filter(u => (u.role || 'customer') === 'customer').length;
     
     // New users in last 7 days
     const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
@@ -148,7 +148,9 @@ function applyFiltersAndSort() {
         if (state.currentFilter === 'admin') {
             filtered = filtered.filter(u => u.role === 'admin' || u.isAdmin);
         } else if (state.currentFilter === 'customer') {
-            filtered = filtered.filter(u => u.role === 'customer' || !u.isAdmin);
+            filtered = filtered.filter(u => (u.role || 'customer') === 'customer');
+        } else if (state.currentFilter === 'shipper') {
+            filtered = filtered.filter(u => u.role === 'shipper');
         } else if (state.currentFilter === 'verified') {
             filtered = filtered.filter(u => u.emailVerified === true);
         }
@@ -201,10 +203,14 @@ function renderUsersTable() {
     
     tbody.innerHTML = paginatedUsers.map(user => {
         const stats = getUserStats(user.uid);
-        const isAdmin = user.role === 'admin' || user.isAdmin;
-        const roleBadge = isAdmin 
-            ? '<span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">Admin</span>'
-            : '<span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">Khách hàng</span>';
+        const role = user.role || (user.isAdmin ? 'admin' : 'customer');
+        const canSetEmployee = role !== 'admin' && role !== 'shipper';
+        let roleBadge = '<span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">Khách hàng</span>';
+        if (role === 'admin') {
+            roleBadge = '<span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">Admin</span>';
+        } else if (role === 'shipper') {
+            roleBadge = '<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Nhân viên</span>';
+        }
         
         const verifiedBadge = user.emailVerified
             ? '<span class="material-symbols-rounded text-emerald-500 text-[16px]" title="Email đã xác thực">verified</span>'
@@ -255,27 +261,28 @@ function renderUsersTable() {
                     <div class="flex items-center justify-end gap-2">
                         <div class="group relative inline-block">
                             <button onclick="window.usersModule.viewDetails('${user.uid}')" 
-                                    class="p-2.5 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 active:scale-95" 
-                                    title="Xem chi tiết">
+                                    class="p-2.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all"
+                                    title="Xem thông tin">
                                 <span class="material-symbols-rounded text-[18px]">visibility</span>
                             </button>
                             <div class="pointer-events-none absolute hidden group-hover:block bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded whitespace-nowrap z-10">
-                                Xem chi tiết
+                                Xem thông tin
                             </div>
                         </div>
                         <div class="group relative inline-block">
-                            <button onclick="window.usersModule.editUser('${user.uid}')" 
-                                    class="p-2.5 bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 active:scale-95" 
-                                    title="Chỉnh sửa">
-                                <span class="material-symbols-rounded text-[18px]">edit</span>
+                            <button onclick="window.usersModule.setAsEmployee('${user.uid}')" 
+                                    ${canSetEmployee ? '' : 'disabled'}
+                                    class="p-2.5 rounded-lg transition-all ${canSetEmployee ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}"
+                                    title="Đặt làm nhân viên">
+                                <span class="material-symbols-rounded text-[18px]">badge</span>
                             </button>
                             <div class="pointer-events-none absolute hidden group-hover:block bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded whitespace-nowrap z-10">
-                                Chỉnh sửa
+                                ${canSetEmployee ? 'Đặt làm nhân viên' : 'Đã là nhân viên/Admin'}
                             </div>
                         </div>
                         <div class="group relative inline-block">
                             <button onclick="window.usersModule.deleteUser('${user.uid}', '${user.displayName || 'User'}')" 
-                                    class="p-2.5 bg-gradient-to-br from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 active:scale-95" 
+                                    class="p-2.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 transition-all" 
                                     title="Xóa tài khoản">
                                 <span class="material-symbols-rounded text-[18px]">delete</span>
                             </button>
@@ -359,9 +366,13 @@ export async function viewDetails(userId) {
     document.getElementById('modal-user-name').textContent = user.displayName || 'N/A';
     document.getElementById('modal-user-email').textContent = user.email || 'N/A';
     document.getElementById('modal-user-uid').textContent = user.uid;
-    document.getElementById('modal-user-role').innerHTML = user.role === 'admin' || user.isAdmin 
-        ? '<span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">Admin</span>'
-        : '<span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">Khách hàng</span>';
+    if (user.role === 'admin' || user.isAdmin) {
+        document.getElementById('modal-user-role').innerHTML = '<span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">Admin</span>';
+    } else if (user.role === 'shipper') {
+        document.getElementById('modal-user-role').innerHTML = '<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Nhân viên</span>';
+    } else {
+        document.getElementById('modal-user-role').innerHTML = '<span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">Khách hàng</span>';
+    }
     
     document.getElementById('modal-user-phone').textContent = user.phone || 'Chưa cập nhật';
     document.getElementById('modal-user-gender').textContent = user.gender === 'male' ? 'Nam' : user.gender === 'female' ? 'Nữ' : 'Chưa cập nhật';
@@ -464,12 +475,14 @@ export function closeEditModal() {
  */
 export async function saveUser() {
     const userId = document.getElementById('edit-user-id').value;
+    const selectedRole = document.getElementById('edit-user-role').value;
     const userData = {
         displayName: document.getElementById('edit-user-name').value,
         phone: document.getElementById('edit-user-phone').value,
         gender: document.getElementById('edit-user-gender').value,
-        role: document.getElementById('edit-user-role').value,
-        isAdmin: document.getElementById('edit-user-role').value === 'admin',
+        role: selectedRole,
+        isAdmin: selectedRole === 'admin',
+        isShipper: selectedRole === 'shipper',
         loyaltyPoints: parseInt(document.getElementById('edit-user-loyalty').value) || 0,
         address: {
             street: document.getElementById('edit-user-street').value,
@@ -539,6 +552,49 @@ export async function deleteUser(userId, userName) {
     } catch (error) {
         console.error('Error deleting user:', error);
         showNotification('Lỗi khi xóa tài khoản: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Set user role to employee (shipper)
+ */
+export async function setAsEmployee(userId) {
+    const user = state.users.find(u => u.uid === userId);
+    if (!user) return;
+
+    if (user.role === 'admin' || user.isAdmin) {
+        showNotification('Không thể đổi tài khoản Admin thành nhân viên.', 'warning');
+        return;
+    }
+
+    if (user.role === 'shipper') {
+        showNotification('Người dùng này đã là nhân viên.', 'info');
+        return;
+    }
+
+    const confirmed = await showConfirm(
+        `Đặt "${user.displayName || user.email || 'người dùng này'}" thành nhân viên giao hàng?`,
+        {
+            title: 'Xác nhận cập nhật vai trò',
+            submessage: 'Người dùng sẽ truy cập trang Delivery.',
+            type: 'warning',
+            confirmText: 'Xác nhận',
+            cancelText: 'Hủy'
+        }
+    );
+
+    if (!confirmed) return;
+
+    try {
+        await updateDoc(doc(database, 'users', userId), {
+            role: 'shipper',
+            isShipper: true,
+            isAdmin: false
+        });
+        showNotification('Đã cập nhật người dùng thành nhân viên.', 'success');
+    } catch (error) {
+        console.error('Error setting employee role:', error);
+        showNotification('Lỗi khi cập nhật vai trò nhân viên.', 'error');
     }
 }
 
@@ -711,7 +767,9 @@ function getStatusText(status) {
         'pending': 'Chờ xử lý',
         'processing': 'Đang xử lý',
         'confirmed': 'Đã xác nhận',
+        'preparing': 'Đang chuẩn bị',
         'shipped': 'Đang giao',
+        'shipping': 'Đang giao',
         'delivered': 'Đã giao',
         'cancelled': 'Đã hủy'
     };
@@ -734,6 +792,7 @@ window.usersModule = {
     init,
     viewDetails,
     closeDetails,
+    setAsEmployee,
     editUser,
     closeEditModal,
     saveUser,

@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>FoodSaver Admin | Quản lý đơn hàng</title>
-    <link rel="icon" type="image/png" href="image/logo.png">
+    <title>Bữa Xanh Admin | Quản lý đơn hàng</title>
+    <link rel="icon" type="image/png" href="image/Logo.png">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
@@ -98,9 +98,9 @@
         <!-- Logo -->
         <div class="h-20 flex items-center px-8 border-b border-slate-200">
             <a href="index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity group">
-                <span class="material-symbols-outlined text-3xl font-bold text-primary">eco</span>
+                <img src="image/Logo.png" alt="Bữa Xanh Logo" class="h-8 w-auto object-contain" />
                 <div>
-                    <h1 class="text-xl font-extrabold tracking-tighter uppercase italic text-slate-900 leading-none">FoodSaver</h1>
+                    <h1 class="text-xl font-extrabold tracking-tighter uppercase italic text-slate-900 leading-none">Bữa Xanh</h1>
                     <p class="text-[11px] uppercase tracking-wider text-primary font-bold mt-1">QUẢN TRỊ VIÊN</p>
                 </div>
             </a>
@@ -137,11 +137,21 @@
                 <span class="text-sm font-semibold">Báo cáo</span>
             </a>
 
+            <a href="#" data-tab="reviews" class="nav-link flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl transition-all group">
+                <span class="material-symbols-rounded text-[22px] group-hover:scale-110 transition-transform">reviews</span>
+                <span class="text-sm font-semibold">Đánh giá</span>
+            </a>
+
             <div class="px-4 mt-8 mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">HỆ THỐNG</div>
 
             <a href="#" data-tab="users" class="nav-link flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl transition-all group">
                 <span class="material-symbols-rounded text-[22px] group-hover:scale-110 transition-transform">group</span>
                 <span class="text-sm font-semibold">Người dùng</span>
+            </a>
+
+            <a href="#" data-tab="contacts" class="nav-link flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl transition-all group">
+                <span class="material-symbols-rounded text-[22px] group-hover:scale-110 transition-transform">contact_mail</span>
+                <span class="text-sm font-semibold">Liên hệ</span>
             </a>
 
 
@@ -685,7 +695,7 @@
             <div id="product-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                 <div class="bg-white dark:bg-card-dark rounded-2xl w-full max-w-6xl shadow-2xl max-h-[90vh] flex flex-col">
                      <!-- Modal Header -->
-                     <div class="p-6 border-b border-slate-100 dark:border-border-dark flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800">
+                     <div class="p-6 border-b border-slate-100 dark:border-border-dark flex items-center justify-between bg-gradient-to-r from-emerald-50 to-lime-50 dark:from-slate-800 dark:to-slate-800">
                         <h3 class="text-xl font-bold text-slate-900 dark:text-white" id="modal-title">Tạo Sản Phẩm Mới</h3>
                         <button id="btn-close-modal" class="p-2 text-slate-400 hover:text-rose-500 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-all">
                             <span class="material-symbols-rounded">close</span>
@@ -695,6 +705,7 @@
                     <div class="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-slate-900">
                         <form id="product-form" class="space-y-6">
                             <input type="hidden" id="product-id">
+                            <input type="hidden" id="product-variant-prices">
                             
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <!-- Left Column: Main Info -->
@@ -713,22 +724,29 @@
                                             <div>
                                                 <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
                                                     <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-purple-600">label</span>
-                                                    Thương hiệu *
+                                                    Thương hiệu / Nhà cung cấp *
                                                 </label>
-                                                <select id="prod-brand" required 
-                                                    class="w-full px-4 py-3 bg-purple-50 dark:bg-slate-800 border border-purple-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
-                                                    <option value="">-- Chọn thương hiệu --</option>
-                                                    <option value="Nike">Nike</option>
-                                                    <option value="Adidas">Adidas</option>
-                                                    <option value="New Balance">New Balance</option>
-                                                    <option value="Converse">Converse</option>
-                                                    <option value="Vans">Vans</option>
-                                                </select>
+                                                <div class="space-y-3">
+                                                    <div class="flex flex-col sm:flex-row gap-2">
+                                                        <select id="prod-brand" required 
+                                                            class="w-full px-4 py-3 bg-purple-50 dark:bg-slate-800 border border-purple-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
+                                                            <option value="">-- Chọn thương hiệu/nhà cung cấp --</option>
+                                                        </select>
+                                                        <button type="button" id="btn-add-brand-option" class="px-4 py-3 bg-purple-100 text-purple-700 rounded-lg text-sm font-bold hover:bg-purple-200 transition-colors whitespace-nowrap">
+                                                            + Nhãn mới
+                                                        </button>
+                                                    </div>
+                                                    <div id="new-brand-wrapper" class="hidden">
+                                                        <input type="text" id="prod-brand-new" placeholder="Nhập nhãn hàng / nhà cung cấp mới"
+                                                            class="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-purple-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
+                                                        <p class="text-xs text-slate-500 mt-1">Tên này sẽ được lưu lại để dùng cho lần sau.</p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Category & Gender -->
+                                    <!-- Category & Storage -->
                                     <div class="bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-200 dark:border-border-dark">
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
@@ -739,22 +757,19 @@
                                                 <select id="prod-category" required 
                                                     class="w-full px-4 py-3 bg-orange-50 dark:bg-slate-800 border border-orange-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
                                                     <option value="">-- Chọn danh mục --</option>
-                                                    <option value="lifestyle">Thời trang</option>
-                                                    <option value="running">Chạy bộ</option>
-                                                    <option value="basketball">Bóng rổ</option>
-                                                    <option value="training">Tập luyện</option>
                                                 </select>
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
-                                                    <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-pink-600">wc</span>
-                                                    Giới tính
+                                                    <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-pink-600">ac_unit</span>
+                                                    Nhóm bảo quản
                                                 </label>
                                                 <select id="prod-gender" 
                                                     class="w-full px-4 py-3 bg-pink-50 dark:bg-slate-800 border border-pink-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
-                                                    <option value="unisex">Unisex</option>
-                                                    <option value="male">Nam</option>
-                                                    <option value="female">Nữ</option>
+                                                    <option value="ambient">Nhiệt độ thường</option>
+                                                    <option value="chilled">Mát (0 - 8°C)</option>
+                                                    <option value="frozen">Đông lạnh (-18°C)</option>
+                                                    <option value="ready">Dùng ngay / mở nắp dùng liền</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -791,38 +806,28 @@
                                         </div>
                                     </div>
 
-                                    <!-- Stock & Sizes -->
+                                    <!-- Pack Size & Variants -->
                                     <div class="bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-200 dark:border-border-dark">
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
-                                                    <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-cyan-600">inventory</span>
-                                                    Tồn kho *
+                                                    <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-indigo-600">straighten</span>
+                                                    Quy cách đóng gói *
                                                 </label>
-                                                <input type="number" id="prod-stock" required min="0" value="0"
-                                                    class="w-full px-4 py-3 bg-cyan-50 dark:bg-slate-800 border border-cyan-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
+                                                <input type="text" id="prod-sizes" required placeholder="500g, 1kg, hộp 12 lon, chai 1L"
+                                                    class="w-full px-4 py-3 bg-indigo-50 dark:bg-slate-800 border border-indigo-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
+                                                <p class="text-xs text-slate-500 mt-1">Phân cách bằng dấu phẩy. VD: 250g, 500g, 1kg</p>
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
-                                                    <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-indigo-600">straighten</span>
-                                                    Kích thước *
+                                                    <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-primary">palette</span>
+                                                    Biến thể sản phẩm *
                                                 </label>
-                                                <input type="text" id="prod-sizes" required placeholder="38, 39, 40, 41, 42, 43"
-                                                    class="w-full px-4 py-3 bg-indigo-50 dark:bg-slate-800 border border-indigo-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
-                                                <p class="text-xs text-slate-500 mt-1">Phân cách bằng dấu phẩy</p>
+                                                <input type="text" id="prod-colors" required placeholder="Phi lê, Nguyên con, Ít cay, Cay vừa"
+                                                    class="w-full px-4 py-3 bg-green-50 dark:bg-slate-800 border border-green-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
+                                                <p class="text-xs text-slate-500 mt-1">Phân cách bằng dấu phẩy. Dùng cho loại cắt, vị, công thức hoặc phiên bản.</p>
                                             </div>
                                         </div>
-                                    </div>
-
-                                    <!-- Colors -->
-                                    <div class="bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-200 dark:border-border-dark">
-                                        <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
-                                            <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-primary">palette</span>
-                                            Màu sắc *
-                                        </label>
-                                        <input type="text" id="prod-colors" required placeholder="Đen, Trắng, Đỏ"
-                                            class="w-full px-4 py-3 bg-green-50 dark:bg-slate-800 border border-green-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
-                                        <p class="text-xs text-slate-500 mt-1">Phân cách bằng dấu phẩy (VD: "Đen, Trắng, Xanh Navy")</p>
                                     </div>
 
                                     <!-- Inventory Management -->
@@ -830,7 +835,7 @@
                                         <div class="flex items-center justify-between mb-3">
                                             <label class="block text-sm font-bold text-slate-800 dark:text-slate-200">
                                                 <span class="material-symbols-rounded text-[16px] align-middle mr-1 text-purple-600">inventory_2</span>
-                                                Quản lý tồn kho theo màu & size
+                                                Quản lý tồn kho theo biến thể & quy cách
                                             </label>
                                             <button type="button" id="btn-generate-inventory" class="px-3 py-1.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg text-xs font-bold hover:bg-purple-200 transition-colors">
                                                 Tạo bảng tồn kho
@@ -841,10 +846,11 @@
                                                 <table class="w-full text-xs">
                                                     <thead>
                                                         <tr class="bg-purple-50 dark:bg-purple-900/20 border-b border-purple-200 dark:border-purple-800">
-                                                            <th class="px-3 py-2 text-left font-bold text-purple-900 dark:text-purple-300">Màu</th>
-                                                            <th class="px-3 py-2 text-left font-bold text-purple-900 dark:text-purple-300">Ảnh màu</th>
-                                                            <th class="px-3 py-2 text-left font-bold text-purple-900 dark:text-purple-300">Size</th>
+                                                            <th class="px-3 py-2 text-left font-bold text-purple-900 dark:text-purple-300">Biến thể</th>
+                                                            <th class="px-3 py-2 text-left font-bold text-purple-900 dark:text-purple-300">Ảnh biến thể</th>
+                                                            <th class="px-3 py-2 text-left font-bold text-purple-900 dark:text-purple-300">Quy cách</th>
                                                             <th class="px-3 py-2 text-center font-bold text-purple-900 dark:text-purple-300">Số lượng</th>
+                                                            <th class="px-3 py-2 text-center font-bold text-purple-900 dark:text-purple-300">Giá</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody id="inventory-table-body" class="divide-y divide-purple-100 dark:divide-purple-900/20">
@@ -859,7 +865,42 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="text-xs text-slate-500 mt-2">Nhập màu sắc và size trước, sau đó nhấn "Tạo bảng tồn kho"</p>
+                                        <p class="text-xs text-slate-500 mt-2">Nhập biến thể và quy cách trước, sau đó nhấn "Tạo bảng tồn kho"</p>
+                                    </div>
+
+                                    <!-- Food Safety Info -->
+                                    <div class="bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-200 dark:border-border-dark">
+                                        <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+                                            <span class="material-symbols-rounded text-[18px] text-emerald-600">verified_user</span>
+                                            Thông tin bảo quản & an toàn
+                                        </h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">Xuất xứ</label>
+                                                <input type="text" id="prod-origin" placeholder="Việt Nam, Nhật Bản..."
+                                                    class="w-full px-4 py-3 bg-emerald-50 dark:bg-slate-800 border border-emerald-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">Hạn dùng (ngày)</label>
+                                                <input type="number" id="prod-shelf-life" min="0" step="1" placeholder="30"
+                                                    class="w-full px-4 py-3 bg-emerald-50 dark:bg-slate-800 border border-emerald-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">Ngày hết hạn (lô hiện tại)</label>
+                                                <input type="date" id="prod-expiry-date"
+                                                    class="w-full px-4 py-3 bg-emerald-50 dark:bg-slate-800 border border-emerald-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">Nhiệt độ bảo quản khuyến nghị</label>
+                                                <input type="text" id="prod-storage-temp" placeholder="0-4°C, tránh ánh nắng trực tiếp"
+                                                    class="w-full px-4 py-3 bg-emerald-50 dark:bg-slate-800 border border-emerald-200 dark:border-slate-600 rounded-lg text-sm font-semibold">
+                                            </div>
+                                        </div>
+                                        <div class="mt-4">
+                                            <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">Thành phần / Dị ứng cảnh báo</label>
+                                            <textarea id="prod-ingredients" rows="3" placeholder="VD: Cá hồi 95%, muối 2%, phụ gia...; Có chứa hải sản"
+                                                class="w-full px-4 py-3 bg-emerald-50 dark:bg-slate-800 border border-emerald-200 dark:border-slate-600 rounded-lg text-sm"></textarea>
+                                        </div>
                                     </div>
 
                                     <!-- Description -->
@@ -870,7 +911,7 @@
                                         </label>
                                         <textarea id="prod-description" rows="4" required
                                             class="w-full px-4 py-3 bg-teal-50 dark:bg-slate-800 border border-teal-200 dark:border-slate-600 rounded-lg text-sm focus:ring-2 focus:ring-teal-500"
-                                            placeholder="Mô tả chi tiết về sản phẩm..."></textarea>
+                                            placeholder="Mô tả mùi vị, cách chế biến, cách dùng, bảo quản sau khi mở nắp..."></textarea>
                                     </div>
                                 </div>
 
@@ -902,14 +943,14 @@
                                     <div class="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-slate-800 dark:to-slate-800 rounded-xl p-4 border border-amber-200 dark:border-slate-600">
                                         <h4 class="text-sm font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                                             <span class="material-symbols-rounded text-[18px] text-amber-600">new_releases</span>
-                                            Trạng thái sản phẩm
+                                            Nhãn hiển thị sản phẩm
                                         </h4>
                                         
                                         <div class="space-y-3">
                                             <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-lg">
                                                 <div>
                                                     <label class="text-sm font-semibold text-slate-800 dark:text-slate-200">Sản phẩm nổi bật</label>
-                                                    <p class="text-xs text-slate-600 dark:text-slate-400">Hiển thị ở trang chủ</p>
+                                                    <p class="text-xs text-slate-600 dark:text-slate-400">Ưu tiên hiển thị trang chủ</p>
                                                 </div>
                                                 <label class="relative inline-flex items-center cursor-pointer">
                                                     <input type="checkbox" id="prod-featured" class="sr-only peer">
@@ -920,7 +961,7 @@
                                             <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-lg">
                                                 <div>
                                                     <label class="text-sm font-semibold text-slate-800 dark:text-slate-200">Hàng mới về</label>
-                                                    <p class="text-xs text-slate-600 dark:text-slate-400">Badge "NEW"</p>
+                                                    <p class="text-xs text-slate-600 dark:text-slate-400">Lô hàng mới / sản phẩm mới</p>
                                                 </div>
                                                 <label class="relative inline-flex items-center cursor-pointer">
                                                     <input type="checkbox" id="prod-new" class="sr-only peer">
@@ -931,7 +972,7 @@
                                             <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-lg">
                                                 <div>
                                                     <label class="text-sm font-semibold text-slate-800 dark:text-slate-200">Bán chạy</label>
-                                                    <p class="text-xs text-slate-600 dark:text-slate-400">Badge "Best Seller"</p>
+                                                    <p class="text-xs text-slate-600 dark:text-slate-400">Sản phẩm bán tốt theo doanh số</p>
                                                 </div>
                                                 <label class="relative inline-flex items-center cursor-pointer">
                                                     <input type="checkbox" id="prod-bestseller" class="sr-only peer">
@@ -1020,7 +1061,7 @@
                                         <p id="view-category" class="text-sm font-medium text-slate-900 dark:text-white mt-1">-</p>
                                     </div>
                                     <div>
-                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Giới tính</label>
+                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Nhóm bảo quản</label>
                                         <p id="view-gender" class="text-sm font-medium text-slate-900 dark:text-white mt-1">-</p>
                                     </div>
                                 </div>
@@ -1061,17 +1102,47 @@
                             <div>
                                 <h4 class="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                                     <span class="material-symbols-rounded text-primary">palette</span>
-                                    Màu sắc & Kích cỡ
+                                    Biến thể & Quy cách
                                 </h4>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Màu sắc</label>
+                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Biến thể</label>
                                         <p id="view-colors" class="text-sm font-medium text-slate-900 dark:text-white mt-1">-</p>
                                     </div>
                                     <div>
-                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Size</label>
+                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Quy cách</label>
                                         <p id="view-sizes" class="text-sm font-medium text-slate-900 dark:text-white mt-1">-</p>
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- Food Safety -->
+                            <div>
+                                <h4 class="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                                    <span class="material-symbols-rounded text-primary">verified_user</span>
+                                    Bảo quản & An toàn thực phẩm
+                                </h4>
+                                <div class="grid grid-cols-2 gap-4 mb-3">
+                                    <div>
+                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Xuất xứ</label>
+                                        <p id="view-origin" class="text-sm font-medium text-slate-900 dark:text-white mt-1">-</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Hạn dùng (ngày)</label>
+                                        <p id="view-shelf-life" class="text-sm font-medium text-slate-900 dark:text-white mt-1">-</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Ngày hết hạn</label>
+                                        <p id="view-expiry-date" class="text-sm font-medium text-slate-900 dark:text-white mt-1">-</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Nhiệt độ bảo quản</label>
+                                        <p id="view-storage-temp" class="text-sm font-medium text-slate-900 dark:text-white mt-1">-</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Thành phần / Dị ứng</label>
+                                    <p id="view-ingredients" class="text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">-</p>
                                 </div>
                             </div>
 
@@ -1088,11 +1159,11 @@
                                 <div id="view-inventory-table"></div>
                             </div>
 
-                            <!-- Color Images -->
+                            <!-- Variant Images -->
                             <div>
                                 <h4 class="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                                     <span class="material-symbols-rounded text-primary">photo_library</span>
-                                    Ảnh theo màu
+                                    Ảnh theo biến thể
                                 </h4>
                                 <div id="view-color-images"></div>
                             </div>
@@ -1172,7 +1243,7 @@
                     </div>
                     <h3 id="report-orders" class="text-3xl font-extrabold text-slate-900 dark:text-white mb-2">...</h3>
                      <div class="flex items-center gap-2 text-sm">
-                        <span class="text-slate-500">Đơn đã giao</span>
+                        <span class="text-slate-500">Đơn theo bộ lọc thời gian</span>
                     </div>
                 </div>
             </div>
@@ -1294,6 +1365,7 @@
                             <button id="filter-btn-all" onclick="window.usersModule.setFilter('all')" class="px-3 md:px-4 py-2 bg-white text-slate-900 text-xs md:text-sm font-bold rounded-lg shadow-sm transition-all whitespace-nowrap">Tất cả</button>
                             <button id="filter-btn-admin" onclick="window.usersModule.setFilter('admin')" class="px-3 md:px-4 py-2 text-slate-600 hover:text-slate-900 text-xs md:text-sm font-medium rounded-lg transition-all whitespace-nowrap">Admin</button>
                             <button id="filter-btn-customer" onclick="window.usersModule.setFilter('customer')" class="px-3 md:px-4 py-2 text-slate-600 hover:text-slate-900 text-xs md:text-sm font-medium rounded-lg transition-all whitespace-nowrap">Khách hàng</button>
+                            <button id="filter-btn-shipper" onclick="window.usersModule.setFilter('shipper')" class="px-3 md:px-4 py-2 text-slate-600 hover:text-slate-900 text-xs md:text-sm font-medium rounded-lg transition-all whitespace-nowrap">Nhân viên</button>
                             <button id="filter-btn-verified" onclick="window.usersModule.setFilter('verified')" class="px-3 md:px-4 py-2 text-slate-600 hover:text-slate-900 text-xs md:text-sm font-medium rounded-lg transition-all whitespace-nowrap">Đã xác thực</button>
                         </div>
                     </div>
@@ -1437,7 +1509,7 @@
                         </div>
 
                         <!-- Stats -->
-                        <div class="grid grid-cols-4 gap-4">
+                        <div class="grid grid-cols-2 gap-4">
                             <div class="bg-blue-50 p-4 rounded-lg">
                                 <p class="text-xs text-blue-600 font-semibold uppercase">Đơn hàng</p>
                                 <p id="modal-user-orders" class="text-2xl font-extrabold text-blue-700 mt-1">0</p>
@@ -1445,14 +1517,6 @@
                             <div class="bg-emerald-50 p-4 rounded-lg">
                                 <p class="text-xs text-emerald-600 font-semibold uppercase">Tổng chi</p>
                                 <p id="modal-user-spent" class="text-2xl font-extrabold text-emerald-700 mt-1">0d</p>
-                            </div>
-                            <div class="bg-amber-50 p-4 rounded-lg">
-                                <p class="text-xs text-amber-600 font-semibold uppercase">Điểm tích lũy</p>
-                                <p id="modal-user-loyalty" class="text-2xl font-extrabold text-amber-700 mt-1">0</p>
-                            </div>
-                            <div class="bg-purple-50 p-4 rounded-lg">
-                                <p class="text-xs text-purple-600 font-semibold uppercase">Hạng</p>
-                                <p id="modal-user-tier" class="text-2xl font-extrabold text-purple-700 mt-1">-</p>
                             </div>
                         </div>
 
@@ -1469,8 +1533,8 @@
                     <div class="p-6 border-t border-slate-100 flex justify-end gap-3">
                         <button onclick="window.usersModule.closeDetails()" class="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all">
                             Đóng</button>
-                        <button onclick="window.usersModule.editUser(document.getElementById('modal-user-uid').textContent.trim())" class="px-6 py-2.5 bg-primary hover:bg-primary-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 active:scale-95 transition-all">
-                            Chỉnh sửa
+                        <button onclick="window.usersModule.setAsEmployee(document.getElementById('modal-user-uid').textContent.trim())" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 active:scale-95 transition-all">
+                            Đặt làm nhân viên
                         </button>
                     </div>
                 </div>
@@ -1517,12 +1581,9 @@
                                     <label class="block text-sm font-semibold text-slate-700 mb-2">Vai trò</label>
                                     <select id="edit-user-role" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
                                         <option value="customer">Khách hàng</option>
+                                        <option value="shipper">Nhân viên</option>
                                         <option value="admin">Admin</option>
                                     </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Điểm tích lũy</label>
-                                    <input type="number" id="edit-user-loyalty" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
                                 </div>
                             </div>
 
@@ -1562,6 +1623,72 @@
             <div id="toast-container" class="fixed top-24 right-8 z-50 space-y-2"></div>
             `,
 
+
+            contacts: `
+            <!-- Page Header -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý Liên hệ</h2>
+                    <p class="text-sm text-slate-500 mt-2">Tiếp nhận và xử lý phản hồi từ trang Liên hệ</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <select id="contacts-status-filter" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700">
+                        <option value="all">Tất cả trạng thái</option>
+                        <option value="pending">Mới</option>
+                        <option value="in_progress">Đang xử lý</option>
+                        <option value="resolved">Đã xử lý</option>
+                    </select>
+                    <button id="btn-reload-contacts" class="p-2.5 text-slate-500 hover:text-primary transition-all" title="Tải lại">
+                        <span class="material-symbols-rounded text-[24px]">refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Tổng liên hệ</p>
+                    <h3 id="stat-contacts-total" class="text-3xl font-extrabold text-slate-900 mt-2">0</h3>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Liên hệ mới</p>
+                    <h3 id="stat-contacts-new" class="text-3xl font-extrabold text-amber-700 mt-2">0</h3>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Đang xử lý</p>
+                    <h3 id="stat-contacts-progress" class="text-3xl font-extrabold text-blue-700 mt-2">0</h3>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Đã xử lý</p>
+                    <h3 id="stat-contacts-resolved" class="text-3xl font-extrabold text-emerald-700 mt-2">0</h3>
+                </div>
+            </div>
+
+            <!-- Contacts Table -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[1100px]">
+                        <thead>
+                            <tr class="bg-slate-50 text-xs uppercase tracking-wider text-slate-600 font-bold">
+                                <th class="px-6 py-4 text-left">Mã</th>
+                                <th class="px-6 py-4 text-left">Người gửi</th>
+                                <th class="px-6 py-4 text-left">Email</th>
+                                <th class="px-6 py-4 text-left">Điện thoại</th>
+                                <th class="px-6 py-4 text-left">Chủ đề</th>
+                                <th class="px-6 py-4 text-left">Nội dung</th>
+                                <th class="px-6 py-4 text-left">Trạng thái</th>
+                                <th class="px-6 py-4 text-right">Xử lý</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contacts-table-body" class="divide-y divide-slate-100">
+                            <tr>
+                                <td colspan="8" class="px-6 py-10 text-center text-slate-500">Đang tải dữ liệu...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            `,
 
             promotions: `
             <!-- Page Header -->
@@ -1669,6 +1796,76 @@
                     </table>
                 </div>
             </div>
+            `,
+
+            reviews: `
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Quản lý đánh giá</h2>
+                    <div class="flex items-center gap-2 mt-2 text-sm text-slate-500 dark:text-slate-400">
+                        <span>Bảng điều khiển</span>
+                        <span class="material-symbols-rounded text-[14px]">chevron_right</span>
+                        <span class="text-primary font-semibold">Đánh giá</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="window.reviewsModule?.init()" class="p-2.5 text-slate-500 hover:text-primary transition-all" title="Tải lại">
+                        <span class="material-symbols-rounded text-[24px]">refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">TỔNG REVIEW</p>
+                    <h3 id="stat-reviews-total" class="text-3xl font-extrabold text-slate-900 mt-2">0</h3>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">ĐIỂM TRUNG BÌNH</p>
+                    <h3 id="stat-reviews-average" class="text-3xl font-extrabold text-amber-600 mt-2">0</h3>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">CHỜ DUYỆT</p>
+                    <h3 id="stat-reviews-pending" class="text-3xl font-extrabold text-orange-600 mt-2">0</h3>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">ĐÃ DUYỆT</p>
+                    <h3 id="stat-reviews-approved" class="text-3xl font-extrabold text-emerald-600 mt-2">0</h3>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-200 flex flex-col md:flex-row items-stretch md:items-center gap-3">
+                    <div class="relative md:ml-auto md:w-80">
+                        <span class="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+                        <input id="search-reviews" type="text" placeholder="Tìm theo review, sản phẩm, người dùng..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/40 focus:border-primary">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-600 font-bold">
+                                <th class="px-6 py-4">Sản phẩm</th>
+                                <th class="px-6 py-4">Người đánh giá</th>
+                                <th class="px-6 py-4">Điểm</th>
+                                <th class="px-6 py-4">Nội dung</th>
+                                <th class="px-6 py-4">Trạng thái</th>
+                                <th class="px-6 py-4">Thời gian</th>
+                                <th class="px-6 py-4 text-right">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reviews-table-body" class="divide-y divide-slate-100">
+                            <tr>
+                                <td colspan="7" class="px-6 py-12 text-center text-slate-500">
+                                    <span class="material-symbols-rounded text-6xl text-slate-300 mb-2">reviews</span>
+                                    <p class="font-medium">Đang tải dữ liệu đánh giá...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             `
         };
 
@@ -1714,8 +1911,10 @@
                     'orders': () => window.ordersModule?.reload(),
                     'inventory': () => window.productsModule?.reload(),
                     'users': () => window.usersModule?.init(),
+                    'contacts': () => window.contactsModule?.init(),
                     'promotions': () => window.promotionsModule?.init(),
-                    'reports': () => window.reportsModule?.reload()
+                    'reports': () => window.reportsModule?.reload(),
+                    'reviews': () => window.reviewsModule?.init()
                 };
 
                 if (initMap[tabName]) {
@@ -1841,8 +2040,10 @@
     <script type="module" src="js/admin/orders.js"></script>
     <script type="module" src="js/admin/products.js"></script>
     <script type="module" src="js/admin/users.js"></script>
+    <script type="module" src="js/admin/contacts.js"></script>
     <script type="module" src="js/admin/reports.js"></script>
     <script type="module" src="js/admin/promotions.js"></script>
+    <script type="module" src="js/admin/reviews.js"></script>
 
     <script>
         document.getElementById('admin-logout-cancel')?.addEventListener('click', closeAdminLogoutModal);

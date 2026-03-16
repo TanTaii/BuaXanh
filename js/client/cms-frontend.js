@@ -1,5 +1,5 @@
 import { getFirebaseFirestore } from '../firebase-config.js';
-import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { getCachedDocData } from '../firestore-cache.js';
 
 const db = getFirebaseFirestore();
 
@@ -7,12 +7,11 @@ const db = getFirebaseFirestore();
  * Applies global settings (Logo, Colors, Footer)
  */
 function applyGlobalSettings() {
-    onSnapshot(doc(db, 'settings', 'general'), (snapshot) => {
-        const data = snapshot.data();
+    getCachedDocData('settings', 'general', { ttlMs: 30 * 60 * 1000 }).then((data) => {
         if (!data) return;
 
         if (data.logoUrl) {
-            document.querySelectorAll('img[alt="X-Sneaker Logo"]').forEach(img => { img.src = data.logoUrl; });
+            document.querySelectorAll('img[alt="Bữa Xanh Logo"], img[alt="Bữa Xanh"], img[alt="FoodSaver Logo"], img[alt="FoodSaver"], img[alt="X-Sneaker Logo"], img[alt="X-Sneaker"]').forEach(img => { img.src = data.logoUrl; });
         }
         if (data.siteName) {
             document.title = data.siteName + (document.title.includes('|') ? ` | ${document.title.split('|')[1].trim()}` : '');
@@ -34,6 +33,8 @@ function applyGlobalSettings() {
             const footerDesc = document.querySelector('footer p.text-gray-400');
             if (footerDesc) footerDesc.textContent = data.footerDescription;
         }
+    }).catch((error) => {
+        console.error('Cannot load general settings:', error);
     });
 }
 
@@ -42,8 +43,7 @@ function applyGlobalSettings() {
  */
 function applyAboutContent() {
     if (!location.pathname.includes('About-us.html')) return;
-    onSnapshot(doc(db, 'settings', 'aboutUs'), (snapshot) => {
-        const data = snapshot.data();
+    getCachedDocData('settings', 'aboutUs', { ttlMs: 30 * 60 * 1000 }).then((data) => {
         if (!data) return;
         const setTxt = (id, val) => { const el = document.getElementById(id); if (el && val) el.innerText = val; };
         if (data.heroImage) {
@@ -56,6 +56,8 @@ function applyAboutContent() {
         setTxt('about-mission-text', data.mission);
         setTxt('about-quality-text', data.quality);
         setTxt('about-community-text', data.community);
+    }).catch((error) => {
+        console.error('Cannot load about settings:', error);
     });
 }
 
@@ -64,8 +66,7 @@ function applyAboutContent() {
  */
 function applyContactContent() {
     if (!location.pathname.includes('Contact-Us.html')) return;
-    onSnapshot(doc(db, 'settings', 'contactInfo'), (snapshot) => {
-        const data = snapshot.data();
+    getCachedDocData('settings', 'contactInfo', { ttlMs: 30 * 60 * 1000 }).then((data) => {
         if (!data) return;
         const setTxt = (id, val) => { const el = document.getElementById(id); if (el && val) el.innerText = val; };
         setTxt('contact-phone', data.phone);
@@ -75,6 +76,8 @@ function applyContactContent() {
             const mapBg = document.getElementById('contact-map-bg');
             if (mapBg) mapBg.style.backgroundImage = `url("${data.mapImage}")`;
         }
+    }).catch((error) => {
+        console.error('Cannot load contact settings:', error);
     });
 }
 

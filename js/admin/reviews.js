@@ -1,10 +1,10 @@
 /**
- * X-Sneaker Admin - Reviews Management Module
- * Manages product reviews, ratings, and moderation
+ * Bua Xanh Admin - Reviews Management Module
+ * Read review details and remove inappropriate reviews.
  */
 
 import { getFirebaseFirestore } from '../firebase-config.js';
-import { collection, doc, getDocs, updateDoc, deleteDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js';
+import { collection, doc, getDocs, deleteDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js';
 
 const database = getFirebaseFirestore();
 
@@ -15,7 +15,10 @@ const state = {
     products: {},
     users: {},
     currentFilter: 'all',
-    searchQuery: ''
+    searchQuery: '',
+    initialized: false,
+    listenersBound: false,
+    unsubscribeReviews: null
 };
 
 /**
@@ -23,10 +26,14 @@ const state = {
  */
 export async function init() {
     console.log('Initializing Reviews Management Module...');
-    
-    setupRealtimeListeners();
+
+    if (!state.listenersBound) {
+        setupRealtimeListeners();
+        state.listenersBound = true;
+    }
+
     setupEventListeners();
-    
+
     await Promise.all([
         fetchReviews(),
         fetchProducts(),
@@ -35,14 +42,19 @@ export async function init() {
     
     updateStats();
     renderReviewsTable();
+    state.initialized = true;
 }
 
 /**
  * Setup Firebase realtime listeners
  */
 function setupRealtimeListeners() {
-    onSnapshot(collection(database, 'reviews'), (snapshot) => {
-        state.reviews = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (typeof state.unsubscribeReviews === 'function') {
+        state.unsubscribeReviews();
+    }
+
+    state.unsubscribeReviews = onSnapshot(collection(database, 'reviews'), (snapshot) => {
+        state.reviews = snapshot.docs.map(d => normalizeReview({ id: d.id, ...d.data() }));
         applyFilters();
         updateStats();
         renderReviewsTable();
@@ -56,11 +68,13 @@ function setupEventListeners() {
     // Search functionality
     const searchInput = document.getElementById('search-reviews');
     if (searchInput) {
+        if (searchInput.dataset.reviewsBound === '1') return;
         searchInput.addEventListener('input', (e) => {
             state.searchQuery = e.target.value.toLowerCase();
             applyFilters();
             renderReviewsTable();
         });
+        searchInput.dataset.reviewsBound = '1';
     }
 }
 
@@ -70,7 +84,7 @@ function setupEventListeners() {
 async function fetchReviews() {
     try {
         const snapshot = await getDocs(collection(database, 'reviews'));
-        state.reviews = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        state.reviews = snapshot.docs.map(d => normalizeReview({ id: d.id, ...d.data() }));
         applyFilters();
     } catch (error) {
         console.error('Error fetching reviews:', error);
@@ -187,6 +201,7 @@ function renderReviewsTable() {
     tbody.innerHTML = state.filteredReviews.map(review => {
         const product = state.products[review.productId] || {};
         const status = review.status || 'pending';
+        const createdAt = review.createdAt || review.updatedAt;
         
         return `
             <tr class="hover:bg-slate-50 transition-colors">
@@ -228,7 +243,7 @@ function renderReviewsTable() {
                     </span>
                 </td>
                 <td class="px-6 py-4 text-sm text-slate-600">
-                    ${formatDate(review.timestamp)}
+                    ${formatDate(createdAt)}
                 </td>
                 <td class="px-6 py-4 text-right">
                     <div class="flex items-center justify-end gap-2">
@@ -243,36 +258,6 @@ function renderReviewsTable() {
             </tr>
         `;
     }).join('');
-}
-
-/**
- * Approve review
- */
-async function approveReview(productId, reviewId) {
-    try {
-        await updateDoc(doc(database, 'reviews', reviewId), {
-            status: 'approved', moderatedAt: Date.now()
-        });
-        showNotification('Đã duyệt đánh giá', 'success');
-    } catch (error) {
-        console.error('Error approving review:', error);
-        showNotification('Lỗi khi duyệt đánh giá', 'error');
-    }
-}
-
-/**
- * Reject review
- */
-async function rejectReview(productId, reviewId) {
-    try {
-        await updateDoc(doc(database, 'reviews', reviewId), {
-            status: 'rejected', moderatedAt: Date.now()
-        });
-        showNotification('Đã từ chối đánh giá', 'success');
-    } catch (error) {
-        console.error('Error rejecting review:', error);
-        showNotification('Lỗi khi từ chối đánh giá', 'error');
-    }
 }
 
 /**
@@ -309,6 +294,9 @@ function viewReview(productId, reviewId) {
         return;
     }
 
+    const product = state.products[review.productId] || {};
+    const reviewTime = review.createdAt || review.updatedAt;
+
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
     modal.innerHTML = `
@@ -325,7 +313,7 @@ function viewReview(productId, reviewId) {
             <div class="p-6 space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Sản phẩm</label>
-                    <p class="text-gray-900">${review.productName || 'N/A'}</p>
+                    <p class="text-gray-900">${review.productName || product.name || review.productId || 'N/A'}</p>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4">
@@ -370,7 +358,7 @@ function viewReview(productId, reviewId) {
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Thời gian</label>
-                    <p class="text-gray-900">${formatDate(review.timestamp)}</p>
+                    <p class="text-gray-900">${formatDate(reviewTime)}</p>
                 </div>
                 
                 ${review.moderatedAt ? `
@@ -397,7 +385,7 @@ function viewReview(productId, reviewId) {
  */
 function formatDate(timestamp) {
     if (!timestamp) return 'N/A';
-    return new Date(timestamp).toLocaleDateString('vi-VN', {
+    return new Date(normalizeTimestamp(timestamp)).toLocaleString('vi-VN', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -415,6 +403,26 @@ function showNotification(message, type = 'info') {
     } else {
         console.log(`[${type.toUpperCase()}] ${message}`);
     }
+}
+
+function normalizeTimestamp(value) {
+    if (!value) return 0;
+    if (typeof value === 'number') return value;
+    if (typeof value?.toMillis === 'function') return value.toMillis();
+    if (typeof value?.seconds === 'number') return (value.seconds * 1000) + Math.floor((value.nanoseconds || 0) / 1000000);
+    return Number(value) || 0;
+}
+
+function normalizeReview(review) {
+    return {
+        ...review,
+        createdAt: normalizeTimestamp(review.createdAt),
+        updatedAt: normalizeTimestamp(review.updatedAt),
+        moderatedAt: normalizeTimestamp(review.moderatedAt),
+        helpful: Number(review.helpful || 0),
+        rating: Number(review.rating || 0),
+        status: review.status || 'approved'
+    };
 }
 
 // Make module functions available globally
