@@ -720,14 +720,14 @@ async function handleAvatarFileChange(event) {
         }
 
         if (currentUser?.uid && database) {
+            // Only update Firestore with Base64. 
+            // We skip updateAuthProfile because Base64 strings are too long for the Auth photoURL limit.
             await setDoc(doc(database, `users/${currentUser.uid}`), {
                 photoURL: base64Avatar,
                 updatedAt: Date.now()
             }, { merge: true });
 
-            await updateAuthProfile(currentUser, {
-                photoURL: base64Avatar
-            });
+            console.log('✅ Avatar updated in Firestore (Base64 skipping Auth Profile)');
         }
 
         showToast('Avatar đã được cập nhật thành công!');
@@ -746,39 +746,50 @@ async function handleAvatarFileChange(event) {
 async function handleProfileUpdate(e) {
     e.preventDefault();
 
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
+        const form = e.target;
+        // Search for submit button: either inside the form or by reference if it's outside
+        let submitBtn = form.querySelector('button[type="submit"]');
+        if (!submitBtn) {
+            submitBtn = document.querySelector(`button[type="submit"][form="${form.id}"]`);
+        }
+        
+        const originalText = submitBtn ? submitBtn.innerHTML : 'Lưu Thay Đổi';
 
-    try {
-        // Show loading
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Đang lưu...';
-
-        const formData = new FormData(e.target);
-        const updates = {
-            displayName: formData.get('displayName'),
-            gender: formData.get('gender'),
-            phone: formData.get('phone'),
-            photoURL: formData.get('photoURL') || currentUser?.photoURL || '',
-            address: {
-                street: formData.get('address.street'),
-                ward: formData.get('address.ward'),
-                district: formData.get('address.district'),
-                city: formData.get('address.city')
+        try {
+            // Show loading
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Đang lưu...';
             }
-        };
 
-        // Update Firestore Database (merge mode prevents failure when user doc is missing)
-        await setDoc(doc(database, `users/${currentUser.uid}`), {
-            ...updates,
-            updatedAt: Date.now()
-        }, { merge: true });
+            const formData = new FormData(form);
+            const updates = {
+                displayName: formData.get('displayName'),
+                gender: formData.get('gender'),
+                phone: formData.get('phone'),
+                photoURL: formData.get('photoURL') || currentUser?.photoURL || '',
+                address: {
+                    street: formData.get('address.street'),
+                    ward: formData.get('address.ward'),
+                    district: formData.get('address.district'),
+                    city: formData.get('address.city')
+                }
+            };
 
-        // Update Auth Profile (displayName & photoURL)
-        await updateAuthProfile(currentUser, {
-            displayName: updates.displayName,
-            photoURL: updates.photoURL
-        });
+            // Update Firestore Database (merge mode prevents failure when user doc is missing)
+            await setDoc(doc(database, `users/${currentUser.uid}`), {
+                ...updates,
+                updatedAt: Date.now()
+            }, { merge: true });
+
+            // Update Auth Profile (displayName & photoURL)
+            // CRITICAL: skip photoURL if it's a Base64 string to avoid "Photo URL too long" error
+            const authUpdates = { displayName: updates.displayName };
+            if (updates.photoURL && !updates.photoURL.startsWith('data:image/')) {
+                authUpdates.photoURL = updates.photoURL;
+            }
+
+            await updateAuthProfile(currentUser, authUpdates);
 
         showToast('Cập nhật thông tin thành công!');
         closeEditModal();
