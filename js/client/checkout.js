@@ -7,6 +7,7 @@ import { initAuthStateObserver, getUserData } from '../auth.js';
 import { getFirebaseAuth, getFirebaseFirestore } from '../firebase-config.js';
 import { collection, addDoc, doc, updateDoc, increment, getDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 import { showQRPaymentModal } from './qr-payment.js';
+import { createVNPayPaymentUrl, savePendingVNPayOrder } from './vnpay.js';
 
 const auth = getFirebaseAuth();
 const database = getFirebaseFirestore();
@@ -307,14 +308,32 @@ document.addEventListener('DOMContentLoaded', () => {
                         type: _appliedCoupon.type,
                         value: _appliedCoupon.value
                     } : null,
-                    paymentMethod: paymentMethod === 'qr-transfer' ? 'QR Transfer' : 'COD',
+                    paymentMethod: paymentMethod === 'qr-transfer' ? 'QR Transfer' : (paymentMethod === 'vnpay' ? 'VNPay' : 'COD'),
                     status: 'pending', // Tất cả đơn mới đều là 'pending'
                     createdAt: Date.now(),
                     updatedAt: Date.now()
                 };
 
                 // XỬ LÝ THEO PHƯƠNG THỨC THANH TOÁN
-                if (paymentMethod === 'qr-transfer') {
+                if (paymentMethod === 'vnpay') {
+                    // ===== THANH TOÁN VNPAY SANDBOX =====
+                    const amountToPay = Math.round(_currentTotal);
+                    savePendingVNPayOrder(orderData);
+
+                    const paymentUrl = createVNPayPaymentUrl({
+                        orderId: orderData.orderId,
+                        amount: amountToPay,
+                        orderInfo: `Thanh toan don hang ${orderData.orderId}`
+                    });
+
+                    if (!paymentUrl) {
+                        throw new Error('Không thể khởi tạo URL thanh toán VNPay.');
+                    }
+
+                    window.showToast('Đang chuyển sang cổng thanh toán VNPay...');
+                    window.location.href = paymentUrl;
+                    return;
+                } else if (paymentMethod === 'qr-transfer') {
                     // ===== THANH TOÁN QR CODE =====
                     submitBtn.innerHTML = originalBtnContent;
                     submitBtn.disabled = false;
