@@ -361,41 +361,58 @@ export async function viewDetails(userId) {
     const stats = getUserStats(userId);
     const userOrders = state.orders.filter(order => order.userId === userId);
     
-    // Populate modal
-    document.getElementById('modal-user-avatar').src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || 'User');
-    document.getElementById('modal-user-name').textContent = user.displayName || 'N/A';
-    document.getElementById('modal-user-email').textContent = user.email || 'N/A';
-    document.getElementById('modal-user-uid').textContent = user.uid;
-    if (user.role === 'admin' || user.isAdmin) {
-        document.getElementById('modal-user-role').innerHTML = '<span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">Admin</span>';
-    } else if (user.role === 'shipper') {
-        document.getElementById('modal-user-role').innerHTML = '<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Nhân viên</span>';
-    } else {
-        document.getElementById('modal-user-role').innerHTML = '<span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">Khách hàng</span>';
+    const setElText = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+    };
+    
+    const setElHtml = (id, html) => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = html;
+    };
+
+    const avatarEl = document.getElementById('modal-user-avatar');
+    if (avatarEl) {
+        avatarEl.src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || 'User');
     }
     
-    document.getElementById('modal-user-phone').textContent = user.phone || 'Chưa cập nhật';
-    document.getElementById('modal-user-gender').textContent = user.gender === 'male' ? 'Nam' : user.gender === 'female' ? 'Nữ' : 'Chưa cập nhật';
-    document.getElementById('modal-user-created').textContent = user.createdAt ? formatDate(user.createdAt) : 'N/A';
-    document.getElementById('modal-user-last-login').textContent = user.lastLogin ? formatDate(user.lastLogin) : 'Chưa đăng nhập';
-    document.getElementById('modal-user-verified').innerHTML = user.emailVerified 
+    setElText('modal-user-name', user.displayName || 'N/A');
+    setElText('modal-user-email', user.email || 'N/A');
+    setElText('modal-user-uid', user.uid);
+    
+    let roleBadge = '';
+    if (user.role === 'admin' || user.isAdmin) {
+        roleBadge = '<span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">Admin</span>';
+    } else if (user.role === 'shipper') {
+        roleBadge = '<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Nhân viên</span>';
+    } else {
+        roleBadge = '<span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">Khách hàng</span>';
+    }
+    setElHtml('modal-user-role', roleBadge);
+    
+    setElText('modal-user-phone', user.phone || 'Chưa cập nhật');
+    setElText('modal-user-gender', user.gender === 'male' ? 'Nam' : user.gender === 'female' ? 'Nữ' : 'Chưa cập nhật');
+    setElText('modal-user-created', user.createdAt ? formatDate(user.createdAt) : 'N/A');
+    setElText('modal-user-last-login', user.lastLogin ? formatDate(user.lastLogin) : 'Chưa đăng nhập');
+    
+    setElHtml('modal-user-verified', user.emailVerified 
         ? '<span class="text-emerald-600 font-semibold">✓ Đã xác thực</span>'
-        : '<span class="text-amber-600 font-semibold">✗ Chưa xác thực</span>';
+        : '<span class="text-amber-600 font-semibold">✗ Chưa xác thực</span>');
     
     // Address
     if (user.address) {
         const addr = user.address;
-        document.getElementById('modal-user-address').textContent = 
-            `${addr.street || ''}, ${addr.ward || ''}, ${addr.district || ''}, ${addr.city || ''}`.replace(/^[,\s]+|[,\s]+$/g, '') || 'Chưa cập nhật';
+        const addressText = `${addr.street || ''}, ${addr.ward || ''}, ${addr.district || ''}, ${addr.city || ''}`.replace(/^[,\s]+|[,\s]+$/g, '') || 'Chưa cập nhật';
+        setElText('modal-user-address', addressText);
     } else {
-        document.getElementById('modal-user-address').textContent = 'Chưa cập nhật';
+        setElText('modal-user-address', 'Chưa cập nhật');
     }
     
     // Stats
-    document.getElementById('modal-user-orders').textContent = stats.totalOrders;
-    document.getElementById('modal-user-spent').textContent = formatCurrency(stats.totalSpent);
-    document.getElementById('modal-user-loyalty').textContent = user.loyaltyPoints || 0;
-    document.getElementById('modal-user-tier').textContent = user.membershipTier || 'Member';
+    setElText('modal-user-orders', stats.totalOrders);
+    setElText('modal-user-spent', formatCurrency(stats.totalSpent));
+    setElText('modal-user-loyalty', user.loyaltyPoints || 0);
+    setElText('modal-user-tier', user.membershipTier || 'Member');
     
     // Recent orders
     const recentOrders = userOrders.slice(0, 5);
