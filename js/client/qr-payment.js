@@ -5,9 +5,9 @@
 
 // Cấu hình ngân hàng (có thể thay đổi theo nhu cầu)
 const BANK_CONFIG = {
-    bankId: '970436',          // Vietcombank (Vietcombank: 970436, Techcombank: 970407)
-    accountNo: '1111111111',   // Số tài khoản nhận tiền
-    accountName: 'CONG TY ',
+    bankId: '970436',          // Vietcombank
+    accountNo: '1030341856',   // Số tài khoản nhận tiền
+    accountName: 'NGUYEN TAN TAI',
     template: 'compact2'       // Template QR code
 };
 
