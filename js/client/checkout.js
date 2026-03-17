@@ -6,7 +6,7 @@
 import { initAuthStateObserver, getUserData } from '../auth.js';
 import { getFirebaseAuth, getFirebaseFirestore } from '../firebase-config.js';
 import { collection, addDoc, doc, updateDoc, increment, getDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
-import { showQRPaymentModal } from './qr-payment.js';
+
 import { createVNPayPaymentUrl, savePendingVNPayOrder } from './vnpay.js';
 
 const auth = getFirebaseAuth();
@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         type: _appliedCoupon.type,
                         value: _appliedCoupon.value
                     } : null,
-                    paymentMethod: paymentMethod === 'qr-transfer' ? 'QR Transfer' : (paymentMethod === 'vnpay' ? 'VNPay' : 'COD'),
+                    paymentMethod: paymentMethod === 'vnpay' ? 'VNPay' : 'COD',
                     status: 'pending', // Tất cả đơn mới đều là 'pending'
                     createdAt: Date.now(),
                     updatedAt: Date.now()
@@ -333,57 +333,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.showToast('Đang chuyển sang cổng thanh toán VNPay...');
                     window.location.href = paymentUrl;
                     return;
-                } else if (paymentMethod === 'qr-transfer') {
-                    // ===== THANH TOÁN QR CODE =====
-                    submitBtn.innerHTML = originalBtnContent;
-                    submitBtn.disabled = false;
-
-                    // Hiển thị QR Modal
-                    showQRPaymentModal(
-                        orderData.orderId,
-                        Math.round(_currentTotal),
-                        async () => {
-                            // Callback khi thanh toán thành công
-                            submitBtn.disabled = true;
-                            submitBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">progress_activity</span> Đang lưu đơn hàng...`;
-
-                            try {
-                                // Lưu đơn hàng vào Firestore
-                                await addDoc(collection(database, 'orders'), orderData);
-                                console.log('✅ Đơn hàng QR đã được lưu:', orderData.orderId);
-
-                                // Update promotion usage count if coupon was used
-                                if (_appliedCoupon && _appliedCoupon.id) {
-                                    await updatePromotionUsage(_appliedCoupon.id);
-                                }
-
-                                // Clear Cart and Coupon
-                                localStorage.removeItem('cart');
-                                localStorage.removeItem('appliedCoupon');
-                                
-                                // Show Success
-                                submitBtn.innerHTML = `<span class="material-symbols-outlined">check</span> Thành công!`;
-                                window.showToast('Thanh toán thành công! Đơn hàng đang chờ xử lý.');
-
-                                // Redirect
-                                setTimeout(() => {
-                                    window.location.href = 'Account.html?tab=orders&orderSuccess=true';
-                                }, 1500);
-                            } catch (saveError) {
-                                console.error('❌ Lỗi lưu đơn hàng:', saveError);
-                                window.showToast('Thanh toán thành công nhưng không thể lưu đơn hàng. Vui lòng liên hệ CSKH.', 'error');
-                                submitBtn.disabled = false;
-                                submitBtn.innerHTML = originalBtnContent;
-                            }
-                        },
-                        () => {
-                            // Callback khi hủy thanh toán
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = originalBtnContent;
-                            window.showToast('Đã hủy thanh toán QR', 'error');
-                        }
-                    );
-
                 } else {
                     // ===== THANH TOÁN COD (Mặc định) =====
                     await new Promise(resolve => setTimeout(resolve, 1000)); // Fake delay
